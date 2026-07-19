@@ -1,7 +1,0 @@
-{
-  "appId": "de.maehlmann.gradegoal",
-  "appName": "GradeGoal",
-  "webDir": "dist",
-  "android": { "allowMixedContent": false },
-  "backgroundColor": "#EEF2F7"
-}
