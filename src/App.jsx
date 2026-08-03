@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   uid, parseNum, filterNumInput, fmt, scaleOf, quality, colorFor,
   sName, cName, catMean, weightedCalc, neededGrade, subjWeight, subjectsMean, gv,
+  keyOf,
 } from "./lib/grades.js";
 import { store, STORAGE_KEY } from "./lib/storage.js";
 import { freshState, freshDataset, freshYear, freshAbi, defaultCats, migrateState } from "./lib/state.js";
@@ -435,7 +436,8 @@ function App() {
       <h1 className="brand" style={{ fontSize: 28, margin: "8px 0 16px" }}><Ic n="percent" size={22} />{t("keyCalc")}</h1>
       <div className="card">
         <ProGate feature="key" t={t}>
-          <KeyCalc t={t} lang={state.lang} dark={dark} />
+          <KeyCalc ds={ds} sc={sc} t={t} lang={state.lang} dark={dark}
+            onChangeDs={(patch) => upDs(patch)} />
         </ProGate>
       </div>
     </div>);
@@ -706,6 +708,9 @@ function App() {
   /* ============ FACH-DETAIL ============ */
   if (subject) {
     const calc = weightedCalc(subject);
+    const subjKey = keyOf(ds, subject);
+    const defaultKey = (ds.keys || []).find((k) => k.id === ds.defaultKeyId);
+    const defaultKeyName = defaultKey ? defaultKey.name : "";
     const g = parseNum(subject.grade), w = parseNum(subject.wish);
     const diff = g != null && w != null ? (sc.bestLow ? g - w : w - g) : null;
     const upCat = (cid, p) => upSubject(subject.id, { cats: subject.cats.map((c) => (c.id === cid ? { ...c, ...p } : c)) });
@@ -755,6 +760,26 @@ function App() {
                   {subjWeight(subject) === 0 ? t("weightOff") : "× " + fmt(subjWeight(subject), state.lang, 1)}
                 </span>
               </div>
+
+              {/* Notenschluessel des Fachs. Schluessel unterscheiden sich
+                  von Schule zu Schule UND von Fach zu Fach – deshalb ist
+                  die Zuordnung hier und nicht nur global. */}
+              <div style={{ borderTop: "1px solid var(--line)", marginTop: 12, paddingTop: 12 }}>
+                <div className="row" style={{ justifyContent: "space-between" }}>
+                  <span className="lbl"><Ic n="percent" size={13} />{t("keyCalc")}</span>
+                  <InfoTip text={t("keySubjectHint")} />
+                </div>
+                <select className="sel" style={{ width: "100%", maxWidth: "100%", marginTop: 4 }}
+                  value={subject.keyId || ""} aria-label={t("keyCalc")}
+                  onChange={(e) => upSubject(subject.id, { keyId: e.target.value })}>
+                  <option value="">{t("keyFromTerm")}{defaultKeyName ? " (" + defaultKeyName + ")" : ""}</option>
+                  {(ds.keys || []).map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}
+                </select>
+                <button className="btn-ghost" style={{ marginTop: 8, padding: "6px 12px", fontSize: 13 }}
+                  onClick={() => up({ screen: "key" })}>
+                  <Ic n="sliders" size={13} />{t("keyManage")}
+                </button>
+              </div>
             </ProGate>
           </div>)}
 
@@ -800,12 +825,18 @@ function App() {
                           borderRadius: 20, padding: "3px 6px 3px 12px", fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif",
                         }}>
                           {fmt(val, state.lang)}
+                          {gr && gr.p && (
+                            <span style={{ fontWeight: 400, fontSize: 11, opacity: 0.8 }}>
+                              {fmt(gr.p.r, state.lang, 1)}/{fmt(gr.p.m, state.lang, 1)}
+                            </span>)}
                           <button className="xbtn" style={{ fontSize: 14, color: "var(--faint)" }} aria-label="✕"
                             onClick={() => { pushUndo(); upCat(c.id, { grades: c.grades.filter((_, j) => j !== i) }); }}>✕</button>
                         </span>);
                     })}
                     <QuickAdd ph={t("addGrade")} label={t("addGradeFull")}
                       dateLabel={t("gradeDate")} dateHint={t("gradeDateHint")}
+                      keyObj={isPro ? subjKey : null} sc={isPro ? sc : null}
+                      lang={state.lang} t={isPro ? t : null} dark={dark}
                       onAdd={(v) => upCat(c.id, { grades: [...c.grades, v] })} />
                   </div>
                 </div>);
