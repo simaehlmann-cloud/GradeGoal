@@ -193,7 +193,7 @@ Der Keystore selbst gehört **nicht** ins Repo; `.gitignore` schließt
 
 **Actions → Release AAB (Play Store) → Run workflow.** Dort eintragen:
 
-- **version_name** – muss zu `package.json` passen, z. B. `1.5.1`
+- **version_name** – muss zu `package.json` passen, z. B. `1.6.0`
 - **version_code** – ganze Zahl, **höher als beim letzten Upload**. Play
   nimmt jeden Wert nur einmal je App-ID an. Beim ersten Mal `1`.
 - **tier** – `beide`, `lite` oder `pro`
@@ -240,3 +240,29 @@ Angaben unter „App Privacy". Für GradeGoal lautet die Antwort überall
   müssen aber gemacht werden.
 - **Keine In-App-Käufe.** Lite und Pro sind getrennte Einträge; in beiden
   Formularen „nein" angeben.
+
+## Store-Vorbereitung
+
+Im Ordner `store/` liegt alles Nicht-Technische fertig vor:
+
+| Datei | Inhalt |
+|---|---|
+| `PLAY-CONSOLE-CHECKLISTE.md` | Zeitplan und alle Formularantworten |
+| `STORE-TEXTE.md` | Namen und Beschreibungen, deutsch und englisch, für beide Ausgaben |
+| `feature-graphic-lite.png` | 1024 × 500, fertig zum Hochladen |
+| `feature-graphic-pro.png` | dasselbe für Pro |
+
+Die Datenschutzerklärung liegt als `public/datenschutz.html` im Projekt
+und wird über GitHub Pages mitveröffentlicht:
+`https://DEINNAME.github.io/REPOSITORY/datenschutz.html`
+
+**Wichtig:** Beide Stores verlangen eine erreichbare Datenschutz-URL, und
+das Impressum braucht eine ladungsfähige Anschrift. In der Datei stehen
+dafür markierte Platzhalter.
+
+Der wichtigste Zeitfaktor steht in der Checkliste: Neue persönliche
+Entwicklerkonten müssen vor dem Produktionszugriff einen geschlossenen
+Test mit 12 Testern über 14 zusammenhängende Tage bestehen. Das lässt
+sich nicht abkürzen – deshalb möglichst früh damit anfangen.
+
+Feature-Grafiken neu erzeugen: `python3 tools/make_feature_graphic.py`
