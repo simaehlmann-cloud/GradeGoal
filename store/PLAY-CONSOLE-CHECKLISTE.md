@@ -177,9 +177,9 @@ Vorschlag, damit es nachvollziehbar bleibt:
 
 | Upload | versionName | versionCode |
 |---|---|---|
-| erster geschlossener Test | 1.5.1 | 1 |
-| Korrektur währenddessen | 1.5.2 | 2 |
-| Produktion | 1.6.0 | 3 |
+| erster geschlossener Test | 1.6.0 | 1 |
+| Korrektur währenddessen | 1.6.1 | 2 |
+| Produktion | 1.7.0 | 3 |
 
 Beide Ausgaben zählen getrennt, weil sie eigene App-IDs haben. Der
 Einfachheit halber trotzdem dieselbe Nummer für beide vergeben.
