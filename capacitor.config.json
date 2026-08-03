@@ -3,5 +3,9 @@
   "appName": "GradeGoal",
   "webDir": "dist",
   "android": { "allowMixedContent": false },
+  "ios": {
+    "contentInset": "always",
+    "limitsNavigationsToAppBoundDomains": true
+  },
   "backgroundColor": "#EEF2F7"
 }

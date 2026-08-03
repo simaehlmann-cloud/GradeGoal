@@ -154,3 +154,89 @@ src/
     icons.jsx  ui.jsx  charts.jsx  panels.jsx
     KeyCalc.jsx  AbiCalc.jsx  LockScreen.jsx  ErrorBoundary.jsx
 ```
+
+## Signierte App-Bundles (.aab) bauen lassen
+
+### Einmalig: Keystore erzeugen und hinterlegen
+
+```bash
+keytool -genkey -v -keystore gradegoal.jks -alias gradegoal \
+        -keyalg RSA -keysize 2048 -validity 10000
+```
+
+**Diese Datei sicher aufbewahren und mehrfach sichern.** Geht sie verloren,
+lässt sich keine Aktualisierung mehr veröffentlichen – die App müsste unter
+neuem Namen neu eingereicht werden. Ein Keystore für beide Ausgaben genügt.
+
+Dann in Base64 umwandeln:
+
+```bash
+base64 -w0 gradegoal.jks > keystore.txt     # Linux
+base64 -i gradegoal.jks | tr -d '\n'        # macOS
+certutil -encode gradegoal.jks keystore.txt # Windows, danach Kopf- und Fußzeile entfernen
+```
+
+Unter **Settings → Secrets and variables → Actions → New repository secret**
+vier Einträge anlegen:
+
+| Name | Inhalt |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | Inhalt von `keystore.txt`, ohne Zeilenumbrüche |
+| `ANDROID_KEYSTORE_PASSWORD` | Kennwort des Keystores |
+| `ANDROID_KEY_ALIAS` | `gradegoal` |
+| `ANDROID_KEY_PASSWORD` | Kennwort des Schlüssels (oft identisch) |
+
+Der Keystore selbst gehört **nicht** ins Repo; `.gitignore` schließt
+`*.jks` und `*.keystore` aus.
+
+### Release auslösen
+
+**Actions → Release AAB (Play Store) → Run workflow.** Dort eintragen:
+
+- **version_name** – muss zu `package.json` passen, z. B. `1.5.1`
+- **version_code** – ganze Zahl, **höher als beim letzten Upload**. Play
+  nimmt jeden Wert nur einmal je App-ID an. Beim ersten Mal `1`.
+- **tier** – `beide`, `lite` oder `pro`
+
+Ergebnis: `gradegoal-lite-…-aab` und `gradegoal-pro-…-aab` unter Artifacts.
+Diese `.aab` in der Play Console hochladen.
+
+Der Workflow läuft bewusst **nicht** bei jedem Push: jeder Lauf verbraucht
+einen versionCode.
+
+## Später: iOS
+
+Vorbereitet ist bereits alles, was sich ohne Mac erledigen lässt:
+
+- Die App-Icons sind randlos und **ohne Alphakanal** – App Store Connect
+  lehnt Icons mit Transparenz oder eigenen runden Ecken ab.
+- Safe Areas sind im Stylesheet berücksichtigt (Notch, Home-Indikator).
+- `capacitor.config*.json` enthält bereits den `ios`-Abschnitt.
+- Die Bundle-IDs entsprechen den App-IDs.
+
+Was ein Mac braucht:
+
+```bash
+npm install @capacitor/ios
+npm run build          # oder build:pro
+npx cap add ios
+npx capacitor-assets generate --ios
+npx cap sync ios
+npx cap open ios       # dann in Xcode signieren und hochladen
+```
+
+Nicht vergessen: Apple verlangt eine erreichbare Datenschutz-URL und die
+Angaben unter „App Privacy". Für GradeGoal lautet die Antwort überall
+**„Data Not Collected"**.
+
+## Hinweise zur Einreichung
+
+- **Datenschutzerklärung als Webseite.** Beide Stores verlangen eine
+  öffentlich erreichbare URL. Die GitHub-Pages-Adresse eignet sich dafür.
+- **Zielgruppe.** Die App richtet sich auch an Kinder unter 13. In der Play
+  Console führt das ins Programm „Für Familien" mit zusätzlichen Fragen.
+  Weil GradeGoal keine Daten erhebt, keine Werbung zeigt und keine
+  Netzwerkverbindung aufbaut, sind die Antworten unkritisch – die Angaben
+  müssen aber gemacht werden.
+- **Keine In-App-Käufe.** Lite und Pro sind getrennte Einträge; in beiden
+  Formularen „nein" angeben.

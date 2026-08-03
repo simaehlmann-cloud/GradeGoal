@@ -3,4 +3,7 @@ dist/
 android/
 ios/
 *.keystore
+*.jks
+*.p12
+*.mobileprovision
 .DS_Store
