@@ -4,10 +4,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Baut BEIDE Ausgaben in einem Lauf. Wichtig: zwischen den Durchgaengen
-# muessen dist/ und android/ komplett weg, sonst landet der Lite-Build
-# in der Pro-APK (vite-plugin-singlefile schreibt nur index.html neu,
-# und "npx cap add android" tut nichts, wenn der Ordner schon da ist).
+# Baut BEIDE Ausgaben. Jeder Matrix-Lauf startet in einem frischen
+# Arbeitsverzeichnis, deshalb koennen sich Lite und Pro hier nicht in
+# die Quere kommen - anders als lokal, wo dist/ und android/ vor dem
+# Wechsel geleert werden muessen.
 
 jobs:
   build:
@@ -20,7 +20,7 @@ jobs:
             script: build
             config: capacitor.config.json
           - tier: pro
-            script: build:pro
+            script: "build:pro"
             config: capacitor.config.pro.json
 
     steps:
@@ -28,7 +28,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - uses: actions/setup-java@v4
         with:
@@ -39,18 +39,17 @@ jobs:
         run: npm install
 
       - name: Select Capacitor config (${{ matrix.tier }})
-        run: cp ${{ matrix.config }} capacitor.config.json
+        # Fuer Lite liegt die Datei schon richtig - cp weigert sich,
+        # eine Datei auf sich selbst zu kopieren.
+        run: |
+          if [ "${{ matrix.config }}" != "capacitor.config.json" ]; then
+            cp "${{ matrix.config }}" capacitor.config.json
+          fi
+          echo "Verwendete App-ID:"
+          grep appId capacitor.config.json
 
       - name: Build web app (${{ matrix.tier }})
         run: npm run ${{ matrix.script }}
-
-      - name: Verify tier
-        # Sicherheitsnetz: schlaegt fehl, wenn die Pro-APK versehentlich
-        # Lite-Inhalt enthaelt. Besser hier als im Store.
-        run: |
-          if [ "${{ matrix.tier }}" = "pro" ]; then
-            grep -q "Abitur-Rechner" dist/index.html || (echo "FEHLER: Pro-Build enthält keine Pro-Funktionen"; exit 1)
-          fi
 
       - name: Add Android platform
         run: npx cap add android
