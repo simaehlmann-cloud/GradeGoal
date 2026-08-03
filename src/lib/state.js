@@ -11,10 +11,10 @@
    bereits gespeichert war, blieb die App dauerhaft weiss.
 ========================================================= */
 
-import { uid } from "./grades.js";
+import { uid, freshKey, scaleOf } from "./grades.js";
 import { logWarn } from "./logger.js";
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 export const LANGS = ["de", "en"];
 export const THEMES = ["system", "light", "dark"];
 
@@ -54,20 +54,28 @@ export const freshSubjects = () =>
     grade: "",
     wish: "",
     weight: 1, /* Fachgewichtung; 0 = zaehlt nicht im Gesamtschnitt */
+    keyId: "",  /* Notenschluessel; leer = Vorgabe des Halbjahres */
     cats: defaultCats(),
     goals: "",
     notes: "",
   }));
 
-export const freshDataset = (label, yearId) => ({
-  id: uid(),
-  label,
-  yearId: yearId || "",
-  scale: { type: "grades", min: 1, max: 6, bestLow: true },
-  subjects: freshSubjects(),
-  groups: [],
-  abi: freshAbi(),
-});
+export const freshDataset = (label, yearId) => {
+  const scale = { type: "grades", min: 1, max: 6, bestLow: true };
+  return {
+    id: uid(),
+    label,
+    yearId: yearId || "",
+    scale,
+    subjects: freshSubjects(),
+    groups: [],
+    abi: freshAbi(),
+    /* Notenschluessel gehoeren zum Halbjahr, nicht zum einzelnen Fach:
+       meist gilt derselbe Schluessel fuer mehrere Faecher. */
+    keys: [],
+    defaultKeyId: "",
+  };
+};
 
 export const freshYear = (label) => ({ id: uid(), label });
 
@@ -110,7 +118,15 @@ function safeGrade(g) {
   if (isObj(g)) {
     const v = str(g.v);
     if (!v.trim()) return null;
-    return { v, d: Number(g.d) || 0 };
+    const out = { v, d: Number(g.d) || 0 };
+    /* Punkteherkunft mitnehmen, falls die Note ueber einen
+       Notenschluessel entstand. Nur uebernehmen, wenn beide Werte
+       brauchbar sind – halbe Angaben waeren irrefuehrend. */
+    if (isObj(g.p)) {
+      const r = Number(g.p.r), m = Number(g.p.m);
+      if (Number.isFinite(r) && Number.isFinite(m) && m > 0) out.p = { r, m };
+    }
+    return out;
   }
   const v = str(g);
   return v.trim() ? { v, d: 0 } : null;
@@ -138,9 +154,34 @@ function safeSubject(s) {
     /* Fehlendes Gewicht bedeutet "normal" (1), nicht "zaehlt nicht" (0) –
        sonst haetten alle Altdaten nach dem Update einen leeren Schnitt. */
     weight: Number.isFinite(w) && w >= 0 ? Math.min(w, 99) : 1,
+    keyId: str(s.keyId), /* leer = Vorgabe des Halbjahres */
     cats: Array.isArray(s.cats) ? s.cats.map(safeCat).filter(Boolean) : defaultCats(),
     goals: str(s.goals),
     notes: str(s.notes),
+  };
+}
+
+function safeStep(st) {
+  if (!isObj(st)) return null;
+  const min = Number(st.min);
+  const g = str(st.g).slice(0, 8);
+  if (!g || !Number.isFinite(min)) return null;
+  return { g, min: Math.max(0, Math.min(100, Math.round(min * 10) / 10)) };
+}
+
+function safeKey(k) {
+  if (!isObj(k)) return null;
+  const type = k.type === "linear" ? "linear" : "steps";
+  const steps = Array.isArray(k.steps)
+    ? k.steps.map(safeStep).filter(Boolean).slice(0, 20)
+    : [];
+  /* Eine Tabelle ohne brauchbare Zeile wuerde stumm falsch rechnen –
+     dann lieber ausdruecklich linear. */
+  return {
+    id: idOf(k.id),
+    name: str(k.name).slice(0, 40) || "Schlüssel",
+    type: type === "steps" && !steps.length ? "linear" : type,
+    steps,
   };
 }
 
@@ -183,8 +224,16 @@ function safeScale(sc) {
 
 function safeDataset(d, i) {
   if (!isObj(d)) return null;
-  const subjects = Array.isArray(d.subjects) ? d.subjects.map(safeSubject).filter(Boolean) : [];
+  let subjects = Array.isArray(d.subjects) ? d.subjects.map(safeSubject).filter(Boolean) : [];
   const ids = new Set(subjects.map((s) => s.id));
+
+  const rawKeys = Array.isArray(d.keys) ? d.keys.map(safeKey).filter(Boolean) : [];
+  const seenK = new Set();
+  const keys = rawKeys.filter((k) => (seenK.has(k.id) ? false : (seenK.add(k.id), true)));
+  const keyIds = new Set(keys.map((k) => k.id));
+  /* Verweise auf geloeschte Schluessel zuruecksetzen, sonst rechnet das
+     Fach stillschweigend mit der Vorgabe, zeigt aber einen Namen an. */
+  subjects = subjects.map((s) => (keyIds.has(s.keyId) ? s : { ...s, keyId: "" }));
   return {
     id: idOf(d.id),
     label: str(d.label) || `Halbjahr ${i + 1}`,
@@ -193,6 +242,8 @@ function safeDataset(d, i) {
     subjects,
     groups: Array.isArray(d.groups) ? d.groups.map((g) => safeGroup(g, ids)).filter(Boolean) : [],
     abi: safeAbi(d.abi),
+    keys,
+    defaultKeyId: keyIds.has(str(d.defaultKeyId)) ? str(d.defaultKeyId) : "",
   };
 }
 

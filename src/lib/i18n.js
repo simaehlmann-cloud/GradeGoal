@@ -8,7 +8,7 @@
 
 export const APP_NAME = "GradeGoal";
 export const APP_SUB = "Schulnoten & Grades";
-export const APP_VER = "1.5.1";
+export const APP_VER = "1.6.0";
 export const DEVELOPER = "Simon Mählmann";
 export const CONTACT = "kontakt@example.de"; /* vor der Einreichung ersetzen */
 export const APP = { name: APP_NAME, sub: APP_SUB, ver: APP_VER, developer: DEVELOPER };
@@ -40,12 +40,32 @@ export const T = {
     whatIfIn: "Nächste Note in", whatIfNew: "neuer Schnitt", whatIfNoCats: "Lege zuerst eine Kategorie mit Gewichtung an.",
 
     /* Notenschlüssel */
-    keyCalc: "Notenschlüssel", keyCalcHint: "Wie viele Punkte sind welche Note?",
+    keyCalc: "Notenschlüssel", keyCalcHint: "Wie viele Punkte sind welche Note? Schlüssel unterscheiden sich von Schule zu Schule und von Fach zu Fach – lege deine eigenen an.",
     keyReached: "Erreichte Punkte", keyMax: "Maximale Punkte", keyPercent: "Prozent",
-    keyMode: "Schlüssel", keyLinear: "Linear", keyIhk: "IHK", keyPoints: "Punkte 0–15",
-    keyModeHint: "Linear: 100 % = 1, 0 % = 6 (50 % ergibt 3,5). IHK: der gestufte Schlüssel der Industrie- und Handelskammern, bei dem 50 % noch eine 4 sind. Welcher Schlüssel gilt, legt deine Lehrkraft fest.",
-    keyTable: "Notenspiegel", keyFrom: "ab",
-    keyResult: "Das ergibt",
+    keyReachedShort: "Pkt.", keyMaxShort: "von",
+    keyMode: "Art", keyLinear: "Linear", keySteps: "Tabelle", keyIhk: "IHK",
+    keyTend: "Mit Tendenzen", keyEven: "Ganze Noten",
+    keyTendHint: "„Ganze Noten“ legt genau die Noten deiner Skala an. „Mit Tendenzen“ ergänzt 2+ und 3− als eigene Stufen. Ob deine Lehrkraft überhaupt mit Tendenzen bewertet, ist von Fach zu Fach verschieden – du kannst jede Zeile danach frei ändern und + oder − auch selbst eintippen.",
+    keyReplaceWarn: "Die Vorlage ersetzt alle Zeilen dieses Schlüssels.",
+    keyReplaceOk: "Ersetzen",
+    keyLinearHint: "Verteilt die Notenskala gleichmäßig: 100 % ergibt die beste, 0 % die schlechteste Note. 50 % liegen genau in der Mitte.",
+    keyStepsHint: "Trag ein, ab wie viel Prozent welche Note gilt. Die Reihenfolge ist egal – die App sortiert selbst.",
+    keyThreshold: "Schwelle in Prozent",
+    keyNoZero: "Keine Zeile beginnt bei 0 %. Alles unterhalb der niedrigsten Schwelle bekommt die schlechteste eingetragene Note – ergänze eine Zeile mit 0 %.",
+    keyTable: "Notenspiegel", keyFrom: "ab", keyResult: "Das ergibt",
+    keyManage: "Schlüssel verwalten",
+    keyManageHint: "Lege für jeden Schlüssel deiner Schule einen Eintrag an. Fächer zeigen dann nur darauf – änderst du den Schlüssel, ändern sich alle zugeordneten Fächer mit.",
+    keyNew: "Neuer Schlüssel", keyNewName: "Neuer Schlüssel", keyName: "Name des Schlüssels",
+    keyDelete: "Schlüssel löschen", keyRowAdd: "Zeile", keyRowDelete: "Zeile löschen",
+    keyPreset: "Vorlage:",
+    keyUse: "Rechnen mit",
+    keyScopeHint: "Die Schlüssel gehören zum Halbjahr. Jedes Fach kann einen davon auswählen – oder die Vorgabe des Halbjahres nutzen.",
+    keyDefault: "Vorgabe für dieses Halbjahr",
+    keyDefaultHint: "Gilt für alle Fächer, die keinen eigenen Schlüssel ausgewählt haben.",
+    keyFromTerm: "Vorgabe des Halbjahres",
+    keySubjectHint: "Nur für dieses Fach. Wenn deine Lehrkraft hier anders bewertet als im Rest der Schule, wähl einen eigenen Schlüssel.",
+    keyTogglePoints: "Zwischen Note und Punkten umschalten",
+    keyUsing: "Umgerechnet mit:", keyUsingLinear: "Umgerechnet linear.",
 
     /* Abitur */
     abi: "Abitur-Rechner", abiShort: "Abitur",
@@ -211,12 +231,32 @@ export const T = {
     whatIfHint: "Move the slider to see instantly how one more grade changes your calculated average.",
     whatIfIn: "Next grade in", whatIfNew: "new average", whatIfNoCats: "Create a category with a weighting first.",
 
-    keyCalc: "Grade key", keyCalcHint: "How many points make which grade?",
+    keyCalc: "Grade key", keyCalcHint: "How many points make which grade? Keys differ from school to school and from subject to subject – set up your own.",
     keyReached: "Points achieved", keyMax: "Maximum points", keyPercent: "Percent",
-    keyMode: "Key", keyLinear: "Linear", keyIhk: "IHK", keyPoints: "Points 0–15",
-    keyModeHint: "Linear: 100 % = 1, 0 % = 6 (50 % gives 3.5). IHK: the stepped key used by the German chambers of commerce, where 50 % is still a 4. Your teacher decides which key applies.",
-    keyTable: "Grade breakdown", keyFrom: "from",
-    keyResult: "That makes",
+    keyReachedShort: "pts", keyMaxShort: "of",
+    keyMode: "Type", keyLinear: "Linear", keySteps: "Table", keyIhk: "IHK",
+    keyTend: "With tendencies", keyEven: "Whole grades",
+    keyTendHint: "“Whole grades” creates exactly the grades of your scale. “With tendencies” adds 2+ and 3− as separate steps. Whether your teacher uses tendencies at all differs from subject to subject – you can edit every row afterwards and type + or − yourself.",
+    keyReplaceWarn: "The preset replaces every row of this key.",
+    keyReplaceOk: "Replace",
+    keyLinearHint: "Spreads the grading scale evenly: 100 % gives the best grade, 0 % the worst. 50 % lands exactly in the middle.",
+    keyStepsHint: "Enter from what percentage each grade applies. Order does not matter – the app sorts it.",
+    keyThreshold: "Threshold in percent",
+    keyNoZero: "No row starts at 0 %. Anything below the lowest threshold gets the worst listed grade – add a row at 0 %.",
+    keyTable: "Grade breakdown", keyFrom: "from", keyResult: "That makes",
+    keyManage: "Manage keys",
+    keyManageHint: "Create an entry for each key your school uses. Subjects then just point to it – change the key and every subject using it follows.",
+    keyNew: "New key", keyNewName: "New key", keyName: "Key name",
+    keyDelete: "Delete key", keyRowAdd: "Row", keyRowDelete: "Delete row",
+    keyPreset: "Preset:",
+    keyUse: "Calculate with",
+    keyScopeHint: "Keys belong to the term. Each subject can pick one – or use the term's default.",
+    keyDefault: "Default for this term",
+    keyDefaultHint: "Applies to every subject that has not picked its own key.",
+    keyFromTerm: "Term default",
+    keySubjectHint: "For this subject only. If your teacher grades differently from the rest of the school, pick a separate key.",
+    keyTogglePoints: "Switch between grade and points",
+    keyUsing: "Converted with:", keyUsingLinear: "Converted linearly.",
 
     abi: "Abitur calculator", abiShort: "Abitur",
     abiHint: "Calculate your Abitur grade from block I (term results) and block II (exams).",

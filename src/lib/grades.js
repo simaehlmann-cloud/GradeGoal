@@ -53,17 +53,19 @@ export function fmt(n, lang, d = 2) {
 /* Skala eines Datensatzes, gegen kaputte Eigenwerte abgesichert. */
 export function scaleOf(ds) {
   const s = (ds && ds.scale) || {};
-  if (s.type === "points") return { min: 0, max: 15, bestLow: false };
+  /* whole: die Skala kennt nur ganze Werte – wichtig fuer die
+     Notenschluessel, damit 7,5 Punkte nicht als Ergebnis erscheinen. */
+  if (s.type === "points") return { min: 0, max: 15, bestLow: false, whole: true };
   /* Alles ausser "custom" – auch ein fehlender oder unbekannter Typ –
      faellt auf das deutsche Standardsystem zurueck. */
-  if (s.type !== "custom") return { min: 1, max: 6, bestLow: true };
+  if (s.type !== "custom") return { min: 1, max: 6, bestLow: true, whole: false };
   let min = Number(s.min);
   let max = Number(s.max);
   if (!Number.isFinite(min)) min = 0;
   if (!Number.isFinite(max)) max = 10;
   if (min > max) [min, max] = [max, min]; /* vertauschte Eingabe abfangen */
   if (min === max) max = min + 1; /* Division durch 0 verhindern */
-  return { min, max, bestLow: !!s.bestLow };
+  return { min, max, bestLow: !!s.bestLow, whole: false };
 }
 
 /* 0 = schlechteste, 1 = beste Leistung. */
@@ -176,43 +178,132 @@ export const subjectsMean = (subjects, field) =>
   weightedMean(subjects, (s) => parseNum(s[field]), subjWeight);
 
 /* =========================================================
-   Notenschluessel: Punkte -> Note
+   Notenschluessel
+
+   Schwellen werden in PROZENT gespeichert, nicht in Punkten: eine Arbeit
+   hat 50 Punkte, die naechste 120. "Ab 92 %" gilt fuer beide.
+
+   Zwei Arten:
+     type "linear" – Formel, verteilt die Skala gleichmaessig
+     type "steps"  – Tabelle mit Schwellen, wie sie Schulen vorgeben
 ========================================================= */
-/* Standard-Schluessel der IHK. Bewusst als Tabelle, nicht als Formel:
-   der Schluessel ist nicht linear. */
-export const IHK_KEY = [
-  { min: 92, grade: 1 }, { min: 81, grade: 2 }, { min: 67, grade: 3 },
-  { min: 50, grade: 4 }, { min: 30, grade: 5 }, { min: 0, grade: 6 },
+
+/* Der IHK-Schluessel ist ein tatsaechlich verbindlicher Standard und
+   deshalb fest hinterlegt. Schulinterne Schluessel unterscheiden sich
+   dagegen von Ort zu Ort – die legt der Nutzer selbst an. */
+export const IHK_STEPS = [
+  { g: "1", min: 92 }, { g: "2", min: 81 }, { g: "3", min: 67 },
+  { g: "4", min: 50 }, { g: "5", min: 30 }, { g: "6", min: 0 },
 ];
 
-/* mode: "linear" (1–6), "ihk" (1–6), "points" (0–15) */
-export function gradeFromPercent(pct, mode) {
-  if (!Number.isFinite(pct)) return null;
-  const p = Math.max(0, Math.min(100, pct));
-  if (mode === "ihk") {
-    for (const r of IHK_KEY) if (p >= r.min) return r.grade;
-    return 6;
+/* Lineare Umrechnung, an der Skala des Halbjahres ausgerichtet:
+   bei Noten 1–6 ergibt 100 % eine 1, bei Punkten 0–15 eine 15. */
+export function linearGrade(pct, sc) {
+  if (!Number.isFinite(pct) || !sc) return null;
+  const p = Math.max(0, Math.min(100, pct)) / 100;
+  const span = sc.max - sc.min;
+  const raw = sc.bestLow ? sc.max - span * p : sc.min + span * p;
+  return sc.whole ? Math.round(raw) : Math.round(raw * 10) / 10;
+}
+
+/* Verteilt eine Liste von Notenbezeichnungen (beste zuerst) auf gleich
+   breite Prozentbaender. Die letzte Zeile beginnt immer bei 0 %, damit
+   die Tabelle nach unten lueckenlos ist. */
+function bandsFor(labels) {
+  const band = 100 / labels.length;
+  return labels.map((g, i) => ({
+    g,
+    min: i === labels.length - 1 ? 0 : Math.round((100 - band * (i + 1)) * 10) / 10,
+  }));
+}
+
+/* Ausgangstabelle mit den GANZEN Noten der Skala.
+   Bei Noten 1–6 sind das genau sechs Zeilen, bei Oberstufen-Punkten
+   0–15 sechzehn – letzteres ist an Schulen durchaus ueblich.
+   Ausdruecklich nur ein Startpunkt zum Anpassen: einen bundesweit
+   gueltigen Schulschluessel gibt es nicht. */
+export function evenSteps(sc) {
+  if (!sc) return null;
+  const lo = Math.min(sc.min, sc.max), hi = Math.max(sc.min, sc.max);
+  const values = [];
+  for (let v = Math.ceil(lo); v <= hi + 1e-9; v++) values.push(v);
+  if (values.length < 2 || values.length > 20) return null;
+  const best = sc.bestLow ? values.slice().sort((a, b) => a - b) : values.slice().sort((a, b) => b - a);
+  return bandsFor(best.map(String));
+}
+
+/* Ausgangstabelle MIT Tendenzen, nur fuer die deutsche Skala 1–6.
+
+   Die Liste endet bewusst bei 1 und 6 ohne Tendenz: 1+ waere
+   rechnerisch 0,7 und damit ausserhalb der Skala, 6- entsprechend 6,3.
+   Ergibt 15 Stufen – dieselbe Feinheit wie die Oberstufen-Punkte.
+
+   Ob eine Lehrkraft ueberhaupt mit Tendenzen bewertet, ist von Fach zu
+   Fach verschieden. Deshalb ist das eine Vorlage zur Auswahl und keine
+   Voreinstellung. */
+export function tendencySteps(sc) {
+  if (!sc || !sc.bestLow || sc.min !== 1 || sc.max !== 6) return null;
+  const labels = ["1"];
+  for (let n = 1; n <= 5; n++) {
+    if (n > 1) labels.push(n + "+");
+    if (n > 1) labels.push(String(n));
+    labels.push(n + "\u2212");           /* typografisches Minus */
   }
-  if (mode === "points") return Math.round((p / 100) * 15);
-  return Math.round((6 - 5 * (p / 100)) * 10) / 10;
+  labels.push("6");
+  return bandsFor(labels);
+}
+
+export const freshKey = (id, name, sc) => ({
+  id, name,
+  type: "steps",
+  steps: evenSteps(sc) || IHK_STEPS.map((s) => ({ ...s })),
+});
+
+/* Tabelle absteigend nach Schwelle – die Reihenfolge der Eingabe soll
+   das Ergebnis nicht beeinflussen. */
+export const sortedSteps = (steps) =>
+  (steps || [])
+    .filter((s) => s && parseNum(s.g) != null && Number.isFinite(Number(s.min)))
+    .slice()
+    .sort((a, b) => Number(b.min) - Number(a.min));
+
+/* Prozent -> Note nach einem Schluessel. */
+export function keyGrade(key, pct, sc) {
+  if (!Number.isFinite(pct)) return null;
+  if (!key || key.type === "linear") return linearGrade(pct, sc);
+  const rows = sortedSteps(key.steps);
+  if (!rows.length) return linearGrade(pct, sc);
+  const p = Math.max(0, Math.min(100, pct));
+  for (const r of rows) if (p >= Number(r.min)) return parseNum(r.g);
+  /* Unterhalb der niedrigsten Schwelle gilt die schlechteste Note der Tabelle */
+  return parseNum(rows[rows.length - 1].g);
 }
 
 /* Notenspiegel: ab wie vielen Punkten beginnt welche Note?
-   Wird von unten nach oben gesucht, damit die Grenze exakt die erste
-   Punktzahl ist, bei der die bessere Note erreicht wird. */
-export function keyTable(maxPoints, mode, step = 0.5) {
+   Bei Tabellen direkt aus den Schwellen gerechnet, bei linear abgetastet. */
+export function keyTable(maxPoints, key, sc) {
   const max = Number(maxPoints);
   if (!Number.isFinite(max) || max <= 0) return [];
-  const s = Math.max(step, max / 400); /* Obergrenze fuer die Schleife: max. 400 Schritte */
+
+  if (key && key.type !== "linear") {
+    return sortedSteps(key.steps).map((r) => ({
+      grade: parseNum(r.g),
+      label: r.g,        /* so anzeigen, wie es eingetippt wurde */
+      from: Math.round((Number(r.min) / 100) * max * 100) / 100,
+      pct: Number(r.min),
+    }));
+  }
+
   const seen = new Map();
-  for (let p = 0; p <= max + 1e-9; p += s) {
-    const g = gradeFromPercent((p / max) * 100, mode);
+  const steps = 400;
+  for (let i = 0; i <= steps; i++) {
+    const p = (max * i) / steps;
+    const g = linearGrade((p / max) * 100, sc);
     if (g == null) continue;
-    if (!seen.has(g)) seen.set(g, p);
-    else if (p < seen.get(g)) seen.set(g, p);
+    if (!seen.has(g) || p < seen.get(g)) seen.set(g, p);
   }
   return Array.from(seen.entries())
-    .map(([grade, from]) => ({ grade, from: Math.round(from * 100) / 100 }))
+    .map(([grade, from]) => ({ grade, label: null, from: Math.round(from * 100) / 100, pct: Math.round((from / max) * 1000) / 10 }))
     .sort((a, b) => b.from - a.from);
 }
 
@@ -319,3 +410,17 @@ export function isoToStamp(iso, fallback) {
   const t = new Date(y, mo - 1, da, 12, 0, 0).getTime();
   return Number.isFinite(t) ? t : fb;
 }
+
+/* Welcher Schluessel gilt fuer ein Fach?
+   Reihenfolge: eigener Schluessel des Fachs, sonst Vorgabe des
+   Halbjahres, sonst linear. Ein Verweis auf einen geloeschten
+   Schluessel faellt dabei sauber auf die naechste Ebene zurueck. */
+export function keyOf(ds, subject) {
+  const keys = (ds && ds.keys) || [];
+  const byId = (id) => (id ? keys.find((k) => k.id === id) : null);
+  return byId(subject && subject.keyId) || byId(ds && ds.defaultKeyId) || null;
+}
+
+/* Punkte einer Einzelnote, falls sie ueber einen Schluessel entstand. */
+export const gp = (g) => (g && typeof g === "object" && g.p && Number.isFinite(Number(g.p.r)) && Number.isFinite(Number(g.p.m)))
+  ? { r: Number(g.p.r), m: Number(g.p.m) } : null;

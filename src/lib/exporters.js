@@ -15,7 +15,7 @@
       oder Lehrkraefte weitergibt, darf das nicht ausloesen.
 ========================================================= */
 
-import { parseNum, gv, gd, fmt, sName, cName, subjWeight, subjectsMean } from "./grades.js";
+import { parseNum, gv, gd, gp, fmt, sName, cName, subjWeight, subjectsMean } from "./grades.js";
 import { logError } from "./logger.js";
 
 export function escapeHtml(s) {
@@ -77,8 +77,8 @@ export function buildCsv(state, opts = {}) {
   const sep = opts.sep || (lang === "de" ? ";" : ",");
   const head =
     lang === "de"
-      ? ["Schuljahr", "Halbjahr", "Fach", "Fachgewicht", "Zeugnisnote", "Wunschnote", "Kategorie", "Gewichtung %", "Einzelnote", "Datum"]
-      : ["School year", "Term", "Subject", "Subject weight", "Report grade", "Wish grade", "Category", "Weighting %", "Single grade", "Date"];
+      ? ["Schuljahr", "Halbjahr", "Fach", "Fachgewicht", "Zeugnisnote", "Wunschnote", "Kategorie", "Gewichtung %", "Einzelnote", "Datum", "Punkte", "von"]
+      : ["School year", "Term", "Subject", "Subject weight", "Report grade", "Wish grade", "Category", "Weighting %", "Single grade", "Date", "Points", "of"];
 
   const rows = [head];
   const dateStr = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
@@ -96,12 +96,16 @@ export function buildCsv(state, opts = {}) {
         for (const g of c.grades || []) {
           const v = parseNum(gv(g));
           if (v == null) continue;
-          singles.push([...base, cName(c, lang), c.weight, fmt(v, lang, 1), dateStr(gd(g))]);
+          /* Punkteherkunft mitschreiben, falls die Note ueber einen
+             Notenschluessel entstand – sonst bleiben die Spalten leer. */
+          const pts = gp(g);
+          singles.push([...base, cName(c, lang), c.weight, fmt(v, lang, 1), dateStr(gd(g)),
+                        pts ? fmt(pts.r, lang, 1) : "", pts ? fmt(pts.m, lang, 1) : ""]);
         }
       }
       /* Faecher ohne Einzelnoten trotzdem auflisten – sonst fehlen sie in der Tabelle */
       if (singles.length) rows.push(...singles);
-      else rows.push([...base, "", "", "", ""]);
+      else rows.push([...base, "", "", "", "", "", ""]);
     }
   }
 
