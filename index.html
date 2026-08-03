@@ -5,8 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>GradeGoal: Schulnoten &amp; Grades</title>
   <meta name="description" content="Zeugnisnoten eintragen, Durchschnitte berechnen, Wunschnoten erreichen. / Track grades, calculate averages, reach your goals." />
-  <meta name="theme-color" content="#172A46" />
-  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <meta name="theme-color" content="#EEF2F7" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+
+  <!--
+    Design VOR dem ersten Rendern setzen. React kennt den gespeicherten
+    Zustand erst nach einem asynchronen Lesevorgang; ohne dieses Skript
+    blitzt bei jedem Start kurz die helle Oberflaeche auf, bevor auf
+    Dunkel umgeschaltet wird. Bewusst inline und mit try/catch, damit ein
+    gesperrter localStorage (privater Modus) den Start nicht blockiert.
+  -->
+  <script>
+    (function () {
+      var dark = false;
+      try {
+        var raw = localStorage.getItem("gradegoal:data");
+        var theme = "system";
+        if (raw) {
+          var s = JSON.parse(raw);
+          theme = s.theme || (s.dark === true ? "dark" : s.dark === false ? "light" : "system");
+        }
+        dark = theme === "dark" ||
+          (theme !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      } catch (e) { /* Standard bleibt hell */ }
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute("content", dark ? "#101826" : "#EEF2F7");
+    })();
+  </script>
 </head>
 <body>
   <div id="app"></div>

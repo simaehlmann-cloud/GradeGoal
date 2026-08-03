@@ -1,0 +1,7 @@
+{
+  "appId": "de.maehlmann.gradegoal.pro",
+  "appName": "GradeGoal Pro",
+  "webDir": "dist",
+  "android": { "allowMixedContent": false },
+  "backgroundColor": "#EEF2F7"
+}
