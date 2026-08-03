@@ -1,60 +1,243 @@
+/* =========================================================
+   GradeGoal – Stylesheet  ·  v1.4.0
 
-:root{
-  --bg:#EEF2F7; --card:#ffffff; --ink:#172A46; --sub:#5B6B84; --faint:#8A97AB;
-  --line:#EDF1F6; --border:#D5DDE8; --blue:#2F5DE0; --blue-soft:#EDF2FE;
-  --yellow:#FFDE59; --red:#B0392E; --red-soft:#FBE9E7; --green:#1E7B3C; --green-soft:#E4F5E9;
-  --warn:#A97400;
-  --hero1:#172A46; --hero2:#20386A; --hero-ink:#B9C6DE; --chip:#F1F4F9; --note-bg:#FFFDF2;
-  --shadow:0 1px 4px rgba(23,42,70,.08);
+   Aenderungen gegenueber v1.3.1:
+   - env(safe-area-inset-*) ueberall dort, wo die App den Bildschirmrand
+     beruehrt. Die index.html hatte bereits viewport-fit=cover gesetzt,
+     ohne dass das CSS darauf reagiert hat – in der APK lief der Kopf-
+     bereich unter die Statusleiste bzw. die Dynamic Island.
+   - Dunkles Design folgt der Systemeinstellung, sofern der Nutzer nicht
+     ausdruecklich Hell oder Dunkel gewaehlt hat.
+   - 100dvh statt 100vh: auf Mobilgeraeten mit ein-/ausfahrender
+     Browserleiste springt 100vh sonst.
+========================================================= */
+
+:root {
+  --bg: #EEF2F7; --card: #ffffff; --ink: #172A46; --sub: #5B6B84; --faint: #8A97AB;
+  --line: #EDF1F6; --border: #D5DDE8; --blue: #2F5DE0; --blue-soft: #EDF2FE;
+  --yellow: #FFDE59; --red: #B0392E; --red-soft: #FBE9E7; --green: #1E7B3C; --green-soft: #E4F5E9;
+  --warn: #A97400;
+  --hero1: #172A46; --hero2: #20386A; --hero-ink: #B9C6DE; --chip: #F1F4F9; --note-bg: #FFFDF2;
+  --shadow: 0 1px 4px rgba(23, 42, 70, .08);
+
+  /* Sichere Bereiche einmal zentral, damit sie sich unten nur noch
+     zusammensetzen lassen. Der 0px-Fallback ist wichtig: ohne ihn
+     faellt calc() auf Browsern ohne env() komplett aus. */
+  --sa-t: env(safe-area-inset-top, 0px);
+  --sa-r: env(safe-area-inset-right, 0px);
+  --sa-b: env(safe-area-inset-bottom, 0px);
+  --sa-l: env(safe-area-inset-left, 0px);
 }
-[data-theme="dark"]{
-  --bg:#101826; --card:#1A2436; --ink:#E8EDF5; --sub:#A5B4CB; --faint:#7A8BA6;
-  --line:#26324A; --border:#3A4A68; --blue:#7C9BFF; --blue-soft:#22304E;
-  --yellow:#FFD84D; --red:#F09489; --red-soft:#402A27; --green:#6FD694; --green-soft:#21382B;
-  --warn:#FFD84D;
-  --hero1:#0C1220; --hero2:#16233B; --hero-ink:#9AACC8; --chip:#233049; --note-bg:#242E42;
-  --shadow:0 1px 4px rgba(0,0,0,.35);
+
+/* Vom Nutzer ausdruecklich gewaehltes dunkles Design */
+:root[data-theme="dark"] {
+  --bg: #101826; --card: #1A2436; --ink: #E8EDF5; --sub: #A5B4CB; --faint: #7A8BA6;
+  --line: #26324A; --border: #3A4A68; --blue: #7C9BFF; --blue-soft: #22304E;
+  --yellow: #FFD84D; --red: #F09489; --red-soft: #402A27; --green: #6FD694; --green-soft: #21382B;
+  --warn: #FFD84D;
+  --hero1: #0C1220; --hero2: #16233B; --hero-ink: #9AACC8; --chip: #233049; --note-bg: #242E42;
+  --shadow: 0 1px 4px rgba(0, 0, 0, .35);
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
-body{background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;min-height:100vh;transition:background .25s,color .25s}
-input,textarea,select,button{font-family:'Karla',sans-serif;color:var(--ink)}
-input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
-.wrap{max-width:560px;margin:0 auto;padding:0 16px 70px}
-.card{background:var(--card);border-radius:18px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
-h2.sec{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:0 0 10px;display:inline-block;background:linear-gradient(transparent 62%,var(--yellow) 62%);padding-right:6px;color:var(--ink)}
-[data-theme="dark"] h2.sec{background:linear-gradient(transparent 62%,rgba(255,216,77,.35) 62%)}
-.btn{background:var(--blue);color:#fff;border:none;border-radius:12px;padding:10px 18px;font-size:15px;font-weight:700;font-family:'Space Grotesk',sans-serif;cursor:pointer}
-[data-theme="dark"] .btn{color:#0C1220}
-.btn-ghost{background:var(--card);color:var(--blue);border:1.5px solid var(--blue);border-radius:12px;padding:8px 14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif}
-.btn-danger{background:var(--card);color:var(--red);border:1.5px solid var(--red);border-radius:12px;padding:8px 14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif}
-.inp{width:100%;padding:11px 12px;border-radius:12px;border:1.5px solid var(--border);font-size:16px;background:var(--card);outline:none}
-.ta{width:100%;min-height:80px;padding:11px 12px;border-radius:12px;border:1.5px solid var(--border);font-size:15px;background:var(--note-bg);resize:vertical;line-height:1.5}
-.num{padding:8px 6px;text-align:center;border-radius:10px;border:1.5px solid var(--border);font-size:16px;font-weight:700;font-family:'Space Grotesk',sans-serif;background:var(--card)}
-.xbtn{background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:2px 6px;line-height:1}
-.hint{font-size:13px;color:var(--sub)}
-.lbl{font-size:13px;font-weight:700;color:var(--sub)}
-.brand{font-family:'Space Grotesk',sans-serif;font-weight:700}
-.row{display:flex;align-items:center;gap:8px}
-.switch{position:relative;width:46px;height:26px;flex-shrink:0}
-.switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;background:var(--border);border-radius:20px;cursor:pointer;transition:.2s}
-.slider:before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
-.switch input:checked + .slider{background:var(--blue)}
-.switch input:checked + .slider:before{transform:translateX(20px)}
-.ico{vertical-align:-3px;margin-right:5px;flex-shrink:0}
-.snack{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:100;background:var(--hero1);color:#fff;border-radius:14px;padding:10px 16px;display:flex;align-items:center;gap:16px;box-shadow:0 4px 16px rgba(0,0,0,.35);font-size:14px;font-weight:600;white-space:nowrap}
-.snack button{background:none;border:none;color:var(--yellow);font-weight:700;cursor:pointer;font-size:14px;font-family:'Space Grotesk',sans-serif;padding:0}
-.confetti{position:fixed;top:-30px;font-size:22px;pointer-events:none;z-index:999;animation:fall 1.6s ease-in forwards}
-@keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.2}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.confetti{display:none}}
-.print-sheet{display:none}
-@media print{
-  body{background:#fff}
-  #app{display:none}
-  .print-sheet{display:block;color:#000;font-family:'Karla',sans-serif;padding:24px}
-  .print-sheet h1{font-family:'Space Grotesk',sans-serif;margin:0 0 4px}
-  .print-sheet table{width:100%;border-collapse:collapse;margin-top:16px}
-  .print-sheet td,.print-sheet th{border-bottom:1px solid #ccc;padding:8px 6px;text-align:left}
-  .print-sheet th:nth-child(2),.print-sheet td:nth-child(2),.print-sheet th:nth-child(3),.print-sheet td:nth-child(3){text-align:center}
+
+/* Fallback fuer den Fall, dass das Skript im <head> nicht laeuft:
+   Systemeinstellung greift, solange nicht ausdruecklich "hell" gewaehlt wurde.
+   Die Werte sind bewusst identisch zum Block darueber – CSS erlaubt es nicht,
+   eine Regel gleichzeitig innerhalb und ausserhalb einer Media Query zu teilen. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    --bg: #101826; --card: #1A2436; --ink: #E8EDF5; --sub: #A5B4CB; --faint: #7A8BA6;
+    --line: #26324A; --border: #3A4A68; --blue: #7C9BFF; --blue-soft: #22304E;
+    --yellow: #FFD84D; --red: #F09489; --red-soft: #402A27; --green: #6FD694; --green-soft: #21382B;
+    --warn: #FFD84D;
+    --hero1: #0C1220; --hero2: #16233B; --hero-ink: #9AACC8; --chip: #233049; --note-bg: #242E42;
+    --shadow: 0 1px 4px rgba(0, 0, 0, .35);
+  }
 }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+html { background: var(--bg); }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Karla', sans-serif;
+  min-height: 100vh;
+  min-height: 100dvh;
+  transition: background .25s, color .25s;
+  /* Verhindert das horizontale Wackeln, wenn eine lange Fachbezeichnung
+     die Rasterspalte kurzzeitig sprengt. */
+  overflow-x: hidden;
+}
+
+input, textarea, select, button { font-family: 'Karla', sans-serif; color: var(--ink); }
+input:focus, textarea:focus, select:focus, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+.wrap {
+  max-width: 560px;
+  margin: 0 auto;
+  padding-top: calc(14px + var(--sa-t));
+  padding-left: max(16px, var(--sa-l));
+  padding-right: max(16px, var(--sa-r));
+  padding-bottom: calc(70px + var(--sa-b));
+}
+
+/* Startbildschirm: mittig, aber ohne unter Notch oder Home-Indikator zu laufen */
+.screen-center {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(24px + var(--sa-t)) max(20px, var(--sa-l)) calc(24px + var(--sa-b)) max(20px, var(--sa-r));
+}
+
+.card { background: var(--card); border-radius: 18px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
+h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 10px; display: inline-block; background: linear-gradient(transparent 62%, var(--yellow) 62%); padding-right: 6px; color: var(--ink); }
+:root[data-theme="dark"] h2.sec { background: linear-gradient(transparent 62%, rgba(255, 216, 77, .35) 62%); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) h2.sec { background: linear-gradient(transparent 62%, rgba(255, 216, 77, .35) 62%); }
+}
+
+.btn { background: var(--blue); color: #fff; border: none; border-radius: 12px; padding: 10px 18px; font-size: 15px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; cursor: pointer; }
+:root[data-theme="dark"] .btn { color: #0C1220; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .btn { color: #0C1220; }
+}
+.btn-ghost { background: var(--card); color: var(--blue); border: 1.5px solid var(--blue); border-radius: 12px; padding: 8px 14px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Space Grotesk', sans-serif; }
+.btn-danger { background: var(--card); color: var(--red); border: 1.5px solid var(--red); border-radius: 12px; padding: 8px 14px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Space Grotesk', sans-serif; }
+
+/* Alle Eingabefelder mindestens 16px: darunter zoomt iOS Safari beim
+   Fokussieren automatisch hinein und der Nutzer verliert die Ansicht.
+   Betraf bisher das Schnelleingabefeld und das Gewichtungsfeld. */
+.inp { width: 100%; padding: 11px 12px; border-radius: 12px; border: 1.5px solid var(--border); font-size: 16px; background: var(--card); outline: none; }
+.ta { width: 100%; min-height: 80px; padding: 11px 12px; border-radius: 12px; border: 1.5px solid var(--border); font-size: 15px; background: var(--note-bg); resize: vertical; line-height: 1.5; }
+.num { padding: 8px 6px; text-align: center; border-radius: 10px; border: 1.5px solid var(--border); font-size: 16px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; background: var(--card); }
+.num-mini { width: 64px; border-radius: 20px; border: 1.5px dashed var(--border); padding: 4px 10px; font-size: 16px; background: var(--card); }
+.num-weight { width: 52px; text-align: center; border-radius: 8px; border: 1.5px solid var(--border); padding: 5px 2px; font-size: 16px; font-weight: 700; background: var(--card); }
+
+.xbtn { background: none; border: none; color: var(--red); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; }
+.hint { font-size: 13px; color: var(--sub); }
+.lbl { font-size: 13px; font-weight: 700; color: var(--sub); }
+.brand { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+.row { display: flex; align-items: center; gap: 8px; }
+
+/* Leerer Zustand: eine Einladung zum Handeln statt einer leeren Flaeche */
+.empty { text-align: center; padding: 22px 12px; color: var(--sub); }
+.empty svg { opacity: .5; margin-bottom: 6px; }
+
+/* Hinweisstreifen, wenn das Speichern fehlschlaegt */
+.banner { border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 600; margin-bottom: 12px; background: var(--red-soft); color: var(--red); border: 1px solid var(--red); }
+
+.switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; inset: 0; background: var(--border); border-radius: 20px; cursor: pointer; transition: .2s; }
+.slider:before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+.switch input:checked + .slider { background: var(--blue); }
+.switch input:checked + .slider:before { transform: translateX(20px); }
+.switch input:focus-visible + .slider { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* Segmentierte Auswahl (Design: System / Hell / Dunkel) */
+.seg { display: flex; gap: 4px; background: var(--chip); border-radius: 12px; padding: 3px; }
+.seg button { flex: 1; border: none; background: none; border-radius: 9px; padding: 7px 6px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; font-family: 'Space Grotesk', sans-serif; }
+.seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+
+.ico { vertical-align: -3px; margin-right: 5px; flex-shrink: 0; }
+
+.snack {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(18px + var(--sa-b));
+  z-index: 100;
+  max-width: calc(100vw - 32px);
+  background: var(--hero1);
+  color: #fff;
+  border-radius: 14px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+  font-size: 14px;
+  font-weight: 600;
+}
+.snack button { background: none; border: none; color: var(--yellow); font-weight: 700; cursor: pointer; font-size: 14px; font-family: 'Space Grotesk', sans-serif; padding: 0; white-space: nowrap; }
+
+.confetti { position: fixed; top: -30px; font-size: 22px; pointer-events: none; z-index: 999; animation: fall 1.6s ease-in forwards; }
+@keyframes fall { to { transform: translateY(105vh) rotate(540deg); opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } .confetti { display: none; } }
+
+.log-box { max-height: 180px; overflow: auto; background: var(--chip); border-radius: 10px; padding: 10px; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; word-break: break-word; color: var(--sub); }
+
+.print-sheet { display: none; }
+@media print {
+  /* Druck immer hell – dunkler Hintergrund verbraucht Toner und wird
+     von vielen Treibern ohnehin weggerechnet. */
+  html, body { background: #fff !important; }
+  #app { display: none; }
+  .print-sheet { display: block; color: #000; font-family: 'Karla', sans-serif; padding: 24px; }
+  .print-sheet h1 { font-family: 'Space Grotesk', sans-serif; margin: 0 0 4px; }
+  .print-sheet .print-meta { font-size: 13px; color: #444; }
+  .print-sheet table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  .print-sheet td, .print-sheet th { border-bottom: 1px solid #ccc; padding: 8px 6px; text-align: left; }
+  .print-sheet th:nth-child(n+2), .print-sheet td:nth-child(n+2) { text-align: center; width: 90px; }
+  .print-sheet tr { break-inside: avoid; }
+  .print-sheet .print-foot { font-size: 12px; color: #666; }
+}
+
+/* =========================================================
+   Ergänzungen v1.5.0
+========================================================= */
+
+/* Pro-Abzeichen und -Hinweise */
+.pro-badge{display:inline-block;margin-left:6px;background:var(--blue);color:#fff;border-radius:20px;
+  padding:1px 8px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  font-family:'Space Grotesk',sans-serif;vertical-align:middle;flex-shrink:0}
+:root[data-theme="dark"] .pro-badge{color:#0C1220}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .pro-badge{color:#0C1220}
+}
+.pro-gate{border:1.5px dashed var(--border);border-radius:14px;padding:14px;background:var(--chip)}
+.pro-gate-compact{padding:12px}
+.pro-teaser{border:1.5px solid var(--blue-soft)}
+
+/* Fachgewichtung in der Fächerliste */
+.wt-badge{background:var(--chip);color:var(--sub);border-radius:20px;padding:1px 7px;font-size:11px;
+  font-weight:700;font-family:'Space Grotesk',sans-serif;flex-shrink:0}
+
+/* Schuljahr-Gruppierung */
+.year-block{border-top:1px solid var(--line);padding:12px 0}
+.year-block:first-of-type{border-top:none}
+
+/* Auswahlfeld (Schuljahr-Zuordnung) */
+.sel{border:1.5px solid var(--border);border-radius:10px;padding:6px 8px;font-size:16px;
+  background:var(--card);color:var(--ink);max-width:190px}
+
+/* Datumsknopf in der Schnelleingabe */
+.date-btn{border:1.5px dashed var(--border);background:var(--card);color:var(--sub);border-radius:50%;
+  width:28px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.date-btn[aria-expanded="true"]{border-style:solid;border-color:var(--blue);color:var(--blue)}
+
+/* Chip-Schaltfläche für Vorlagen */
+.chip-btn{border-radius:20px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--card);color:var(--sub);
+  font-family:'Space Grotesk',sans-serif}
+
+/* Hinweisstreifen in blau (Erklärung statt Warnung) */
+.banner-info{background:var(--blue-soft);color:var(--ink);border-color:var(--blue)}
+
+/* Was-wäre-wenn-Regler.
+   -webkit-appearance:none ist nötig, sonst ignorieren WebKit-Browser
+   Höhe und Farbe der Bahn vollständig. */
+.range{-webkit-appearance:none;appearance:none;flex:1;height:6px;border-radius:5px;
+  background:var(--border);outline:none;margin:0}
+.range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;
+  border-radius:50%;background:var(--blue);border:3px solid var(--card);cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.range::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--blue);
+  border:3px solid var(--card);cursor:pointer}
+.range:focus-visible{outline:2px solid var(--blue);outline-offset:4px}
+
+/* PIN-Eingabe: großzügig und zentriert, Ziffern gesperrt */
+.pin-input{text-align:center;font-size:26px;letter-spacing:.4em;font-family:'Space Grotesk',sans-serif;
+  font-weight:700;padding:14px 12px}
