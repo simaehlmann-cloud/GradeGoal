@@ -606,21 +606,31 @@ function App() {
           {/* ---------- PIN-Sperre ---------- */}
           <div className="card">
             <h2 className="sec"><Ic n="lock" size={14} />{t("lock")}</h2>
-            <ProGate feature="lock" t={t} compact>
-              <div className="banner banner-info" style={{ marginBottom: 10 }}>
-                <Ic n="alert" size={14} />{t("lockHint")}
-              </div>
-              {state.lock && state.lock.on ? (
+            {/* Das Aufheben liegt BEWUSST ausserhalb des Pro-Hinweises.
+                Sonst waere folgender Ablauf eine Sackgasse: Sicherung in Pro
+                mit PIN erstellt, in Lite importiert – die Sperre greift, der
+                Knopf zum Aufheben ist aber unsichtbar. Der einzige Ausweg
+                waere das Loeschen aller Daten. */}
+            {state.lock && state.lock.on ? (
+              <React.Fragment>
+                <div className="banner banner-info" style={{ marginBottom: 10 }}>
+                  <Ic n="alert" size={14} />{t("lockHint")}
+                </div>
                 <button className="btn-danger" style={{ width: "100%" }}
                   onClick={() => { up({ lock: null }); flash(t("lockRemove"), "ok"); }}>
                   <Ic n="trash" size={14} />{t("lockRemove")}
                 </button>
-              ) : (
-                <React.Fragment>
-                  <div className="hint" style={{ marginBottom: 8 }}>{t("lockForgotHint")}</div>
-                  <div className="row" style={{ flexWrap: "wrap", gap: 10 }}>
-                    <label className="lbl" style={{ flex: "1 1 130px" }}>
-                      {t("lockSet")}
+                {flashBox}
+              </React.Fragment>
+            ) : (
+            <ProGate feature="lock" t={t} compact>
+              <div className="banner banner-info" style={{ marginBottom: 10 }}>
+                <Ic n="alert" size={14} />{t("lockHint")}
+              </div>
+              <div className="hint" style={{ marginBottom: 8 }}>{t("lockForgotHint")}</div>
+              <div className="row" style={{ flexWrap: "wrap", gap: 10 }}>
+                <label className="lbl" style={{ flex: "1 1 130px" }}>
+                  {t("lockSet")}
                       <input className="inp" style={{ marginTop: 4 }} type="password" inputMode="numeric"
                         autoComplete="new-password" maxLength={PIN_MAX} value={pinA}
                         onChange={(e) => setPinA(e.target.value.replace(/\D/g, "").slice(0, PIN_MAX))} />
@@ -632,13 +642,12 @@ function App() {
                         onChange={(e) => setPinB(e.target.value.replace(/\D/g, "").slice(0, PIN_MAX))} />
                     </label>
                   </div>
-                  <button className="btn" style={{ width: "100%", marginTop: 12 }} onClick={savePin}
-                    disabled={pinBusy || pinA.length < PIN_MIN || pinB.length < PIN_MIN}>
-                    <Ic n="lock" size={14} />{t("lockSave")}
-                  </button>
-                </React.Fragment>)}
+              <button className="btn" style={{ width: "100%", marginTop: 12 }} onClick={savePin}
+                disabled={pinBusy || pinA.length < PIN_MIN || pinB.length < PIN_MIN}>
+                <Ic n="lock" size={14} />{t("lockSave")}
+              </button>
               {flashBox}
-            </ProGate>
+            </ProGate>)}
           </div>
 
           {/* ---------- Daten ---------- */}
