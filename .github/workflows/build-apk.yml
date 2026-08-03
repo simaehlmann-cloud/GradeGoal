@@ -4,9 +4,25 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Baut BEIDE Ausgaben in einem Lauf. Wichtig: zwischen den Durchgaengen
+# muessen dist/ und android/ komplett weg, sonst landet der Lite-Build
+# in der Pro-APK (vite-plugin-singlefile schreibt nur index.html neu,
+# und "npx cap add android" tut nichts, wenn der Ordner schon da ist).
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tier: lite
+            script: build
+            config: capacitor.config.json
+          - tier: pro
+            script: build:pro
+            config: capacitor.config.pro.json
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,8 +38,19 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build web app
-        run: npm run build
+      - name: Select Capacitor config (${{ matrix.tier }})
+        run: cp ${{ matrix.config }} capacitor.config.json
+
+      - name: Build web app (${{ matrix.tier }})
+        run: npm run ${{ matrix.script }}
+
+      - name: Verify tier
+        # Sicherheitsnetz: schlaegt fehl, wenn die Pro-APK versehentlich
+        # Lite-Inhalt enthaelt. Besser hier als im Store.
+        run: |
+          if [ "${{ matrix.tier }}" = "pro" ]; then
+            grep -q "Abitur-Rechner" dist/index.html || (echo "FEHLER: Pro-Build enthält keine Pro-Funktionen"; exit 1)
+          fi
 
       - name: Add Android platform
         run: npx cap add android
@@ -40,5 +67,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: gradegoal-debug-apk
+          name: gradegoal-${{ matrix.tier }}-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
