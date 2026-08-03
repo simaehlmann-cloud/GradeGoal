@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Ic } from "./icons.jsx";
-import { parseNum, filterNumInput, fmt, colorFor, todayISO, isoToStamp } from "../lib/grades.js";
+import { parseNum, filterNumInput, fmt, colorFor, todayISO, isoToStamp, keyGrade } from "../lib/grades.js";
 import { isPro, PRO_URL } from "../lib/tier.js";
 
 /* ---------- Schalter ---------- */
@@ -64,35 +64,85 @@ export function AddRow({ ph, btn, onAdd }) {
    Indexachse zurueck. Das Datumsfeld ist eingeklappt, damit der
    Normalfall "Note von heute" weiterhin zwei Tipper braucht.
 ========================================================= */
-export function QuickAdd({ ph, onAdd, label, dateLabel, dateHint }) {
+export function QuickAdd({ ph, onAdd, label, dateLabel, dateHint, keyObj, sc, lang, t, dark }) {
+  const [mode, setMode] = useState("grade");
   const [v, setV] = useState("");
+  const [reached, setReached] = useState("");
+  const [max, setMax] = useState("");
   const [date, setDate] = useState(todayISO);
   const [openDate, setOpenDate] = useState(false);
-  const valid = parseNum(v) != null;
+
+  const r = parseNum(reached), m = parseNum(max);
+  const pointsOk = r != null && m != null && m > 0;
+  /* Aus Punkten wird ueber den Schluessel des Fachs eine Note. Beides
+     wird gespeichert, damit spaeter noch nachvollziehbar ist, woher
+     die Note kam – und damit ein geaenderter Schluessel alte Eintraege
+     nicht stillschweigend umdeutet. */
+  const fromPoints = pointsOk ? keyGrade(keyObj, (r / m) * 100, sc) : null;
+  const valid = mode === "grade" ? parseNum(v) != null : fromPoints != null;
+
+  const reset = () => {
+    setV(""); setReached(""); setMax("");
+    setDate(todayISO()); setOpenDate(false);
+  };
 
   const go = () => {
     if (!valid) return;
-    onAdd({ v: v.trim(), d: isoToStamp(date) });
-    setV("");
-    setDate(todayISO());
-    setOpenDate(false);
+    if (mode === "grade") {
+      onAdd({ v: v.trim(), d: isoToStamp(date) });
+    } else {
+      onAdd({ v: String(fromPoints), d: isoToStamp(date), p: { r, m } });
+    }
+    reset();
   };
+
+  const canPoints = !!(sc && t);
 
   return (
     <span style={{ display: "inline-flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
-      <input className="num-mini" inputMode="decimal" enterKeyHint="done" value={v} placeholder={ph} aria-label={label}
-        onChange={(e) => setV(filterNumInput(e.target.value))} onKeyDown={(e) => e.key === "Enter" && go()} />
+      {mode === "grade" ? (
+        <input className="num-mini" inputMode="decimal" enterKeyHint="done" value={v} placeholder={ph} aria-label={label}
+          onChange={(e) => setV(filterNumInput(e.target.value))} onKeyDown={(e) => e.key === "Enter" && go()} />
+      ) : (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+          <input className="num-mini" inputMode="decimal" enterKeyHint="next" value={reached}
+            placeholder={t("keyReachedShort")} aria-label={t("keyReached")}
+            onChange={(e) => setReached(filterNumInput(e.target.value))} onKeyDown={(e) => e.key === "Enter" && go()} />
+          <span className="lbl">/</span>
+          <input className="num-mini" inputMode="decimal" enterKeyHint="done" value={max}
+            placeholder={t("keyMaxShort")} aria-label={t("keyMax")}
+            onChange={(e) => setMax(filterNumInput(e.target.value))} onKeyDown={(e) => e.key === "Enter" && go()} />
+          {fromPoints != null && (
+            <span className="brand" style={{ fontSize: 15, minWidth: 30, textAlign: "center", color: colorFor(fromPoints, sc, null, dark) }}>
+              {fmt(fromPoints, lang, 1)}
+            </span>)}
+        </span>)}
+
+      {canPoints && (
+        <button onClick={() => { setMode(mode === "grade" ? "points" : "grade"); reset(); }}
+          className="date-btn" aria-pressed={mode === "points"}
+          aria-label={t("keyTogglePoints")} title={t("keyTogglePoints")}>
+          <Ic n="percent" size={13} style={{ marginRight: 0 }} />
+        </button>)}
+
       <button onClick={() => setOpenDate(!openDate)} className="date-btn" aria-expanded={openDate}
         aria-label={dateLabel} title={dateLabel}>
         <Ic n="calendar" size={14} style={{ marginRight: 0 }} />
       </button>
+
       <button onClick={go} aria-label={label} disabled={!valid}
         style={{ border: "none", background: valid ? "var(--blue)" : "var(--border)", color: "#fff", borderRadius: "50%", width: 28, height: 28, cursor: valid ? "pointer" : "default", fontWeight: 700 }}>+</button>
+
       {openDate && (
         <span style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%", marginTop: 4 }}>
           <input type="date" className="inp" style={{ maxWidth: 190 }} value={date} aria-label={dateLabel}
             max={todayISO()} onChange={(e) => setDate(e.target.value || todayISO())} />
           <span className="hint" style={{ fontSize: 12 }}>{dateHint}</span>
+        </span>)}
+
+      {mode === "points" && canPoints && (
+        <span className="hint" style={{ fontSize: 12, width: "100%", marginTop: 2 }}>
+          {keyObj && keyObj.name ? t("keyUsing") + " " + keyObj.name : t("keyUsingLinear")}
         </span>)}
     </span>);
 }
