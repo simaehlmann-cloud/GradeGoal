@@ -1,0 +1,159 @@
+name: Release AAB (Play Store)
+
+# Läuft NICHT bei jedem Push. Ein Release ist eine bewusste Handlung:
+# jeder Lauf verbraucht einen versionCode, und der lässt sich nicht
+# wiederverwenden.
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Versionsname, muss zu package.json passen (z. B. 1.5.0)'
+        required: true
+        default: '1.5.0'
+      version_code:
+        description: 'versionCode – ganze Zahl, muss höher sein als beim letzten Upload'
+        required: true
+        default: '1'
+      tier:
+        description: 'Welche Ausgabe?'
+        required: true
+        default: 'beide'
+        type: choice
+        options: [beide, lite, pro]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tier: [lite, pro]
+
+    steps:
+      - name: Diese Ausgabe überspringen?
+        id: gate
+        run: |
+          WANT="${{ github.event.inputs.tier }}"
+          if [ "$WANT" = "beide" ] || [ "$WANT" = "${{ matrix.tier }}" ]; then
+            echo "run=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=no" >> "$GITHUB_OUTPUT"
+            echo "Ausgabe ${{ matrix.tier }} wurde nicht angefordert."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'yes'
+
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'yes'
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v4
+        if: steps.gate.outputs.run == 'yes'
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Zugangsdaten prüfen
+        if: steps.gate.outputs.run == 'yes'
+        # Früh und mit klarer Meldung abbrechen. Ohne diesen Schritt
+        # scheitert erst Gradle, mit einer schwer lesbaren Fehlermeldung.
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KSP: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KA: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KP: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          MISSING=""
+          [ -z "$KS" ]  && MISSING="$MISSING ANDROID_KEYSTORE_BASE64"
+          [ -z "$KSP" ] && MISSING="$MISSING ANDROID_KEYSTORE_PASSWORD"
+          [ -z "$KA" ]  && MISSING="$MISSING ANDROID_KEY_ALIAS"
+          [ -z "$KP" ]  && MISSING="$MISSING ANDROID_KEY_PASSWORD"
+          if [ -n "$MISSING" ]; then
+            echo "FEHLER: Diese Secrets fehlen unter Settings → Secrets and variables → Actions:"
+            echo "  $MISSING"
+            exit 1
+          fi
+          echo "Alle Zugangsdaten vorhanden."
+
+      - name: Install dependencies
+        if: steps.gate.outputs.run == 'yes'
+        run: npm install
+
+      - name: Konfiguration und Bildmaterial wählen (${{ matrix.tier }})
+        if: steps.gate.outputs.run == 'yes'
+        run: |
+          if [ "${{ matrix.tier }}" = "pro" ]; then
+            cp capacitor.config.pro.json capacitor.config.json
+          else
+            cp -r assets-lite/. assets/
+            cp public/icon-lite.svg public/icon.svg
+          fi
+          echo "App-ID:"; grep appId capacitor.config.json
+          echo "App-Name:"; grep appName capacitor.config.json
+
+      - name: Build web app (${{ matrix.tier }})
+        if: steps.gate.outputs.run == 'yes'
+        run: |
+          if [ "${{ matrix.tier }}" = "pro" ]; then npm run build:pro; else npm run build; fi
+
+      - name: Add Android platform
+        if: steps.gate.outputs.run == 'yes'
+        run: npx cap add android
+
+      - name: Generate icons and splash screens
+        if: steps.gate.outputs.run == 'yes'
+        run: npx capacitor-assets generate --android
+
+      - name: Sync Capacitor
+        if: steps.gate.outputs.run == 'yes'
+        run: npx cap sync android
+
+      - name: Keystore bereitstellen
+        if: steps.gate.outputs.run == 'yes'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/keystore.jks"
+          # Grobe Plausibilitätsprüfung: eine leere oder zerschnittene
+          # Datei würde sonst erst in Gradle auffallen.
+          SIZE=$(stat -c%s "$RUNNER_TEMP/keystore.jks")
+          echo "Keystore: $SIZE Bytes"
+          [ "$SIZE" -gt 500 ] || { echo "FEHLER: Keystore sieht kaputt aus. Base64 vollständig kopiert?"; exit 1; }
+
+      - name: Release vorbereiten
+        if: steps.gate.outputs.run == 'yes'
+        run: |
+          chmod +x tools/prepare-release.sh
+          tools/prepare-release.sh "${{ github.event.inputs.version_name }}" "${{ github.event.inputs.version_code }}"
+
+      - name: Signiertes App-Bundle bauen
+        if: steps.gate.outputs.run == 'yes'
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: cd android && chmod +x gradlew && ./gradlew bundleRelease
+
+      - name: Signatur gegenprüfen
+        if: steps.gate.outputs.run == 'yes'
+        # Ein unsigniertes Bundle nimmt die Play Console nicht an. Lieber
+        # hier merken als nach dem Hochladen.
+        run: |
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          ls -lh "$AAB"
+          unzip -l "$AAB" | grep -qi "META-INF/.*\.RSA\|META-INF/.*\.EC\|META-INF/MANIFEST.MF" \
+            && echo "Bundle enthält eine Signatur." \
+            || { echo "FEHLER: Bundle scheint unsigniert."; exit 1; }
+
+      - name: Keystore wieder entfernen
+        if: always() && steps.gate.outputs.run == 'yes'
+        run: rm -f "$RUNNER_TEMP/keystore.jks"
+
+      - name: Upload AAB
+        if: steps.gate.outputs.run == 'yes'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradegoal-${{ matrix.tier }}-${{ github.event.inputs.version_name }}-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30

@@ -38,12 +38,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Select Capacitor config (${{ matrix.tier }})
-        # Fuer Lite liegt die Datei schon richtig - cp weigert sich,
-        # eine Datei auf sich selbst zu kopieren.
+      - name: Konfiguration und Bildmaterial waehlen (${{ matrix.tier }})
+        # Fuer Lite liegt die Konfiguration schon richtig - cp weigert
+        # sich, eine Datei auf sich selbst zu kopieren. Dafuer kommt dort
+        # das Bildmaterial mit dem LITE-Streifen zum Einsatz.
         run: |
           if [ "${{ matrix.config }}" != "capacitor.config.json" ]; then
             cp "${{ matrix.config }}" capacitor.config.json
+          else
+            cp -r assets-lite/. assets/
+            cp public/icon-lite.svg public/icon.svg
           fi
           echo "Verwendete App-ID:"
           grep appId capacitor.config.json
