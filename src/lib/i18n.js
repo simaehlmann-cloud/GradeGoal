@@ -8,7 +8,7 @@
 
 export const APP_NAME = "GradeGoal";
 export const APP_SUB = "Schulnoten & Grades";
-export const APP_VER = "1.5.0";
+export const APP_VER = "1.5.1";
 export const DEVELOPER = "Simon Mählmann";
 export const CONTACT = "kontakt@example.de"; /* vor der Einreichung ersetzen */
 export const APP = { name: APP_NAME, sub: APP_SUB, ver: APP_VER, developer: DEVELOPER };
