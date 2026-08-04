@@ -5,196 +5,407 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Datenschutzerklärung – GradeGoal</title>
 <meta name="robots" content="index, follow" />
-<style>
-  :root { color-scheme: light dark; }
-  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-         max-width: 46rem; margin: 0 auto; padding: 2rem 1.2rem 5rem;
-         line-height: 1.65; color: #172A46; background: #EEF2F7; }
-  @media (prefers-color-scheme: dark) { body { color: #E8EDF5; background: #101826; } }
-  h1 { font-size: 1.7rem; margin-bottom: .2rem; }
-  h2 { font-size: 1.15rem; margin-top: 2.2rem; }
-  .sub { color: #5B6B84; margin-top: 0; }
-  @media (prefers-color-scheme: dark) { .sub { color: #A5B4CB; } }
-  .box { background: rgba(127,127,127,.09); border-radius: 12px; padding: .9rem 1.1rem; }
-  hr { border: none; border-top: 1px solid rgba(127,127,127,.3); margin: 3rem 0 2rem; }
-  a { color: #2F5DE0; }
-  @media (prefers-color-scheme: dark) { a { color: #7C9BFF; } }
-  code { background: rgba(127,127,127,.15); padding: .1em .35em; border-radius: 4px; }
-</style>
+<link rel="stylesheet" href="./recht.css" />
 </head>
 <body>
+<nav class="nav">
+  <a href="./">GradeGoal</a> ·
+  <a href="./impressum.html">Impressum</a> ·
+  <strong>Datenschutz</strong>
+</nav>
 
 <h1>Datenschutzerklärung</h1>
-<p class="sub">GradeGoal: Schulnoten &amp; Grades · GradeGoal Pro<br>Stand: August 2026</p>
+<p class="sub">
+  Gilt für die Apps <strong>GradeGoal: Schulnoten &amp; Grades</strong> und
+  <strong>GradeGoal Pro</strong> sowie für die Webversion.<br>
+  Stand: August 2026
+</p>
 
 <div class="box">
-  <strong>Kurzfassung:</strong> GradeGoal erhebt keine personenbezogenen Daten.
-  Alle Eingaben bleiben ausschließlich auf dem Gerät. Es gibt keine Server,
-  keine Konten, keine Werbung und keine Analyse-Werkzeuge.
+  <strong>Das Wichtigste vorab:</strong> GradeGoal erhebt keine
+  personenbezogenen Daten. Alle Eingaben bleiben auf dem Gerät. Es gibt keine
+  Server des Anbieters, keine Nutzerkonten, keine Werbung, keine Analysewerkzeuge
+  und keine Weitergabe an Dritte. Die App baut im laufenden Betrieb keine
+  Netzwerkverbindung auf.
 </div>
 
 <h2>1. Verantwortlicher</h2>
 <p>
-  Simon Mählmann<br>
-  <!-- ANSCHRIFT EINTRAGEN: Für ein Impressum nach § 5 DDG ist eine
-       ladungsfähige Anschrift erforderlich. -->
-  [Straße und Hausnummer]<br>
-  [PLZ Ort], Deutschland<br>
-  E-Mail: <a href="mailto:kontakt@example.de">kontakt@example.de</a>
-</p>
-
-<h2>2. Welche Daten verarbeitet die App?</h2>
-<p>
-  In der App eingegebene Angaben – Noten, Fächer, Wunschnoten, Ziele, Notizen
-  sowie wahlweise Name und Schule – werden ausschließlich lokal im Speicher
-  des Geräts abgelegt (<code>localStorage</code> der App-Ansicht). Sie werden
-  zu keinem Zeitpunkt an den Entwickler oder an Dritte übermittelt.
+  Verantwortlich im Sinne von Art. 4 Nr. 7 DSGVO:
 </p>
 <p>
-  Die App baut im laufenden Betrieb keine Netzwerkverbindung auf. Sie
-  funktioniert vollständig offline; Schriftarten und Programmcode sind
-  fest eingebaut.
+  Wisdompeak Apps<br>
+  Inhaber: Simon Mählmann<br>
+  Oderstraße 13<br>
+  28844 Weyhe, Deutschland<br>
+  E-Mail: <a href="mailto:smaehlmann.appdev@gmail.com">smaehlmann.appdev@gmail.com</a>
+</p>
+<p class="hint">
+  Ein Datenschutzbeauftragter ist nicht bestellt. Die Voraussetzungen des
+  Art. 37 DSGVO und des § 38 BDSG liegen nicht vor, da keine
+  personenbezogenen Daten verarbeitet werden.
 </p>
 
-<h2>3. Keine Erhebung, keine Weitergabe</h2>
+<h2>2. Grundsatz: Verarbeitung ausschließlich auf dem Gerät</h2>
+<p>
+  Was in der App eingetragen wird, verlässt das Gerät nicht. Die Daten liegen
+  im lokalen Speicher der App (<code>localStorage</code> der eingebetteten
+  Ansicht) und werden dort ausschließlich verarbeitet, um die Funktionen der
+  App bereitzustellen.
+</p>
+<p>
+  Da diese Daten den Verantwortlichen zu keinem Zeitpunkt erreichen, findet
+  keine Verarbeitung personenbezogener Daten durch ihn statt. Die
+  nachfolgenden Angaben beschreiben dennoch, was in der App gespeichert wird –
+  damit nachvollziehbar bleibt, worüber selbst entschieden wird.
+</p>
+
+<h3>Was auf dem Gerät gespeichert wird</h3>
+<table>
+  <tr><th>Daten</th><th>Zweck</th></tr>
+  <tr><td>Fächer, Noten, Wunschnoten, Einzelnoten mit Datum, Kategorien und deren Gewichtung</td><td>Berechnung der Durchschnitte und Darstellung des Verlaufs</td></tr>
+  <tr><td>Ziele und Notizen je Fach</td><td>eigene Aufzeichnungen</td></tr>
+  <tr><td>Notenschlüssel, Fächergruppen, Halbjahre, Schuljahre</td><td>Einstellungen der App</td></tr>
+  <tr><td>Abitur-Ergebnisse und Prüfungspunkte (nur Pro)</td><td>Abiturrechner</td></tr>
+  <tr><td>Name und Schule, sofern freiwillig eingetragen</td><td>Beschriftung des ausgedruckten Zeugnisses</td></tr>
+  <tr><td>Anzeigeeinstellungen wie Sprache und Design</td><td>Bedienkomfort</td></tr>
+  <tr><td>Prüfwert der PIN, sofern gesetzt (nur Pro)</td><td>Sichtschutz beim Start</td></tr>
+</table>
+<p>
+  Namen und Schule sind ausdrücklich <strong>freiwillig</strong>. Die App ist
+  ohne diese Angaben vollständig nutzbar.
+</p>
+
+<h2>3. Eingabe von Daten anderer Personen</h2>
+<p>
+  Die App richtet sich auch an Eltern und an Lehrkräfte. Wer Noten oder
+  Namen <em>anderer</em> Personen einträgt – etwa eines Kindes oder von
+  Schülerinnen und Schülern –, verarbeitet damit personenbezogene Daten
+  <strong>in eigener Verantwortung</strong>.
+</p>
+<p>
+  Da diese Daten das Gerät nicht verlassen, findet keine Übermittlung an
+  den Anbieter statt. Zu beachten sind dennoch:
+</p>
+<ul>
+  <li>Noten und Leistungsstände sind besonders schutzwürdig. Für
+      Lehrkräfte gelten die Vorgaben der eigenen Schule und die
+      landesrechtlichen Regelungen zum Schuldatenschutz – in mehreren
+      Bundesländern ist die Verarbeitung von Schülerdaten auf privaten
+      Geräten eingeschränkt oder genehmigungspflichtig.</li>
+  <li>Es empfiehlt sich, nur Vornamen oder Kürzel zu verwenden. Die
+      Felder für Name und Schule sind vollständig freiwillig; die
+      Profilfunktion lässt sich auch mit neutralen Bezeichnungen
+      nutzen.</li>
+  <li>Beim Ausdruck, beim Bild-Export eines Diagramms und beim Export
+      einer Sicherung werden die eingetragenen Namen mit ausgegeben.</li>
+</ul>
+<p>
+  Die App nimmt selbst keine Bewertung vor. Sie rechnet ausschließlich mit
+  den Zahlen, die eingetragen werden.
+</p>
+
+<h2>4. Keine Erhebung, keine Übermittlung</h2>
 <ul>
   <li>Kein Nutzerkonto, keine Anmeldung, keine Registrierung</li>
-  <li>Keine Werbung und keine Werbekennungen</li>
-  <li>Keine Analyse-, Absturz- oder Nutzungsstatistik</li>
-  <li>Keine Weitergabe an Dritte</li>
-  <li>Kein Zugriff auf Kontakte, Standort, Kamera oder Mikrofon</li>
+  <li>Keine Werbung, keine Werbe-IDs, kein Tracking</li>
+  <li>Keine Analyse-, Nutzungs- oder Absturzstatistik</li>
+  <li>Keine Weitergabe an Dritte, keine Auftragsverarbeiter</li>
+  <li>Keine Übermittlung in Drittländer</li>
+  <li>Keine automatisierte Entscheidungsfindung oder Profilbildung
+      im Sinne von Art. 22 DSGVO</li>
+  <li>Kein Zugriff auf Kontakte, Standort, Kamera, Mikrofon oder Fotos</li>
 </ul>
-
-<h2>4. Diagnose-Protokoll</h2>
 <p>
-  Die App führt ein lokales Protokoll technischer Meldungen, um bei Problemen
-  helfen zu können. Es bleibt auf dem Gerät und wird nicht übertragen. Der
-  Inhalt lässt sich in den Einstellungen einsehen und löschen. Wird es
-  freiwillig zur Fehlermeldung übermittelt, geschieht das nur durch
-  ausdrückliches Kopieren und Versenden durch die nutzende Person.
+  Die App fordert keine besonderen Systemberechtigungen an. Schriftarten und
+  Programmcode sind fest eingebaut; es werden keine Inhalte von fremden
+  Servern nachgeladen.
 </p>
 
-<h2>5. Sicherungsdateien</h2>
+<h2>5. Rechtsgrundlage</h2>
 <p>
-  Über „Sicherung exportieren“ lässt sich eine Datei erzeugen, die alle
-  Eingaben enthält. Wohin diese Datei gespeichert oder an wen sie gesendet
-  wird, entscheidet allein die nutzende Person. Der Entwickler erhält
-  keinen Zugriff darauf.
+  Soweit die lokale Speicherung überhaupt als Verarbeitung anzusehen ist,
+  erfolgt sie auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO – sie ist zur
+  Erfüllung des Nutzungsvertrags über die App erforderlich, weil ohne
+  Speicherung keine Noten verwaltet werden könnten.
+</p>
+<p>
+  Für die Speicherung im Endgerät gilt zusätzlich § 25 Abs. 2 Nr. 2 TDDDG:
+  Die Speicherung ist unbedingt erforderlich, damit der ausdrücklich
+  gewünschte Dienst bereitgestellt werden kann. Eine Einwilligung ist daher
+  nicht einzuholen; ein Zustimmungsbanner entfällt.
 </p>
 
-<h2>6. PIN-Sperre</h2>
+<h2>6. Speicherdauer</h2>
 <p>
-  Die optionale PIN-Sperre ist ein Sichtschutz gegen fremde Blicke, keine
-  Verschlüsselung. Die Daten liegen weiterhin unverschlüsselt im lokalen
-  Speicher des Geräts. Gespeichert wird nur ein gesalzener Prüfwert der PIN,
-  nicht die PIN selbst.
+  Die Daten bleiben so lange auf dem Gerät, bis sie selbst gelöscht werden –
+  einzeln in der App, vollständig über „Alles zurücksetzen“ in den
+  Einstellungen oder durch Deinstallation der App. Eine Löschfrist seitens
+  des Anbieters gibt es nicht, weil beim Anbieter nichts gespeichert wird.
 </p>
 
-<h2>7. Berechtigungen</h2>
+<h2>7. Sicherungsdateien und Export</h2>
 <p>
-  Die App fordert keine besonderen Android- oder iOS-Berechtigungen an.
-  Für das Speichern einer Sicherungsdatei wird die Dateiauswahl des
-  Betriebssystems verwendet.
+  Über „Sicherung exportieren“ lässt sich eine Datei im JSON-Format erzeugen,
+  die sämtliche Eingaben enthält. Die Pro-Fassung erlaubt zusätzlich einen
+  Export als CSV-Tabelle.
+</p>
+<p>
+  Beim Export legt die App die Datei zunächst in einem temporären
+  Verzeichnis der App ab und übergibt sie an die Speichern- oder
+  Teilen-Funktion des Geräts. Wohin sie anschließend gelangt, ob sie in
+  eine Cloud geladen oder an andere Personen gesendet wird, entscheidet
+  allein die nutzende Person.
+  Ab dem Verlassen des Geräts gelten die Datenschutzbestimmungen des jeweils
+  gewählten Dienstes. Der Anbieter der App erhält keinen Zugriff.
 </p>
 
-<h2>8. Nutzung durch Kinder und Jugendliche</h2>
+<h2>8. Druckfunktion</h2>
 <p>
-  Die App richtet sich auch an Schülerinnen und Schüler unter 13 Jahren.
-  Da keinerlei personenbezogene Daten erhoben, gespeichert oder übertragen
-  werden, ist keine Einwilligung von Erziehungsberechtigten erforderlich.
+  Die Funktion „Zeugnis drucken“ nutzt die Druckfunktion des Betriebssystems
+  beziehungsweise des Browsers. Dabei werden die angezeigten Daten an den
+  gewählten Drucker oder PDF-Dienst übergeben. Auch hier bestimmt allein die
+  nutzende Person das Ziel.
 </p>
 
-<h2>9. Ihre Rechte</h2>
+<h2>9. PIN-Sperre (nur Pro)</h2>
 <p>
-  Da keine Daten beim Entwickler vorliegen, können Auskunfts-, Berichtigungs-
-  und Löschansprüche nach Art. 15 ff. DSGVO ins Leere gehen. Sämtliche Daten
-  lassen sich jederzeit selbst löschen: über „Alles zurücksetzen“ in den
-  Einstellungen oder durch Deinstallation der App.
+  Die optionale PIN-Sperre ist ein <strong>Sichtschutz gegen fremde Blicke,
+  keine Verschlüsselung</strong>. Die gespeicherten Noten liegen weiterhin
+  unverschlüsselt im lokalen Speicher des Geräts. Wer Zugriff auf das
+  entsperrte Gerät und dessen Entwicklerwerkzeuge hat, kann sie auslesen.
+</p>
+<p>
+  Gespeichert wird nicht die PIN selbst, sondern ein gesalzener Prüfwert.
+  Eine Wiederherstellung bei vergessener PIN ist bewusst nicht vorgesehen,
+  weil eine solche Hintertür den Sichtschutz aufheben würde.
 </p>
 
-<h2>10. Rechtsgrundlage</h2>
+<h2>10. Diagnose-Protokoll</h2>
 <p>
-  Eine Verarbeitung personenbezogener Daten durch den Entwickler findet nicht
-  statt. Die lokale Speicherung auf dem eigenen Gerät erfolgt allein zur
-  Erfüllung des Zwecks, den die nutzende Person mit der App verfolgt.
+  Die App führt ein Protokoll technischer Meldungen, um bei Störungen die
+  Ursache eingrenzen zu können. Es liegt ausschließlich auf dem Gerät, ist in
+  den Einstellungen einsehbar und dort jederzeit löschbar. Es wird nicht
+  übertragen. Wer es zur Fehlermeldung einsenden möchte, muss es
+  ausdrücklich selbst kopieren und versenden.
 </p>
 
-<h2>11. Änderungen</h2>
+<h2>11. Webversion</h2>
 <p>
-  Sollten sich Funktionen der App ändern, wird diese Erklärung angepasst.
-  Maßgeblich ist die jeweils an dieser Adresse veröffentlichte Fassung.
+  Die Webversion wird über GitHub Pages bereitgestellt. Beim Abruf der Seite
+  verarbeitet der Hostinganbieter GitHub, Inc. technisch notwendige
+  Verbindungsdaten wie IP-Adresse, Zeitpunkt des Abrufs und
+  Browserkennung. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; das
+  berechtigte Interesse liegt in der technisch fehlerfreien Auslieferung.
+  Auf Art und Dauer dieser Protokollierung besteht kein Einfluss.
+</p>
+<p>
+  Nähere Angaben: <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"
+  target="_blank" rel="noopener noreferrer">GitHub General Privacy Statement</a>.
+</p>
+<p>
+  Die installierten Apps aus dem Play Store und dem App Store greifen im
+  laufenden Betrieb nicht auf diese Adresse zu.
+</p>
+
+<h2>12. App-Stores</h2>
+<p>
+  Beim Herunterladen aus dem Google Play Store oder dem Apple App Store
+  verarbeiten die jeweiligen Betreiber Daten in eigener Verantwortung, etwa
+  Nutzerkennung, Zahlungsangaben und Gerätedaten. Darauf besteht kein
+  Einfluss.
+</p>
+<ul>
+  <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google – Datenschutzerklärung</a></li>
+  <li><a href="https://www.apple.com/legal/privacy/de-ww/" target="_blank" rel="noopener noreferrer">Apple – Datenschutzrichtlinie</a></li>
+</ul>
+<p>
+  Vom Kauf der kostenpflichtigen Fassung erhält der Anbieter keine
+  Klarnamen oder Zahlungsdaten, sondern lediglich zusammengefasste
+  Abrechnungsangaben des jeweiligen Stores.
+</p>
+
+<h2>13. Nutzung durch Kinder und Jugendliche</h2>
+<p>
+  Die App richtet sich ausdrücklich auch an Schülerinnen und Schüler unter
+  16 Jahren. Da keinerlei personenbezogene Daten erhoben, übermittelt oder
+  ausgewertet werden, ist eine Einwilligung der Erziehungsberechtigten nach
+  Art. 8 DSGVO nicht erforderlich.
+</p>
+<p>
+  Es gibt keine Werbung, keine In-App-Käufe innerhalb der Apps, keine
+  Chat- oder Kontaktfunktionen und keine Verknüpfung mit sozialen Netzwerken.
+</p>
+
+<h2>14. Rechte der betroffenen Personen</h2>
+<p>
+  Nach der DSGVO bestehen die Rechte auf Auskunft (Art. 15), Berichtigung
+  (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18),
+  Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21).
+</p>
+<p>
+  Diese Rechte laufen gegenüber dem Anbieter ins Leere, weil dort keine
+  Daten vorliegen. Praktisch lassen sie sich unmittelbar selbst ausüben:
+</p>
+<ul>
+  <li><strong>Auskunft und Übertragbarkeit:</strong> „Sicherung exportieren“
+      liefert sämtliche gespeicherten Daten in einem maschinenlesbaren
+      Format.</li>
+  <li><strong>Berichtigung:</strong> jeder Eintrag ist in der App direkt
+      änderbar.</li>
+  <li><strong>Löschung:</strong> einzeln in der App, vollständig über
+      „Alles zurücksetzen“ oder durch Deinstallation.</li>
+</ul>
+<p>
+  Unabhängig davon besteht ein Beschwerderecht bei einer
+  Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO). Zuständig ist die Behörde
+  am Wohnsitz, am Arbeitsplatz oder am Ort des mutmaßlichen Verstoßes.
+  Für Niedersachsen: Die Landesbeauftragte für den Datenschutz
+  Niedersachsen, Prinzenstraße 5, 30159 Hannover.
+</p>
+
+<h2>15. Verwendete Fremdbestandteile</h2>
+<p>
+  Die App verwendet die Programmbibliothek React (MIT-Lizenz) sowie die
+  Schriftarten Space Grotesk und Karla (SIL Open Font License 1.1). Alle
+  Bestandteile sind fest in die App eingebaut und werden nicht zur Laufzeit
+  von fremden Servern geladen.
+</p>
+
+<h2>16. Änderungen dieser Erklärung</h2>
+<p>
+  Ändern sich Funktionen der App, wird diese Erklärung angepasst. Maßgeblich
+  ist die jeweils an dieser Adresse veröffentlichte Fassung. Das Datum der
+  aktuellen Fassung steht oben.
 </p>
 
 <hr>
 
-<h1 lang="en">Privacy Policy</h1>
-<p class="sub" lang="en">GradeGoal: Schulnoten &amp; Grades · GradeGoal Pro<br>Last updated: August 2026</p>
+<div lang="en">
+<h1>Privacy Policy</h1>
+<p class="sub">
+  Applies to <strong>GradeGoal: Schulnoten &amp; Grades</strong>,
+  <strong>GradeGoal Pro</strong> and the web version.<br>
+  Version of August 2026
+</p>
 
-<div class="box" lang="en">
-  <strong>In short:</strong> GradeGoal collects no personal data. Everything you
-  enter stays on your device. There are no servers, no accounts, no ads and no
-  analytics.
+<div class="box">
+  <strong>In short:</strong> GradeGoal collects no personal data. Everything
+  you enter stays on your device. There are no servers operated by the
+  provider, no accounts, no ads, no analytics and no sharing with third
+  parties. The app makes no network requests while running.
 </div>
 
-<div lang="en">
 <h2>1. Controller</h2>
 <p>
-  Simon Mählmann · [address] · Germany ·
-  <a href="mailto:kontakt@example.de">kontakt@example.de</a>
+  Wisdompeak Apps, owner Simon Mählmann · Oderstraße 13 · 28844 Weyhe · Germany<br>
+  E-Mail: <a href="mailto:smaehlmann.appdev@gmail.com">smaehlmann.appdev@gmail.com</a>
 </p>
 
-<h2>2. What the app processes</h2>
+<h2>2. Processing happens on your device only</h2>
 <p>
-  Grades, subjects, wish grades, goals, notes and optionally your name and
-  school are stored only in your device's local storage. Nothing is ever sent
-  to the developer or to third parties. The app makes no network requests
-  during use and works fully offline.
+  Subjects, grades, wish grades, single grades with dates, categories and
+  weightings, goals and notes, grading keys, subject groups, terms and school
+  years, Abitur results (Pro), your name and school if you choose to enter
+  them, display preferences, and a salted hash of your PIN if set – all of
+  this is stored in the app's local storage and never reaches the provider.
+</p>
+<p>
+  Name and school are entirely optional; the app works fully without them.
 </p>
 
-<h2>3. No collection, no sharing</h2>
+<h2>3. Entering other people's data</h2>
+<p>
+  The app is also aimed at parents and teachers. If you enter grades or
+  names of <em>other</em> people – a child, or your students – you process
+  personal data <strong>under your own responsibility</strong>. Such data
+  never leaves the device and is never transmitted to the provider.
+</p>
+<p>
+  Grades are particularly sensitive. Teachers should observe their school's
+  rules and the data protection law of their federal state; in several
+  German states, processing student data on private devices is restricted
+  or requires approval. Using first names or initials only is advisable.
+  Name and school fields are entirely optional.
+</p>
+
+<h2>4. No collection, no transfer</h2>
 <ul>
   <li>No account, no sign-in, no registration</li>
-  <li>No advertising and no advertising identifiers</li>
-  <li>No analytics, crash reporting or usage tracking</li>
-  <li>No sharing with third parties</li>
-  <li>No access to contacts, location, camera or microphone</li>
+  <li>No ads, no advertising identifiers, no tracking</li>
+  <li>No analytics or crash reporting</li>
+  <li>No sharing with third parties, no processors, no transfers abroad</li>
+  <li>No automated decision-making or profiling under Art. 22 GDPR</li>
+  <li>No access to contacts, location, camera, microphone or photos</li>
 </ul>
 
-<h2>4. Diagnostic log</h2>
+<h2>5. Legal basis and retention</h2>
 <p>
-  The app keeps a local log of technical messages to help with troubleshooting.
-  It never leaves your device and can be viewed and cleared in the settings.
+  Insofar as local storage constitutes processing at all, it rests on
+  Art. 6(1)(b) GDPR – it is necessary to perform the contract for use of the
+  app. Storage on your device is also covered by § 25(2)(2) TDDDG as strictly
+  necessary to provide the service you explicitly requested; no consent
+  banner is therefore required.
+</p>
+<p>
+  Data stays until you delete it: individually in the app, entirely via
+  “Reset everything”, or by uninstalling.
 </p>
 
-<h2>5. Backup files</h2>
+<h2>6. Backups, export and printing</h2>
 <p>
-  “Export backup” creates a file containing your entries. Where you store or
-  send it is entirely your choice; the developer has no access to it.
+  “Export backup” produces a JSON file containing everything you entered;
+  Pro also offers CSV export. Where you store or send these files is entirely
+  your decision, and the privacy terms of whatever service you choose then
+  apply. The same holds for printing, which hands your data to the printer or
+  PDF service you select.
 </p>
 
-<h2>6. PIN lock</h2>
+<h2>7. PIN lock (Pro)</h2>
 <p>
-  The optional PIN lock is a privacy screen, not encryption. Your data remains
-  unencrypted in local storage. Only a salted hash of the PIN is stored, never
-  the PIN itself.
+  The optional PIN lock is a <strong>privacy screen, not encryption</strong>.
+  Your data remains unencrypted in local storage. Only a salted hash of the
+  PIN is stored. There is deliberately no recovery path, because a back door
+  would defeat the purpose.
 </p>
 
-<h2>7. Permissions</h2>
-<p>The app requests no special Android or iOS permissions.</p>
-
-<h2>8. Use by children</h2>
+<h2>8. Diagnostic log</h2>
 <p>
-  The app is also intended for students under 13. Because no personal data is
-  collected, stored or transmitted, no parental consent is required.
+  A local log of technical messages helps with troubleshooting. It stays on
+  your device, can be viewed and cleared in the settings, and is never
+  transmitted.
 </p>
 
-<h2>9. Your rights</h2>
+<h2>9. Web version and app stores</h2>
 <p>
-  As the developer holds no data about you, requests for access, rectification
-  or erasure under Art. 15 ff. GDPR have no subject matter. You can delete all
-  data yourself at any time via “Reset everything” or by uninstalling the app.
+  The web version is hosted on GitHub Pages; GitHub, Inc. processes technically
+  necessary connection data such as IP address and browser identification
+  (Art. 6(1)(f) GDPR). Downloading from Google Play or the App Store involves
+  processing by those operators under their own responsibility. The installed
+  apps do not contact these addresses while running.
+</p>
+
+<h2>10. Children</h2>
+<p>
+  The app is explicitly intended for students under 16 as well. As no personal
+  data is collected, transmitted or evaluated, parental consent under Art. 8
+  GDPR is not required. There are no ads, no in-app purchases within the apps,
+  no chat and no social network integration.
+</p>
+
+<h2>11. Your rights</h2>
+<p>
+  You have the rights to access, rectification, erasure, restriction,
+  portability and objection under Art. 15–21 GDPR. Because the provider holds
+  no data about you, these are exercised directly in the app: “Export backup”
+  gives you everything in machine-readable form, every entry is editable, and
+  “Reset everything” deletes all of it. You may also lodge a complaint with a
+  supervisory authority (Art. 77 GDPR).
 </p>
 </div>
 
+<footer>
+  <a href="./">Zur App</a> · <a href="./impressum.html">Impressum</a>
+</footer>
 </body>
 </html>

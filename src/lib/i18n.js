@@ -8,9 +8,18 @@
 
 export const APP_NAME = "GradeGoal";
 export const APP_SUB = "Schulnoten & Grades";
-export const APP_VER = "1.6.0";
+export const APP_VER = "1.6.2";
 export const DEVELOPER = "Simon Mählmann";
-export const CONTACT = "kontakt@example.de"; /* vor der Einreichung ersetzen */
+export const CONTACT = "smaehlmann.appdev@gmail.com";
+export const PUBLISHER = "Wisdompeak Apps";
+
+/* Adressen der Rechtsseiten. Die Stores verlangen eine erreichbare
+   Datenschutz-URL; die App verweist zusaetzlich darauf, damit die
+   Angaben auch ohne Store-Eintrag auffindbar sind.
+   Leer lassen, solange GitHub Pages nicht eingerichtet ist – ein toter
+   Verweis ist schlechter als keiner. */
+export const PRIVACY_URL = "https://simaehlmann-cloud.github.io/GradeGoal/datenschutz.html";
+export const IMPRINT_URL = "https://simaehlmann-cloud.github.io/GradeGoal/impressum.html";
 export const APP = { name: APP_NAME, sub: APP_SUB, ver: APP_VER, developer: DEVELOPER };
 
 export const T = {
@@ -44,8 +53,10 @@ export const T = {
     keyReached: "Erreichte Punkte", keyMax: "Maximale Punkte", keyPercent: "Prozent",
     keyReachedShort: "Pkt.", keyMaxShort: "von",
     keyMode: "Art", keyLinear: "Linear", keySteps: "Tabelle", keyIhk: "IHK",
+    keyStandard: "Standard",
+    keyStandardHint: "Der in vielen Schulen übliche Schlüssel: 1 ab 87,5 %, 2 ab 75 %, 3 ab 62,5 %, 4 ab 50 %, 5 ab 25 %, 6 ab 0 %. Er gilt, solange du nichts anderes einstellst – und lässt sich Zeile für Zeile ändern.",
     keyTend: "Mit Tendenzen", keyEven: "Ganze Noten",
-    keyTendHint: "„Ganze Noten“ legt genau die Noten deiner Skala an. „Mit Tendenzen“ ergänzt 2+ und 3− als eigene Stufen. Ob deine Lehrkraft überhaupt mit Tendenzen bewertet, ist von Fach zu Fach verschieden – du kannst jede Zeile danach frei ändern und + oder − auch selbst eintippen.",
+    keyTendHint: "„Standard“ setzt den weit verbreiteten Sechstel-Schlüssel. „Mit Tendenzen“ ergänzt 2+ und 3− als eigene Stufen. Ob deine Lehrkraft überhaupt mit Tendenzen bewertet, ist von Fach zu Fach verschieden – du kannst jede Zeile danach frei ändern und + oder − auch selbst eintippen.",
     keyReplaceWarn: "Die Vorlage ersetzt alle Zeilen dieses Schlüssels.",
     keyReplaceOk: "Ersetzen",
     keyLinearHint: "Verteilt die Notenskala gleichmäßig: 100 % ergibt die beste, 0 % die schlechteste Note. 50 % liegen genau in der Mitte.",
@@ -203,7 +214,9 @@ export const T = {
     ],
     aboutPrivacyTitle: "Datenschutz",
     aboutPrivacy: "Alle Daten bleiben ausschließlich auf deinem Gerät. Es werden keine Daten an Server übertragen, es gibt keine Werbung und es wird kein Konto benötigt. Auch das Diagnose-Protokoll verlässt dein Gerät nicht.",
+    privacyLink: "Datenschutzerklärung öffnen", imprintLink: "Impressum öffnen",
     legalTitle: "Impressum",
+    publisher: "Herausgeber",
     developedBy: "Entwickelt von", contact: "Kontakt", version: "Version", edition: "Ausgabe",
     langName: "Deutsch",
   },
@@ -235,8 +248,10 @@ export const T = {
     keyReached: "Points achieved", keyMax: "Maximum points", keyPercent: "Percent",
     keyReachedShort: "pts", keyMaxShort: "of",
     keyMode: "Type", keyLinear: "Linear", keySteps: "Table", keyIhk: "IHK",
+    keyStandard: "Standard",
+    keyStandardHint: "The key used by many German schools: 1 from 87.5 %, 2 from 75 %, 3 from 62.5 %, 4 from 50 %, 5 from 25 %, 6 from 0 %. It applies until you set something else – and every row can be edited.",
     keyTend: "With tendencies", keyEven: "Whole grades",
-    keyTendHint: "“Whole grades” creates exactly the grades of your scale. “With tendencies” adds 2+ and 3− as separate steps. Whether your teacher uses tendencies at all differs from subject to subject – you can edit every row afterwards and type + or − yourself.",
+    keyTendHint: "“Standard” applies the widely used sixths key. “With tendencies” adds 2+ and 3− as separate steps. Whether your teacher uses tendencies at all differs from subject to subject – you can edit every row afterwards and type + or − yourself.",
     keyReplaceWarn: "The preset replaces every row of this key.",
     keyReplaceOk: "Replace",
     keyLinearHint: "Spreads the grading scale evenly: 100 % gives the best grade, 0 % the worst. 50 % lands exactly in the middle.",
@@ -388,7 +403,9 @@ export const T = {
     ],
     aboutPrivacyTitle: "Privacy",
     aboutPrivacy: "All data stays on your device only. Nothing is sent to any server, there are no ads and no account is needed. The diagnostic log never leaves your device either.",
+    privacyLink: "Open privacy policy", imprintLink: "Open legal notice",
     legalTitle: "Legal notice",
+    publisher: "Publisher",
     developedBy: "Developed by", contact: "Contact", version: "Version", edition: "Edition",
     langName: "English",
   },

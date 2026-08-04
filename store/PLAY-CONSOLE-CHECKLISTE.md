@@ -57,18 +57,23 @@ nicht.
 ## Datenschutz-URL
 
 Beide Stores verlangen eine öffentlich erreichbare Adresse.
-`public/datenschutz.html` wird über GitHub Pages mitveröffentlicht:
+Zwei Seiten werden über GitHub Pages mitveröffentlicht:
 
 ```
 https://simaehlmann-cloud.github.io/GradeGoal/datenschutz.html
+https://simaehlmann-cloud.github.io/GradeGoal/impressum.html
 ```
 
-**Vorher eintragen:** ladungsfähige Anschrift und echte Kontakt-E-Mail.
-Beide Platzhalter sind in der Datei markiert. Ohne Anschrift ist das
-Impressum nach § 5 DDG unvollständig.
+Die erste Adresse trägst du im Store-Eintrag als Datenschutz-URL ein.
 
-Dieselbe E-Mail auch in `src/lib/i18n.js` (`CONTACT`) und im
-Store-Eintrag verwenden.
+Beide Seiten sind mit den Daten von **Wisdompeak Apps** ausgefüllt, es
+sind keine Platzhalter mehr offen. `CONTACT`, `PRIVACY_URL` und
+`IMPRINT_URL` in `src/lib/i18n.js` stehen ebenfalls – in der App
+erscheinen unter „Info & Impressum" zwei Schaltflächen dorthin.
+
+**Prüfen:** Die beiden Adressen funktionieren erst, wenn GitHub Pages
+aktiv ist (Settings → Pages → Source: „GitHub Actions"). Ruf sie einmal
+im Browser auf, bevor du sie in der Play Console einträgst.
 
 ---
 
@@ -177,7 +182,7 @@ Vorschlag, damit es nachvollziehbar bleibt:
 
 | Upload | versionName | versionCode |
 |---|---|---|
-| erster geschlossener Test | 1.6.0 | 1 |
+| erster geschlossener Test | 1.6.2 | 1 |
 | Korrektur währenddessen | 1.6.1 | 2 |
 | Produktion | 1.7.0 | 3 |
 
@@ -188,8 +193,8 @@ Einfachheit halber trotzdem dieselbe Nummer für beide vergeben.
 
 ## Vor dem ersten Upload
 
-- [ ] Anschrift und E-Mail in `public/datenschutz.html` eingetragen
-- [ ] `CONTACT` in `src/lib/i18n.js` ersetzt
+- [ ] Beide Rechtsseiten im Browser aufgerufen und erreichbar
+- [ ] Entwicklername in der Play Console: **Wisdompeak Apps**
 - [ ] Keystore erzeugt, **mehrfach gesichert**, vier Secrets hinterlegt
 - [ ] Beide Debug-APKs auf einem echten Gerät im Flugmodus getestet
 - [ ] Besonders geprüft: PIN setzen, App schließen, neu öffnen, entsperren

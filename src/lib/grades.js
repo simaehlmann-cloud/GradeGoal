@@ -188,6 +188,34 @@ export const subjectsMean = (subjects, field) =>
      type "steps"  – Tabelle mit Schwellen, wie sie Schulen vorgeben
 ========================================================= */
 
+/* Prozentwert einlesen: akzeptiert Komma UND Punkt als Trennzeichen und
+   begrenzt auf 0..100.
+
+   Wichtig, weil Number("87,5") NaN liefert – genau daran ist die
+   Eingabe frueher stillschweigend auf 0 gesprungen. */
+export function pctOf(x) {
+  const n = parseNum(x);
+  if (n == null) return null;
+  return Math.max(0, Math.min(100, n));
+}
+
+/* Der in deutschen Schulen weit verbreitete Sechstel-Schluessel.
+   Er ist die Vorgabe der App – anders als der IHK-Schluessel aber kein
+   verbindlicher Standard, sondern nur der haeufigste Ausgangspunkt.
+   Jede Zeile laesst sich aendern. */
+export const STANDARD_STEPS = [
+  { g: "1", min: 87.5 }, { g: "2", min: 75 }, { g: "3", min: 62.5 },
+  { g: "4", min: 50 }, { g: "5", min: 25 }, { g: "6", min: 0 },
+];
+
+/* Gilt der Standardschluessel fuer diese Skala?
+   Nur bei Noten 1–6 – bei Oberstufen-Punkten oder eigenen Skalen waeren
+   die Notenbezeichnungen schlicht falsch. */
+export function standardKeyFor(sc) {
+  if (!sc || !sc.bestLow || sc.min !== 1 || sc.max !== 6) return null;
+  return { id: "", name: "", type: "steps", steps: STANDARD_STEPS.map((x) => ({ ...x })) };
+}
+
 /* Der IHK-Schluessel ist ein tatsaechlich verbindlicher Standard und
    deshalb fest hinterlegt. Schulinterne Schluessel unterscheiden sich
    dagegen von Ort zu Ort – die legt der Nutzer selbst an. */
@@ -253,28 +281,36 @@ export function tendencySteps(sc) {
   return bandsFor(labels);
 }
 
-export const freshKey = (id, name, sc) => ({
-  id, name,
-  type: "steps",
-  steps: evenSteps(sc) || IHK_STEPS.map((s) => ({ ...s })),
-});
+export const freshKey = (id, name, sc) => {
+  const std = standardKeyFor(sc);
+  return {
+    id, name,
+    type: "steps",
+    steps: std ? std.steps : (evenSteps(sc) || IHK_STEPS.map((x) => ({ ...x }))),
+  };
+};
 
 /* Tabelle absteigend nach Schwelle – die Reihenfolge der Eingabe soll
    das Ergebnis nicht beeinflussen. */
 export const sortedSteps = (steps) =>
   (steps || [])
-    .filter((s) => s && parseNum(s.g) != null && Number.isFinite(Number(s.min)))
-    .slice()
-    .sort((a, b) => Number(b.min) - Number(a.min));
+    .map((s) => (s && parseNum(s.g) != null ? { ...s, min: pctOf(s.min) } : null))
+    .filter((s) => s && s.min != null)
+    .sort((a, b) => b.min - a.min);
 
 /* Prozent -> Note nach einem Schluessel. */
 export function keyGrade(key, pct, sc) {
   if (!Number.isFinite(pct)) return null;
-  if (!key || key.type === "linear") return linearGrade(pct, sc);
-  const rows = sortedSteps(key.steps);
+  if (key && key.type === "linear") return linearGrade(pct, sc);
+  /* Kein Schluessel gewaehlt: bei Noten 1–6 gilt der Standardschluessel,
+     sonst linear. Frueher war hier immer linear – das traf die
+     Schulwirklichkeit nicht. */
+  const eff = key || standardKeyFor(sc);
+  if (!eff) return linearGrade(pct, sc);
+  const rows = sortedSteps(eff.steps);
   if (!rows.length) return linearGrade(pct, sc);
   const p = Math.max(0, Math.min(100, pct));
-  for (const r of rows) if (p >= Number(r.min)) return parseNum(r.g);
+  for (const r of rows) if (p >= r.min) return parseNum(r.g);
   /* Unterhalb der niedrigsten Schwelle gilt die schlechteste Note der Tabelle */
   return parseNum(rows[rows.length - 1].g);
 }
@@ -285,12 +321,13 @@ export function keyTable(maxPoints, key, sc) {
   const max = Number(maxPoints);
   if (!Number.isFinite(max) || max <= 0) return [];
 
-  if (key && key.type !== "linear") {
-    return sortedSteps(key.steps).map((r) => ({
+  const eff = key && key.type === "linear" ? null : (key || standardKeyFor(sc));
+  if (eff) {
+    return sortedSteps(eff.steps).map((r) => ({
       grade: parseNum(r.g),
-      label: r.g,        /* so anzeigen, wie es eingetippt wurde */
-      from: Math.round((Number(r.min) / 100) * max * 100) / 100,
-      pct: Number(r.min),
+      label: String(r.g),  /* so anzeigen, wie es eingetippt wurde */
+      from: Math.round((r.min / 100) * max * 100) / 100,
+      pct: r.min,
     }));
   }
 

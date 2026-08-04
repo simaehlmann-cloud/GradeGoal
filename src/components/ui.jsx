@@ -188,5 +188,30 @@ export function ProGate({ feature, t, children, compact }) {
     </div>);
 }
 
-/* Kleines Schloss-Abzeichen fuer Listeneintraege in der Lite-Ausgabe */
-export const ProBadge = ({ t }) => (isPro ? null : <span className="pro-badge">{t("proBadge")}</span>);
+/* Kleines Abzeichen fuer Listeneintraege in der Lite-Ausgabe.
+
+   Sobald PRO_URL gesetzt ist, wird daraus ein anklickbarer Verweis auf
+   den Store-Eintrag. Ohne Adresse bleibt es ein reines Schild – ein
+   Abzeichen, das ins Leere fuehrt, waere schlechter als gar keines.
+
+   Das ist wichtig, weil manche Pro-Funktionen nur als ausgegrauter
+   Schalter erscheinen und dort sonst kein Weg weiterfuehrt. */
+export function ProBadge({ t, stop }) {
+  if (isPro) return null;
+  const label = t("proBadge");
+  if (!PRO_URL) return <span className="pro-badge">{label}</span>;
+  return (
+    <a className="pro-badge pro-badge-link" href={PRO_URL} target="_blank" rel="noopener noreferrer"
+      title={t("proOpen")} aria-label={t("proOpen")}
+      onClick={(e) => { if (stop) e.stopPropagation(); }}>{label}</a>
+  );
+}
+
+/* Auffaelliger Verweis fuer die Werbekarte auf der Startseite. */
+export function ProLink({ t, style }) {
+  if (isPro || !PRO_URL) return null;
+  return (
+    <a className="btn" style={{ display: "inline-block", textDecoration: "none", ...(style || {}) }}
+      href={PRO_URL} target="_blank" rel="noopener noreferrer">{t("proOpen")} →</a>
+  );
+}

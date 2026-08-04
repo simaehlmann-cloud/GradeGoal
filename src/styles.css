@@ -241,3 +241,7 @@ h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight:
 /* PIN-Eingabe: großzügig und zentriert, Ziffern gesperrt */
 .pin-input{text-align:center;font-size:26px;letter-spacing:.4em;font-family:'Space Grotesk',sans-serif;
   font-weight:700;padding:14px 12px}
+
+/* Anklickbares Pro-Abzeichen (nur wenn PRO_URL gesetzt ist) */
+.pro-badge-link{text-decoration:none;cursor:pointer}
+.pro-badge-link:hover{filter:brightness(1.12)}

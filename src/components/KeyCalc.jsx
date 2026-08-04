@@ -3,7 +3,8 @@ import { Ic } from "./icons.jsx";
 import { Segmented, InfoTip } from "./ui.jsx";
 import {
   uid, parseNum, filterNumInput, fmt, keyGrade, keyTable, colorFor,
-  freshKey, IHK_STEPS, evenSteps, tendencySteps, sortedSteps,
+  freshKey, IHK_STEPS, evenSteps, tendencySteps, sortedSteps, pctOf,
+  STANDARD_STEPS, standardKeyFor,
 } from "../lib/grades.js";
 
 /* =========================================================
@@ -20,6 +21,41 @@ import {
 ========================================================= */
 
 const LINEAR = { id: "", name: "", type: "linear", steps: [] };
+
+/* =========================================================
+   Eingabefeld fuer eine Prozentschwelle.
+
+   Braucht eigenen Zwischenspeicher: waehrend des Tippens steht im Feld
+   kurzzeitig "87," – das ist noch keine Zahl. Wuerde man den Text bei
+   jedem Anschlag in eine Zahl verwandeln und zurueckschreiben, waere
+   das Komma sofort wieder weg und man koennte keine Nachkommastelle
+   eingeben.
+
+   Deshalb: Text bleibt stehen, das Modell wird nur aktualisiert, wenn
+   sich der Text als Zahl lesen laesst. Beim Verlassen des Feldes wird
+   sauber formatiert.
+========================================================= */
+function PctInput({ value, onCommit, lang, label }) {
+  const [draft, setDraft] = useState(null);
+  const shown = draft != null ? draft : (value == null ? "" : fmt(value, lang, 2));
+
+  return (
+    <input className="num" inputMode="decimal" style={{ width: 74 }} value={shown} aria-label={label}
+      onChange={(e) => {
+        /* Vorzeichen sind bei Prozentschwellen sinnlos und wuerden nur
+           die Sortierung durcheinanderbringen. */
+        const text = filterNumInput(e.target.value).replace(/[+\-\u2212]/g, "");
+        setDraft(text);
+        const n = pctOf(text);
+        if (n != null) onCommit(n);
+      }}
+      onBlur={() => {
+        const n = pctOf(draft);
+        if (draft != null && draft !== "" && n != null) onCommit(n);
+        setDraft(null);
+      }} />
+  );
+}
 
 /* ---------- Rechner ---------- */
 function Calculator({ keyObj, sc, lang, t, dark }) {
@@ -130,12 +166,8 @@ function KeyEditor({ k, sc, lang, t, onChange, onDelete, dark }) {
           {rows.map((r, i) => (
             <div key={i} className="row" style={{ padding: "4px 0", gap: 8 }}>
               <span className="lbl" style={{ width: 34 }}>{t("keyFrom")}</span>
-              <input className="num" inputMode="decimal" style={{ width: 66 }} value={r.min}
-                aria-label={t("keyThreshold")}
-                onChange={(e) => {
-                  const v = filterNumInput(e.target.value).replace(/[+\-\u2212]/g, "");
-                  setRow(i, { min: v === "" ? "" : Math.max(0, Math.min(100, Number(v) || 0)) });
-                }} />
+              <PctInput value={r.min} lang={lang} label={t("keyThreshold")}
+                onCommit={(n) => setRow(i, { min: n })} />
               <span className="lbl">%</span>
               <span className="lbl" style={{ marginLeft: "auto" }}>{t("grade")}</span>
               <input className="num" inputMode="decimal" style={{ width: 62, color: colorFor(parseNum(r.g), sc, null, dark) }}
@@ -159,10 +191,14 @@ function KeyEditor({ k, sc, lang, t, onChange, onDelete, dark }) {
               die Rueckfrage, sobald schon etwas eingetragen ist. */}
           <div className="row" style={{ marginTop: 12, flexWrap: "wrap", gap: 6 }}>
             <span className="hint" style={{ width: "100%" }}>{t("keyPreset")}</span>
-            {evenSteps(sc) && (
+            {standardKeyFor(sc) ? (
+              <button className="chip-btn" onClick={() => replaceSteps(STANDARD_STEPS.map((x) => ({ ...x })))}>
+                {t("keyStandard")}
+              </button>
+            ) : (evenSteps(sc) && (
               <button className="chip-btn" onClick={() => replaceSteps(evenSteps(sc))}>
                 {t("keyEven")}
-              </button>)}
+              </button>))}
             {tendencySteps(sc) && (
               <button className="chip-btn" onClick={() => replaceSteps(tendencySteps(sc))}>
                 {t("keyTend")}
@@ -191,7 +227,10 @@ function KeyEditor({ k, sc, lang, t, onChange, onDelete, dark }) {
 /* ---------- Bildschirm ---------- */
 export default function KeyCalc({ ds, sc, lang, t, dark, onChangeDs }) {
   const keys = ds.keys || [];
-  const all = [LINEAR, ...keys];
+  /* Ohne eigene Wahl gilt bei Noten 1–6 der Standardschluessel, sonst linear. */
+  const fallback = standardKeyFor(sc) || LINEAR;
+  const fallbackName = standardKeyFor(sc) ? t("keyStandard") : t("keyLinear");
+  const all = [{ ...fallback, id: "" }, ...keys];
   const [selId, setSelId] = useState(() => ds.defaultKeyId || "");
   const selected = all.find((k) => k.id === selId) || LINEAR;
 
@@ -225,7 +264,7 @@ export default function KeyCalc({ ds, sc, lang, t, dark, onChangeDs }) {
       </div>
       <select className="sel" style={{ maxWidth: "100%", width: "100%" }} value={selId}
         aria-label={t("keyUse")} onChange={(e) => setSelId(e.target.value)}>
-        <option value="">{t("keyLinear")}</option>
+        <option value="">{fallbackName}</option>
         {keys.map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}
       </select>
 
@@ -249,7 +288,7 @@ export default function KeyCalc({ ds, sc, lang, t, dark, onChangeDs }) {
             <div className="lbl" style={{ marginBottom: 6 }}>{t("keyDefault")}</div>
             <select className="sel" style={{ maxWidth: "100%", width: "100%" }} value={ds.defaultKeyId || ""}
               aria-label={t("keyDefault")} onChange={(e) => onChangeDs({ defaultKeyId: e.target.value })}>
-              <option value="">{t("keyLinear")}</option>
+              <option value="">{fallbackName}</option>
               {keys.map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}
             </select>
             <div className="hint" style={{ marginTop: 6 }}>{t("keyDefaultHint")}</div>

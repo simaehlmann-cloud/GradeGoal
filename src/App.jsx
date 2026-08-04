@@ -3,18 +3,18 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   uid, parseNum, filterNumInput, fmt, scaleOf, quality, colorFor,
   sName, cName, catMean, weightedCalc, neededGrade, subjWeight, subjectsMean, gv,
-  keyOf,
+  keyOf, standardKeyFor,
 } from "./lib/grades.js";
 import { store, STORAGE_KEY } from "./lib/storage.js";
 import { freshState, freshDataset, freshYear, freshAbi, defaultCats, migrateState } from "./lib/state.js";
 import { exportBackup, exportCsv, buildPrintHtml, downloadBlob } from "./lib/exporters.js";
 import { logError, logInfo, formatLog, getLog, clearLog } from "./lib/logger.js";
-import { makeT, APP, APP_NAME, APP_SUB, APP_VER, DEVELOPER, CONTACT, T } from "./lib/i18n.js";
+import { makeT, APP, APP_NAME, APP_SUB, APP_VER, DEVELOPER, CONTACT, PUBLISHER, PRIVACY_URL, IMPRINT_URL, T } from "./lib/i18n.js";
 import { isPro, TIER } from "./lib/tier.js";
 import { makeLock, isValidPin, PIN_MIN, PIN_MAX } from "./lib/security.js";
 
 import { Ic, FlagDE, FlagEN } from "./components/icons.jsx";
-import { Toggle, Segmented, InfoTip, NumInput, AddRow, QuickAdd, Stamp, ProGate, ProBadge } from "./components/ui.jsx";
+import { Toggle, Segmented, InfoTip, NumInput, AddRow, QuickAdd, Stamp, ProGate, ProBadge, ProLink } from "./components/ui.jsx";
 import { TrendChart, Spark, LongTermChart, catColor } from "./components/charts.jsx";
 import { WhatIf, GroupRow } from "./components/panels.jsx";
 import KeyCalc from "./components/KeyCalc.jsx";
@@ -414,6 +414,7 @@ function App() {
           <h2 className="sec"><Ic n="lock" size={14} />{t("proTeaser")}</h2>
           <p style={{ margin: 0, lineHeight: 1.6, fontSize: 14, color: "var(--sub)" }}>{t("proList")}</p>
           <p style={{ margin: "8px 0 0", lineHeight: 1.6, fontSize: 13, color: "var(--faint)" }}>{t("proMigrate")}</p>
+          <ProLink t={t} style={{ marginTop: 12 }} />
         </div>)}
       <div className="card">
         <h2 className="sec"><Ic n="lock" size={14} />{t("aboutPrivacyTitle")}</h2>
@@ -421,11 +422,21 @@ function App() {
       </div>
       <div className="card">
         <h2 className="sec">{t("legalTitle")}</h2>
-        <div className="row" style={{ justifyContent: "space-between" }}><span className="lbl">{t("developedBy")}</span><strong>{DEVELOPER}</strong></div>
+        <div className="row" style={{ justifyContent: "space-between" }}><span className="lbl">{t("publisher")}</span><strong>{PUBLISHER}</strong></div>
+        <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("developedBy")}</span><strong>{DEVELOPER}</strong></div>
         <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("version")}</span><span>{APP_VER}</span></div>
         <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("edition")}</span><span>{isPro ? "Pro" : "Lite"}</span></div>
         <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("contact")}</span><span style={{ color: "var(--sub)" }}>{CONTACT}</span></div>
-        <div style={{ marginTop: 14, fontSize: 12, color: "var(--faint)" }}>© 2026 {DEVELOPER}</div>
+        {(PRIVACY_URL || IMPRINT_URL) && (
+          <div className="row" style={{ marginTop: 14, flexWrap: "wrap", gap: 8 }}>
+            {IMPRINT_URL && (
+              <a className="btn-ghost" style={{ textDecoration: "none" }}
+                href={IMPRINT_URL} target="_blank" rel="noopener noreferrer">{t("imprintLink")}</a>)}
+            {PRIVACY_URL && (
+              <a className="btn-ghost" style={{ textDecoration: "none" }}
+                href={PRIVACY_URL} target="_blank" rel="noopener noreferrer">{t("privacyLink")}</a>)}
+          </div>)}
+        <div style={{ marginTop: 14, fontSize: 12, color: "var(--faint)" }}>© 2026 {PUBLISHER} · {DEVELOPER}</div>
       </div>
     </div>);
 
@@ -710,7 +721,9 @@ function App() {
     const calc = weightedCalc(subject);
     const subjKey = keyOf(ds, subject);
     const defaultKey = (ds.keys || []).find((k) => k.id === ds.defaultKeyId);
-    const defaultKeyName = defaultKey ? defaultKey.name : "";
+    const defaultKeyName = defaultKey
+      ? defaultKey.name
+      : (standardKeyFor(sc) ? t("keyStandard") : t("keyLinear"));
     const g = parseNum(subject.grade), w = parseNum(subject.wish);
     const diff = g != null && w != null ? (sc.bestLow ? g - w : w - g) : null;
     const upCat = (cid, p) => upSubject(subject.id, { cats: subject.cats.map((c) => (c.id === cid ? { ...c, ...p } : c)) });
@@ -772,7 +785,7 @@ function App() {
                 <select className="sel" style={{ width: "100%", maxWidth: "100%", marginTop: 4 }}
                   value={subject.keyId || ""} aria-label={t("keyCalc")}
                   onChange={(e) => upSubject(subject.id, { keyId: e.target.value })}>
-                  <option value="">{t("keyFromTerm")}{defaultKeyName ? " (" + defaultKeyName + ")" : ""}</option>
+                  <option value="">{t("keyFromTerm")} ({defaultKeyName})</option>
                   {(ds.keys || []).map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}
                 </select>
                 <button className="btn-ghost" style={{ marginTop: 8, padding: "6px 12px", fontSize: 13 }}
@@ -971,10 +984,10 @@ function App() {
         <h2 className="sec"><Ic n="sliders" size={14} />{t("tools")}</h2>
         <div className="row" style={{ flexWrap: "wrap" }}>
           <button className="btn-ghost" onClick={() => up({ screen: "key" })}>
-            <Ic n="percent" size={15} />{t("keyCalc")}<ProBadge t={t} />
+            <Ic n="percent" size={15} />{t("keyCalc")}<ProBadge t={t} stop />
           </button>
           <button className="btn-ghost" onClick={() => up({ screen: "abi" })}>
-            <Ic n="cap" size={15} />{t("abiShort")}<ProBadge t={t} />
+            <Ic n="cap" size={15} />{t("abiShort")}<ProBadge t={t} stop />
           </button>
         </div>
       </div>
@@ -1080,6 +1093,7 @@ function App() {
             <strong style={{ fontSize: 15 }}>{t("proTeaser")}</strong>
           </div>
           <div className="hint" style={{ marginTop: 6 }}>{t("proList")}</div>
+          <ProLink t={t} style={{ marginTop: 12 }} />
         </div>)}
 
       <div style={{ textAlign: "center", marginTop: 6 }}>

@@ -37,9 +37,21 @@ function resolveTier() {
 export const TIER = resolveTier();
 export const isPro = TIER === "pro";
 
-/* Adresse der Pro-Version im Store. Vor der Veroeffentlichung eintragen –
-   solange sie leer ist, zeigt die App keinen Kauf-Knopf, sondern nur den
-   Hinweistext. Kein toter Link im Store. */
+/* Adresse der Pro-Version im Store.
+
+   Vor der Veroeffentlichung eintragen. Solange sie leer ist, zeigt die
+   App nur Hinweistexte und keinerlei Verweis – ein toter Link ist im
+   Store ein Ablehnungsgrund.
+
+   Sobald hier etwas steht, werden automatisch anklickbar:
+     - die grossen Pro-Karten (ProGate)
+     - die kleinen "Pro"-Abzeichen an gesperrten Eintraegen (ProBadge)
+     - die Werbekarte auf der Startseite und im Info-Bildschirm (ProLink)
+
+   Fuer Google Play:
+     https://play.google.com/store/apps/details?id=de.maehlmann.gradegoal.pro
+   Fuer den App Store spaeter die dortige Adresse eintragen – oder je
+   Plattform unterscheiden, wenn beide Fassungen erscheinen. */
 export const PRO_URL = "";
 
 /* Welche Funktionen zur Pro-Version gehoeren. Zentral an EINER Stelle,

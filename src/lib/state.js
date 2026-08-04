@@ -11,7 +11,7 @@
    bereits gespeichert war, blieb die App dauerhaft weiss.
 ========================================================= */
 
-import { uid, freshKey, scaleOf } from "./grades.js";
+import { uid, freshKey, scaleOf, pctOf } from "./grades.js";
 import { logWarn } from "./logger.js";
 
 export const SCHEMA_VERSION = 4;
@@ -163,10 +163,12 @@ function safeSubject(s) {
 
 function safeStep(st) {
   if (!isObj(st)) return null;
-  const min = Number(st.min);
+  /* pctOf statt Number: eine gespeicherte "87,5" muss lesbar bleiben,
+     etwa aus einer aelteren Sicherung oder nach einem Import. */
+  const min = pctOf(st.min);
   const g = str(st.g).slice(0, 8);
-  if (!g || !Number.isFinite(min)) return null;
-  return { g, min: Math.max(0, Math.min(100, Math.round(min * 10) / 10)) };
+  if (!g || min == null) return null;
+  return { g, min: Math.round(min * 100) / 100 };
 }
 
 function safeKey(k) {

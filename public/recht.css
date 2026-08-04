@@ -1,0 +1,37 @@
+/* Gemeinsames Aussehen für Impressum und Datenschutzerklärung.
+   Bewusst schlicht und ohne externe Schriften – die Seiten müssen auch
+   ohne Netzverbindung und in jedem Browser lesbar sein. */
+:root { color-scheme: light dark; }
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 5rem;line-height:1.65;
+  color:#172A46;background:#EEF2F7}
+@media (prefers-color-scheme:dark){body{color:#E8EDF5;background:#101826}}
+.nav{font-size:.9rem;color:#5B6B84;margin-bottom:2rem}
+@media (prefers-color-scheme:dark){.nav{color:#A5B4CB}}
+h1{font-size:1.7rem;margin-bottom:.2rem}
+h2{font-size:1.12rem;margin-top:2.2rem}
+h3{font-size:1rem;margin-top:1.6rem}
+.sub{color:#5B6B84;margin-top:0}
+@media (prefers-color-scheme:dark){.sub{color:#A5B4CB}}
+.box{background:rgba(127,127,127,.1);border-radius:12px;padding:.9rem 1.1rem;margin:1rem 0}
+.box.warn{background:rgba(255,193,7,.16);border-left:4px solid #C79100}
+.alt{background:rgba(127,127,127,.08);border-radius:10px;padding:.7rem .9rem}
+.hint{font-size:.88rem;color:#5B6B84}
+@media (prefers-color-scheme:dark){.hint{color:#A5B4CB}}
+hr{border:none;border-top:1px solid rgba(127,127,127,.3);margin:3rem 0 2rem}
+a{color:#2F5DE0}
+@media (prefers-color-scheme:dark){a{color:#7C9BFF}}
+code{background:rgba(127,127,127,.15);padding:.1em .35em;border-radius:4px;font-size:.9em}
+table{border-collapse:collapse;width:100%;margin:.6rem 0}
+th,td{text-align:left;vertical-align:top;padding:.45rem .6rem;
+  border-bottom:1px solid rgba(127,127,127,.25)}
+th{width:12rem;font-weight:600}
+table.kv th{width:8rem}
+@media (max-width:34rem){
+  th,td{display:block;width:auto;border:none;padding:.15rem 0}
+  th{padding-top:.6rem;color:#5B6B84;font-size:.85rem}
+  tr{display:block;border-bottom:1px solid rgba(127,127,127,.25);padding-bottom:.5rem}
+}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid rgba(127,127,127,.3);font-size:.9rem}
+ul{padding-left:1.2rem}
+li{margin:.3rem 0}
