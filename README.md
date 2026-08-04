@@ -193,7 +193,7 @@ Der Keystore selbst gehört **nicht** ins Repo; `.gitignore` schließt
 
 **Actions → Release AAB (Play Store) → Run workflow.** Dort eintragen:
 
-- **version_name** – muss zu `package.json` passen, z. B. `1.6.0`
+- **version_name** – muss zu `package.json` passen, z. B. `1.6.2`
 - **version_code** – ganze Zahl, **höher als beim letzten Upload**. Play
   nimmt jeden Wert nur einmal je App-ID an. Beim ersten Mal `1`.
 - **tier** – `beide`, `lite` oder `pro`
@@ -252,13 +252,22 @@ Im Ordner `store/` liegt alles Nicht-Technische fertig vor:
 | `feature-graphic-lite.png` | 1024 × 500, fertig zum Hochladen |
 | `feature-graphic-pro.png` | dasselbe für Pro |
 
-Die Datenschutzerklärung liegt als `public/datenschutz.html` im Projekt
-und wird über GitHub Pages mitveröffentlicht:
-`https://DEINNAME.github.io/REPOSITORY/datenschutz.html`
+Impressum und Datenschutzerklärung liegen als `public/impressum.html` und
+`public/datenschutz.html` im Projekt und werden über GitHub Pages
+mitveröffentlicht:
+
+```
+https://DEINNAME.github.io/REPOSITORY/impressum.html
+https://DEINNAME.github.io/REPOSITORY/datenschutz.html
+```
 
 **Wichtig:** Beide Stores verlangen eine erreichbare Datenschutz-URL, und
-das Impressum braucht eine ladungsfähige Anschrift. In der Datei stehen
-dafür markierte Platzhalter.
+das Impressum braucht eine ladungsfähige Anschrift. In beiden Dateien
+stehen je zwölf markierte Platzhalter.
+
+Trägst du zusätzlich `PRIVACY_URL` und `IMPRINT_URL` in
+`src/lib/i18n.js` ein, verlinkt die App unter „Info & Impressum"
+direkt dorthin.
 
 Der wichtigste Zeitfaktor steht in der Checkliste: Neue persönliche
 Entwicklerkonten müssen vor dem Produktionszugriff einen geschlossenen
