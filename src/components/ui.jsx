@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Ic } from "./icons.jsx";
 import { parseNum, filterNumInput, fmt, colorFor, todayISO, isoToStamp, keyGrade } from "../lib/grades.js";
-import { isPro, PRO_URL } from "../lib/tier.js";
+import { usePurchase, buyUnlock, restoreUnlock, FREE_TERMS } from "../lib/purchase.js";
 
 /* ---------- Schalter ---------- */
 export const Toggle = ({ on, onChange, label, disabled }) => (
@@ -162,56 +162,59 @@ export const Stamp = ({ value, label, sc, lang, dark }) => (
 );
 
 /* =========================================================
-   Pro-Hinweis.
+   Vollversion freischalten.
 
-   In der Pro-Ausgabe rendert die Komponente einfach ihre Kinder – es
-   gibt zur Laufzeit keinen Umschalter und nichts zu umgehen, weil der
-   Lite-Build die gesperrten Inhalte gar nicht erst anzeigt.
-   Bewusst KEIN Kauf-Knopf ohne hinterlegte Adresse: ein toter Link im
-   Store ist ein Ablehnungsgrund.
+   Erscheint dort, wo der Gratis-Rahmen endet, und im Info-Bildschirm.
+   Apple verlangt einen sichtbaren „Wiederherstellen“-Knopf – er steht
+   deshalb immer neben dem Kauf-Knopf, auch wenn der Store gerade nicht
+   erreichbar ist.
 ========================================================= */
-export function ProGate({ feature, t, children, compact }) {
-  if (isPro) return children;
+export function UnlockCard({ t, compact, style }) {
+  const p = usePurchase();
+  const [note, setNote] = useState(null);
+  if (p.unlocked) return null;
+
+  const buy = async () => {
+    setNote(null);
+    const r = await buyUnlock();
+    if (r === "ok") setNote({ ok: true, text: t("unlockDone") });
+    else if (r === "pending") setNote({ ok: true, text: t("unlockPending") });
+    else if (r === "error") setNote({ ok: false, text: t("unlockError") });
+  };
+  const restore = async () => {
+    setNote(null);
+    const r = await restoreUnlock();
+    if (r === "ok") setNote({ ok: true, text: t("unlockDone") });
+    else if (r === "none") setNote({ ok: false, text: t("restoreNone") });
+    else setNote({ ok: false, text: t("unlockError") });
+  };
+
   return (
-    <div className={compact ? "pro-gate pro-gate-compact" : "pro-gate"}>
+    <div className={compact ? "pro-gate pro-gate-compact" : "pro-gate"} style={style}>
       <div className="row" style={{ gap: 6 }}>
-        <Ic n="lock" size={14} color="var(--blue)" />
-        <strong style={{ fontSize: 14 }}>{t("proTitle")}</strong>
-        <span className="pro-badge">{t("proBadge")}</span>
+        <Ic n="star" size={14} color="var(--blue)" />
+        <strong style={{ fontSize: 14 }}>{t("unlockTitle")}</strong>
       </div>
-      <div className="hint" style={{ marginTop: 4 }}>{t("proHint")}</div>
-      {!compact && <div className="hint" style={{ marginTop: 6, fontSize: 12 }}>{t("proMigrate")}</div>}
-      {PRO_URL ? (
-        <a className="btn" style={{ display: "inline-block", marginTop: 10, textDecoration: "none" }}
-          href={PRO_URL} target="_blank" rel="noopener noreferrer">{t("proOpen")}</a>
-      ) : null}
+      <div className="hint" style={{ marginTop: 4 }}>{t("unlockText")(FREE_TERMS)}</div>
+      {p.native ? (
+        <React.Fragment>
+          {p.canBuy ? (
+            <button className="btn" style={{ width: "100%", marginTop: 10 }} disabled={p.busy} onClick={buy}>
+              {p.busy ? "…" : t("unlockBuy")(p.price)}
+            </button>
+          ) : (
+            <div className="hint" style={{ marginTop: 8, fontSize: 12 }}>{t("unlockUnavailable")}</div>
+          )}
+          <button className="btn-ghost" style={{ width: "100%", marginTop: 8 }} disabled={p.busy} onClick={restore}>
+            {t("restoreBtn")}
+          </button>
+          <div className="hint" style={{ marginTop: 6, fontSize: 11 }}>{t("unlockFine")}</div>
+        </React.Fragment>
+      ) : (
+        <div className="hint" style={{ marginTop: 8, fontSize: 12 }}>{t("unlockWebHint")}</div>
+      )}
+      {note && (
+        <div role="status" style={{ marginTop: 8, fontWeight: 700, fontSize: 13, color: note.ok ? "var(--green)" : "var(--red)" }}>{note.text}</div>
+      )}
     </div>);
-}
-
-/* Kleines Abzeichen fuer Listeneintraege in der Lite-Ausgabe.
-
-   Sobald PRO_URL gesetzt ist, wird daraus ein anklickbarer Verweis auf
-   den Store-Eintrag. Ohne Adresse bleibt es ein reines Schild – ein
-   Abzeichen, das ins Leere fuehrt, waere schlechter als gar keines.
-
-   Das ist wichtig, weil manche Pro-Funktionen nur als ausgegrauter
-   Schalter erscheinen und dort sonst kein Weg weiterfuehrt. */
-export function ProBadge({ t, stop }) {
-  if (isPro) return null;
-  const label = t("proBadge");
-  if (!PRO_URL) return <span className="pro-badge">{label}</span>;
-  return (
-    <a className="pro-badge pro-badge-link" href={PRO_URL} target="_blank" rel="noopener noreferrer"
-      title={t("proOpen")} aria-label={t("proOpen")}
-      onClick={(e) => { if (stop) e.stopPropagation(); }}>{label}</a>
-  );
-}
-
-/* Auffaelliger Verweis fuer die Werbekarte auf der Startseite. */
-export function ProLink({ t, style }) {
-  if (isPro || !PRO_URL) return null;
-  return (
-    <a className="btn" style={{ display: "inline-block", textDecoration: "none", ...(style || {}) }}
-      href={PRO_URL} target="_blank" rel="noopener noreferrer">{t("proOpen")} →</a>
-  );
 }

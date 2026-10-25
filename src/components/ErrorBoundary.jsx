@@ -1,7 +1,7 @@
 import React from "react";
 import { logError, formatLog } from "../lib/logger.js";
 import { store, STORAGE_KEY } from "../lib/storage.js";
-import { downloadBlob } from "../lib/exporters.js";
+import { saveText } from "../lib/filesave.js";
 
 /* =========================================================
    ErrorBoundary – der Auffangschirm fuer Render-Fehler.
@@ -70,8 +70,9 @@ export default class ErrorBoundary extends React.Component {
     const raw = store.raw(STORAGE_KEY) || "{}";
     const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
     const payload = `${raw}\n\n/* --- Protokoll ---\n${formatLog()}\n*/`;
-    const ok = downloadBlob(new Blob([payload], { type: "application/json" }), `gradegoal-rettung-${stamp}.json`);
-    this.setState({ rescued: ok });
+    saveText(payload, `gradegoal-rettung-${stamp}.json`, "application/json")
+      .then((ok) => this.setState({ rescued: ok }))
+      .catch(() => this.setState({ rescued: false }));
   };
 
   hardReset = () => {
