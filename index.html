@@ -36,6 +36,36 @@
 </head>
 <body>
   <div id="app"></div>
+  <!--
+    Startwaechter: Bleibt die App nach einigen Sekunden leer (z. B. weil
+    ein Skript schon beim Laden scheitert), erscheint statt eines leeren
+    Bildschirms ein Hinweis mit den aufgefangenen Fehlern. Bewusst ohne
+    Abhaengigkeiten, damit er auch dann funktioniert.
+  -->
+  <script>
+    (function () {
+      var errs = [];
+      window.addEventListener("error", function (e) {
+        errs.push((e.message || "Fehler") + (e.filename ? " @" + String(e.filename).slice(-40) + ":" + e.lineno : ""));
+      });
+      window.addEventListener("unhandledrejection", function (e) {
+        var r = e.reason; errs.push("Promise: " + (r && (r.message || r)) );
+      });
+      setTimeout(function () {
+        var app = document.getElementById("app");
+        if (!app || app.childNodes.length) return;
+        var box = document.createElement("div");
+        box.style.cssText = "font:15px/1.5 -apple-system,sans-serif;padding:calc(40px + env(safe-area-inset-top)) 24px 24px;color:#172A46;background:#EEF2F7;min-height:100vh;box-sizing:border-box";
+        box.innerHTML = "<h2 style='margin:0 0 8px'>GradeGoal startet nicht</h2>" +
+          "<p>Bitte diesen Bildschirm fotografieren und an den Entwickler senden.</p>";
+        var pre = document.createElement("pre");
+        pre.style.cssText = "white-space:pre-wrap;font-size:12px;background:#fff;padding:10px;border-radius:8px";
+        pre.textContent = (errs.length ? errs.join("\n") : "(keine Fehlermeldung aufgefangen)") + "\n\n" + navigator.userAgent;
+        box.appendChild(pre);
+        document.body.appendChild(box);
+      }, 6000);
+    })();
+  </script>
   <div id="print"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
