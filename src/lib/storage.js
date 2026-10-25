@@ -56,7 +56,11 @@ export const store = {
       if (!v) {
         const P = await prefs();
         if (P) {
-          const r = await P.get({ key });
+          /* Zeitlimit: haengt das Zusatzmodul, startet die App trotzdem. */
+          const r = await Promise.race([
+            P.get({ key }),
+            new Promise((res) => setTimeout(() => res(null), 2000)),
+          ]);
           if (r && r.value) {
             v = r.value;
             logWarn("Daten aus der Zweitablage wiederhergestellt");
