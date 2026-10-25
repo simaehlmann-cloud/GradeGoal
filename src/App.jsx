@@ -136,11 +136,17 @@ function App() {
   useEffect(() => {
     alive.current = true;
     (async () => {
-      const saved = await store.get(STORAGE_KEY);
-      if (saved) {
-        const migrated = migrateState(saved);
-        if (migrated) setState(migrated);
-        else logError("Gespeicherte Daten unbrauchbar – starte mit leerem Zustand");
+      /* Das Laden darf den Start NIE blockieren: schlimmstenfalls beginnt
+         die App leer, statt dauerhaft nichts anzuzeigen. */
+      try {
+        const saved = await store.get(STORAGE_KEY);
+        if (saved) {
+          const migrated = migrateState(saved);
+          if (migrated) setState(migrated);
+          else logError("Gespeicherte Daten unbrauchbar – starte mit leerem Zustand");
+        }
+      } catch (e) {
+        logError("Laden fehlgeschlagen", e);
       }
       if (alive.current) setLoaded(true);
     })();
