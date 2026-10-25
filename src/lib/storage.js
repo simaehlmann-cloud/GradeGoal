@@ -20,10 +20,16 @@ import { isNative } from "./platform.js";
    Stand zusaetzlich ueber @capacitor/preferences (iOS: UserDefaults,
    Android: SharedPreferences) abgelegt und beim Start herangezogen,
    falls localStorage leer ist. */
+/* ACHTUNG: Ein Capacitor-Plugin darf NIE direkt aus einer async-Funktion
+   zurueckgegeben werden. Das Plugin-Objekt beantwortet jede Eigenschaft –
+   auch "then" – als nativen Aufruf; await haelt es deshalb fuer ein
+   Promise und wartet ewig ("Preferences.then() is not implemented").
+   Darum steckt es hier in einem Huellobjekt. */
 async function prefs() {
   if (!isNative()) return null;
   try {
-    return (await import("@capacitor/preferences")).Preferences;
+    const mod = await import("@capacitor/preferences");
+    return { P: mod.Preferences };
   } catch (e) {
     logWarn("Preferences nicht verfuegbar", e);
     return null;
@@ -54,7 +60,8 @@ export const store = {
       if (!hasLocal()) return null;
       let v = localStorage.getItem(key);
       if (!v) {
-        const P = await prefs();
+        const w = await prefs();
+        const P = w && w.P;
         if (P) {
           /* Zeitlimit: haengt das Zusatzmodul, startet die App trotzdem. */
           const r = await Promise.race([
@@ -94,8 +101,9 @@ export const store = {
     try {
       if (!hasLocal()) return { ok: false, reason: "unavailable" };
       localStorage.setItem(key, json);
-      const P = await prefs();
-      if (P) {
+      const w = await prefs();
+      if (w && w.P) {
+        const P = w.P;
         try { await P.set({ key, value: json }); } catch (e) { logWarn("Zweitablage nicht geschrieben", e); }
       }
       return { ok: true };
@@ -124,7 +132,7 @@ export const store = {
     } catch (e) {}
     try {
       if (hasLocal()) localStorage.removeItem(key);
-      prefs().then((P) => P && P.remove({ key })).catch(() => {});
+      prefs().then((w) => w && w.P.remove({ key })).catch(() => {});
       return true;
     } catch (e) {
       logError("Zuruecksetzen fehlgeschlagen", e);
