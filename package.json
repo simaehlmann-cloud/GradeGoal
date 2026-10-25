@@ -1,20 +1,25 @@
 {
   "name": "gradegoal",
   "private": true,
-  "version": "1.6.2",
+  "version": "1.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:lite": "vite --mode lite",
     "build": "vite build",
-    "build:pro": "vite build --mode pro",
     "preview": "vite preview",
     "android": "npm run build && npx cap sync android",
-    "android:pro": "npm run build:pro && npx cap sync android"
+    "ios": "npm run build && npx cap sync ios"
   },
   "dependencies": {
-    "@capacitor/android": "^6.2.0",
-    "@capacitor/core": "^6.2.0",
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/browser": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/filesystem": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@capacitor/preferences": "^8.0.0",
+    "@capacitor/share": "^8.0.0",
+    "@capgo/native-purchases": "^8.0.0",
     "@fontsource/karla": "^5.1.0",
     "@fontsource/space-grotesk": "^5.1.0",
     "react": "^18.3.1",
@@ -22,9 +27,12 @@
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^6.2.0",
+    "@capacitor/cli": "^8.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^5.4.11",
     "vite-plugin-singlefile": "^2.0.3"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
