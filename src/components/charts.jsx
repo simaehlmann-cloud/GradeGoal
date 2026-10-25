@@ -3,7 +3,7 @@ import { Ic } from "./icons.jsx";
 import {
   parseNum, gv, gd, fmt, mean, quality, cName, subjectPoints, trendOf, scaleOf, subjectsMean, colorFor,
 } from "../lib/grades.js";
-import { downloadBlob } from "../lib/exporters.js";
+import { saveFile } from "../lib/filesave.js";
 import { logError } from "../lib/logger.js";
 
 const CAT_PALETTE = ["#4C7DFF", "#F2884B", "#9B6BF2", "#2BB8A3", "#E85D9E", "#C9A227", "#6BAA3D", "#FF7B6B"];
@@ -34,7 +34,7 @@ function exportSvg(svg, W, H, bg, fileName, onError) {
           if (!b) { onError && onError(); return; }
           /* Fachnamen sind frei waehlbar – Pfadtrenner muessen raus */
           const safe = String(fileName || "chart").replace(/[\\/:*?"<>|]/g, "-").slice(0, 60);
-          if (!downloadBlob(b, safe + ".png")) onError && onError();
+          saveFile(b, safe + ".png").then((ok) => { if (!ok && onError) onError(); });
         });
       } catch (e) {
         logError("Diagramm-Export fehlgeschlagen", e);
