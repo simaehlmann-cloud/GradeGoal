@@ -10,7 +10,7 @@ App ist gratis nutzbar, aber nicht dauerhaft unbegrenzt.
 
 ### Name (max. 30)
 ```
-GradeGoal: Noten & Abi
+GradeGoal: Noten bis zum Abi
 ```
 
 ### Untertitel (max. 30)
@@ -68,7 +68,7 @@ Entwickelt von Simon Mählmann.
 
 ### Name (max. 30)
 ```
-GradeGoal: Grades & Abitur
+GradeGoal: Grades to Abitur
 ```
 
 ### Untertitel (max. 30)

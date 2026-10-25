@@ -41,7 +41,7 @@ appstoreconnect.apple.com → **Apps → + → Neue App**
 | Feld | Eintrag |
 |---|---|
 | Plattform | iOS |
-| Name | `GradeGoal: Noten & Abi` |
+| Name | `GradeGoal: Noten bis zum Abi` |
 | Primäre Sprache | Deutsch |
 | Bundle-ID | `de.maehlmann.gradegoal` |
 | SKU | `gradegoal-ios` |
@@ -111,6 +111,23 @@ Connect API → Teamschlüssel**
 4. Notieren: **Schlüssel-ID** (in der Liste) und **Issuer-ID** (oben
    über der Liste).
 
+### A7b. Verteilungszertifikat (einmalig)
+
+Reines Cloud Signing genügt nicht: App Store Connect lehnt dann die
+eingebetteten Frameworks (Capacitor) als ungültig signiert ab. Deshalb
+einmalig ein eigenes Zertifikat erzeugen – ohne Mac, über GitHub:
+
+1. Secret `IOS_DIST_P12_PASSWORD` anlegen: ein langes, selbst gewähltes
+   Kennwort (mindestens 12 Zeichen) – im Passwortmanager notieren.
+2. Actions → **iOS – Zertifikat erstellen** → Run workflow.
+3. Im fertigen Lauf unten unter Artifacts **zertifikat-base64**
+   herunterladen, ZIP öffnen, Inhalt der Textdatei kopieren.
+4. Als Secret `IOS_DIST_P12_BASE64` eintragen.
+5. Das Artefakt im Lauf löschen (Papierkorb-Symbol) und die
+   heruntergeladene Datei ebenfalls.
+
+Das Zertifikat ist ein Jahr gültig. Danach Schritte 2–4 wiederholen.
+
 ### A8. Secrets in GitHub hinterlegen
 
 GitHub → Repository → **Settings → Secrets and variables → Actions →
@@ -122,6 +139,8 @@ New repository secret**
 | `ASC_KEY_ID` | Schlüssel-ID aus A7 |
 | `ASC_ISSUER_ID` | Issuer-ID aus A7 |
 | `ASC_KEY_P8_BASE64` | die .p8-Datei als Base64, siehe unten |
+| `IOS_DIST_P12_PASSWORD` | Kennwort aus A7b |
+| `IOS_DIST_P12_BASE64` | Ergebnis aus A7b |
 
 Base64 unter Windows (PowerShell, legt das Ergebnis in die
 Zwischenablage):
