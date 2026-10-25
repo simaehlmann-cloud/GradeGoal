@@ -4,25 +4,17 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Baut BEIDE Ausgaben. Jeder Matrix-Lauf startet in einem frischen
-# Arbeitsverzeichnis, deshalb koennen sich Lite und Pro hier nicht in
-# die Quere kommen - anders als lokal, wo dist/ und android/ vor dem
-# Wechsel geleert werden muessen.
+# Test-APK bei jedem Push. Seit 1.8.0 gibt es nur noch EINE Ausgabe
+# (Gratis-Rahmen + In-App-Kauf statt Lite und Pro).
+#
+# Sind die Keystore-Secrets hinterlegt, wird die APK mit dem Release-
+# Schlüssel signiert und bekommt die Laufnummer als versionCode. Dann
+# laesst sie sich ueber eine aeltere Test-APK installieren. Ohne Secrets
+# entsteht wie bisher eine Debug-APK.
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - tier: lite
-            script: build
-            config: capacitor.config.json
-          - tier: pro
-            script: "build:pro"
-            config: capacitor.config.pro.json
-
     steps:
       - uses: actions/checkout@v4
 
@@ -33,27 +25,13 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Install dependencies
-        run: npm install
+        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-      - name: Konfiguration und Bildmaterial waehlen (${{ matrix.tier }})
-        # Fuer Lite liegt die Konfiguration schon richtig - cp weigert
-        # sich, eine Datei auf sich selbst zu kopieren. Dafuer kommt dort
-        # das Bildmaterial mit dem LITE-Streifen zum Einsatz.
-        run: |
-          if [ "${{ matrix.config }}" != "capacitor.config.json" ]; then
-            cp "${{ matrix.config }}" capacitor.config.json
-          else
-            cp -r assets-lite/. assets/
-            cp public/icon-lite.svg public/icon.svg
-          fi
-          echo "Verwendete App-ID:"
-          grep appId capacitor.config.json
-
-      - name: Build web app (${{ matrix.tier }})
-        run: npm run ${{ matrix.script }}
+      - name: Build web app
+        run: npm run build
 
       - name: Add Android platform
         run: npx cap add android
@@ -64,11 +42,44 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build debug APK
-        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - name: Signierung vorbereiten (falls Secrets vorhanden)
+        id: sign
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KS" ]; then
+            echo "mode=debug" >> "$GITHUB_OUTPUT"
+            echo "Keine Keystore-Secrets – baue Debug-APK."
+            exit 0
+          fi
+          echo "$KS" | base64 -d > "$RUNNER_TEMP/keystore.jks"
+          VERSION=$(node -p "require('./package.json').version")
+          chmod +x tools/prepare-release.sh
+          tools/prepare-release.sh "$VERSION" "${{ github.run_number }}"
+          echo "mode=release" >> "$GITHUB_OUTPUT"
+
+      - name: Build APK
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cd android && chmod +x gradlew
+          if [ "${{ steps.sign.outputs.mode }}" = "release" ]; then
+            ./gradlew assembleRelease
+            cp app/build/outputs/apk/release/app-release.apk ../gradegoal.apk
+          else
+            ./gradlew assembleDebug
+            cp app/build/outputs/apk/debug/app-debug.apk ../gradegoal.apk
+          fi
+
+      - name: Keystore wieder entfernen
+        if: always()
+        run: rm -f "$RUNNER_TEMP/keystore.jks"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: gradegoal-${{ matrix.tier }}-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: gradegoal-apk-${{ steps.sign.outputs.mode }}-${{ github.run_number }}
+          path: gradegoal.apk

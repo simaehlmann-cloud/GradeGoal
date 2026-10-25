@@ -1,0 +1,178 @@
+name: iOS – TestFlight
+
+# Baut die iOS-App auf einem Mac von GitHub und lädt sie zu App Store
+# Connect hoch. Von dort geht sie automatisch an TestFlight.
+#
+# Läuft NICHT bei jedem Push: jeder Upload verbraucht eine Build-Nummer.
+#
+# Signierung ohne eigenen Mac („Cloud Signing“): Das Archiv wird
+# unsigniert gebaut, erst beim Export signiert Apple mit einem von Apple
+# verwalteten Zertifikat. Dafür braucht der API-Schlüssel die Rolle
+# „Admin“. Optional kann ein eigenes Verteilungszertifikat (.p12)
+# hinterlegt werden – dann wird dieses verwendet.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'Build-Nummer (leer lassen = automatisch hochzählen)'
+        required: false
+        default: ''
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zugangsdaten prüfen
+        # Früh und mit klarer Meldung abbrechen statt mitten in xcodebuild.
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KID: ${{ secrets.ASC_KEY_ID }}
+          ISS: ${{ secrets.ASC_ISSUER_ID }}
+          P8: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          MISSING=""
+          [ -z "$TEAM" ] && MISSING="$MISSING APPLE_TEAM_ID"
+          [ -z "$KID" ]  && MISSING="$MISSING ASC_KEY_ID"
+          [ -z "$ISS" ]  && MISSING="$MISSING ASC_ISSUER_ID"
+          [ -z "$P8" ]   && MISSING="$MISSING ASC_KEY_P8_BASE64"
+          if [ -n "$MISSING" ]; then
+            echo "FEHLER: Diese Secrets fehlen unter Settings → Secrets and variables → Actions:"
+            echo "  $MISSING"
+            exit 1
+          fi
+          echo "Alle Zugangsdaten vorhanden."
+
+      - name: Xcode wählen
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Xcode-Version prüfen
+        # Apple nimmt seit 28.04.2026 nur noch Builds mit Xcode 26 / iOS-26-SDK an.
+        run: |
+          xcodebuild -version
+          MAJOR=$(xcodebuild -version | head -1 | sed -E 's/Xcode ([0-9]+).*/\1/')
+          [ "$MAJOR" -ge 26 ] || { echo "FEHLER: Xcode 26 oder neuer nötig, gefunden: $MAJOR"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Versionen bestimmen
+        id: ver
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          BUILD="${{ github.event.inputs.build_number }}"
+          [ -z "$BUILD" ] && BUILD="${{ github.run_number }}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "Version $VERSION, Build $BUILD"
+
+      - name: Install dependencies
+        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Add iOS platform
+        run: npx cap add ios
+
+      - name: Generate icons and splash screens
+        run: npx capacitor-assets generate --ios
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: iOS-Projekt vorbereiten
+        run: |
+          chmod +x tools/prepare-ios.sh
+          tools/prepare-ios.sh "${{ steps.ver.outputs.version }}" "${{ steps.ver.outputs.build }}"
+
+      - name: API-Schlüssel bereitstellen
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          echo "${{ secrets.ASC_KEY_P8_BASE64 }}" | base64 --decode > "$RUNNER_TEMP/keys/AuthKey.p8"
+          grep -q "BEGIN PRIVATE KEY" "$RUNNER_TEMP/keys/AuthKey.p8" \
+            || { echo "FEHLER: ASC_KEY_P8_BASE64 ist kein gültiger .p8-Schlüssel. Base64 vollständig kopiert?"; exit 1; }
+
+      - name: Eigenes Zertifikat importieren (optional)
+        env:
+          P12: ${{ secrets.IOS_DIST_P12_BASE64 }}
+          P12_PW: ${{ secrets.IOS_DIST_P12_PASSWORD }}
+        run: |
+          if [ -z "$P12" ]; then
+            echo "Kein eigenes Zertifikat hinterlegt – Apple signiert per Cloud Signing."
+            exit 0
+          fi
+          KC="$RUNNER_TEMP/signing.keychain-db"
+          KC_PW=$(uuidgen)
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security create-keychain -p "$KC_PW" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$KC_PW" "$KC"
+          security import "$RUNNER_TEMP/dist.p12" -P "$P12_PW" -A -t cert -f pkcs12 -k "$KC"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KC_PW" "$KC" >/dev/null
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+          rm -f "$RUNNER_TEMP/dist.p12"
+          echo "Zertifikat importiert."
+
+      - name: Archiv bauen
+        run: |
+          if [ -d ios/App/App.xcworkspace ]; then SRC="-workspace ios/App/App.xcworkspace"; else SRC="-project ios/App/App.xcodeproj"; fi
+          xcodebuild archive $SRC \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee "$RUNNER_TEMP/archive.log" | grep -E "error:|warning: .*deprecated|ARCHIVE (SUCCEEDED|FAILED)" || true
+          [ -d "$RUNNER_TEMP/App.xcarchive" ] || { echo "FEHLER: Archiv wurde nicht erstellt. Siehe Protokoll oben."; tail -50 "$RUNNER_TEMP/archive.log"; exit 1; }
+
+      - name: Signieren und zu App Store Connect hochladen
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
+            -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}"
+
+      - name: Aufräumen
+        if: always()
+        run: |
+          rm -rf "$RUNNER_TEMP/keys"
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true
+
+      - name: Zusammenfassung
+        run: |
+          {
+            echo "### Hochgeladen: GradeGoal ${{ steps.ver.outputs.version }} (${{ steps.ver.outputs.build }})"
+            echo ""
+            echo "Apple verarbeitet den Build jetzt (meist 5–30 Minuten)."
+            echo "Danach erscheint er in App Store Connect → TestFlight."
+          } >> "$GITHUB_STEP_SUMMARY"
