@@ -7,14 +7,16 @@ import {
 } from "./lib/grades.js";
 import { store, STORAGE_KEY } from "./lib/storage.js";
 import { freshState, freshDataset, freshYear, freshAbi, defaultCats, migrateState } from "./lib/state.js";
-import { exportBackup, exportCsv, buildPrintHtml, downloadBlob } from "./lib/exporters.js";
+import { backupPayload, csvPayload, buildPrintHtml, printDocument } from "./lib/exporters.js";
+import { saveText, copyText } from "./lib/filesave.js";
+import { isNative, extLinkProps } from "./lib/platform.js";
+import { usePurchase, initPurchases, yearsAllowed, termsAllowed, FREE_TERMS } from "./lib/purchase.js";
 import { logError, logInfo, formatLog, getLog, clearLog } from "./lib/logger.js";
 import { makeT, APP, APP_NAME, APP_SUB, APP_VER, DEVELOPER, CONTACT, PUBLISHER, PRIVACY_URL, IMPRINT_URL, T } from "./lib/i18n.js";
-import { isPro, TIER } from "./lib/tier.js";
 import { makeLock, isValidPin, PIN_MIN, PIN_MAX } from "./lib/security.js";
 
 import { Ic, FlagDE, FlagEN } from "./components/icons.jsx";
-import { Toggle, Segmented, InfoTip, NumInput, AddRow, QuickAdd, Stamp, ProGate, ProBadge, ProLink } from "./components/ui.jsx";
+import { Toggle, Segmented, InfoTip, NumInput, AddRow, QuickAdd, Stamp, UnlockCard } from "./components/ui.jsx";
 import { TrendChart, Spark, LongTermChart, catColor } from "./components/charts.jsx";
 import { WhatIf, GroupRow } from "./components/panels.jsx";
 import KeyCalc from "./components/KeyCalc.jsx";
@@ -22,7 +24,7 @@ import AbiCalc from "./components/AbiCalc.jsx";
 import LockScreen from "./components/LockScreen.jsx";
 
 /* =========================================================
-   GradeGoal: Schulnoten & Grades  ·  Version 1.5.0
+   GradeGoal: Schulnoten & Grades  ·  Version 1.8.0
    Entwickelt von / developed by Simon Mählmann
 ========================================================= */
 
@@ -95,6 +97,7 @@ function App() {
   const [pinA, setPinA] = useState("");
   const [pinB, setPinB] = useState("");
   const [pinBusy, setPinBusy] = useState(false);
+  const [askUnlock, setAskUnlock] = useState(false);
 
   const saveT = useRef(null);
   const msgT = useRef(null);
@@ -104,6 +107,7 @@ function App() {
   const alive = useRef(true);
 
   const sysDark = useSystemDark();
+  const pur = usePurchase();
 
   /* ----- Ableitungen ----- */
   const t = useCallback(makeT(state.lang), [state.lang]);
@@ -112,13 +116,14 @@ function App() {
   const sc = scaleOf(ds);
   const years = state.years && state.years.length ? state.years : [{ id: "", label: "" }];
 
-  /* Pro-Funktionen sind in der Lite-Ausgabe hart aus. Das laeuft ueber
-     dieselbe eff-Logik wie die Nutzereinstellungen, damit im UI-Code nur
-     EINE Stelle ueber Sichtbarkeit entscheidet. */
-  const userEff = state.features.simple
+  /* Seit 1.8.0 gibt es keine Lite-Ausgabe mehr: alle Funktionen stehen
+     jedem offen, nur die Zahl der Schuljahre ist gratis begrenzt
+     (siehe lib/purchase.js). */
+  const eff = state.features.simple
     ? { wish: false, cats: false, groups: false, charts: false }
     : { charts: true, ...state.features };
-  const eff = { ...userEff, charts: userEff.charts && isPro, groups: userEff.groups && isPro };
+  const canYear = yearsAllowed(state, pur.unlocked);
+  const canTerm = termsAllowed(state, pur.unlocked);
   const C = (v, mode) => colorFor(v, sc, mode, dark);
 
   const flash = useCallback((text, kind = "ok") => {
@@ -152,6 +157,32 @@ function App() {
     }, 600);
     return () => clearTimeout(saveT.current);
   }, [state, loaded]);
+
+  /* ----- Store: Preis laden, frueheren Kauf erkennen ----- */
+  useEffect(() => { initPurchases(); }, []);
+
+  /* ----- Android-Zurueck-Taste -----
+     Ohne eigene Behandlung schliesst die Taste sofort die App, weil die
+     WebView keine Verlaufseintraege kennt. Hier geht sie eine Ebene
+     zurueck und beendet die App erst auf der Startseite. */
+  const navRef = useRef(null);
+  navRef.current = { screen: state.screen, sel: state.selSubject };
+  useEffect(() => {
+    if (!isNative()) return undefined;
+    let handle = null, gone = false;
+    import("@capacitor/app").then(({ App: CapApp }) =>
+      CapApp.addListener("backButton", () => {
+        const n = navRef.current || {};
+        if (n.sel) { setConfirmDel(false); setState((s) => ({ ...s, selSubject: null })); return; }
+        if (n.screen === "about") { setState((s) => ({ ...s, screen: s.aboutFrom || "home" })); return; }
+        if (["settings", "key", "abi"].includes(n.screen)) { setState((s) => ({ ...s, screen: "home" })); return; }
+        if (n.screen === "setup") { setState((s) => ({ ...s, screen: "start" })); return; }
+        CapApp.exitApp();
+      })
+    ).then((h) => { if (gone) h.remove(); else handle = h; })
+      .catch((e) => logError("Zurück-Taste nicht verfügbar", e));
+    return () => { gone = true; if (handle) handle.remove(); };
+  }, []);
 
   useEffect(() => () => {
     clearTimeout(saveT.current);
@@ -263,9 +294,32 @@ function App() {
   };
 
   /* ----- Import / Export ----- */
-  const doExport = () => { if (!exportBackup(state)) flash(t("exportErr"), "err"); };
-  const doCsv = () => { if (!exportCsv(state)) flash(t("exportErr"), "err"); };
-  const doPrint = () => { buildPrint(); try { window.print(); } catch (e) { logError("Drucken nicht möglich", e); } };
+  const sendOut = async (make, opts) => {
+    let ok = false;
+    try {
+      const p = make();
+      ok = await saveText(p.text, p.name, p.mime, opts);
+    } catch (e) {
+      logError("Export fehlgeschlagen", e);
+    }
+    if (!ok && alive.current) flash(t("exportErr"), "err");
+  };
+  const doExport = () => sendOut(() => backupPayload(state));
+  const doCsv = () => sendOut(() => csvPayload(state));
+  const doPrint = () => {
+    /* In der App gibt es kein window.print(): dort wird das Zeugnis als
+       Datei geteilt und laesst sich z. B. aus „Dateien“ drucken. */
+    if (isNative()) {
+      return sendOut(() => ({
+        text: printDocument(state, ds, t, APP),
+        name: `gradegoal-zeugnis-${new Date().toISOString().slice(0, 10)}.html`,
+        mime: "text/html;charset=utf-8",
+      }), { title: t("report") });
+    }
+    buildPrint();
+    try { window.print(); } catch (e) { logError("Drucken nicht möglich", e); }
+    return undefined;
+  };
 
   const doImport = (file) => {
     const r = new FileReader();
@@ -296,12 +350,8 @@ function App() {
 
   const copyLog = async () => {
     const text = formatLog();
-    try {
-      await navigator.clipboard.writeText(text);
-      flash(t("copied"), "ok");
-    } catch (e) {
-      downloadBlob(new Blob([text], { type: "text/plain" }), "gradegoal-protokoll.txt");
-    }
+    if (await copyText(text)) { flash(t("copied"), "ok"); return; }
+    if (!(await saveText(text, "gradegoal-protokoll.txt"))) flash(t("exportErr"), "err");
   };
 
   const hardReset = () => {
@@ -364,7 +414,7 @@ function App() {
           {APP_NAME}<span style={{ color: "var(--blue)" }}>.</span>
         </div>
         <div style={{ color: "var(--sub)", marginTop: 2, fontSize: 15 }}>
-          {APP_SUB}{isPro && <span className="pro-badge" style={{ marginLeft: 6 }}>Pro</span>}
+          {APP_SUB}
         </div>
         <div style={{ color: "var(--sub)", marginTop: 8, fontSize: 16 }}>{t("tagline")}</div>
         <div className="lbl" style={{ margin: "34px 0 10px", textTransform: "uppercase", letterSpacing: ".05em" }}>{t("chooseLang")}</div>
@@ -409,13 +459,12 @@ function App() {
             <p style={{ margin: "4px 0 0", lineHeight: 1.55, fontSize: 14, color: "var(--sub)" }}>{text}</p>
           </div>))}
       </div>
-      {!isPro && (
-        <div className="card">
-          <h2 className="sec"><Ic n="lock" size={14} />{t("proTeaser")}</h2>
-          <p style={{ margin: 0, lineHeight: 1.6, fontSize: 14, color: "var(--sub)" }}>{t("proList")}</p>
-          <p style={{ margin: "8px 0 0", lineHeight: 1.6, fontSize: 13, color: "var(--faint)" }}>{t("proMigrate")}</p>
-          <ProLink t={t} style={{ marginTop: 12 }} />
-        </div>)}
+      <div className="card">
+        <h2 className="sec"><Ic n="star" size={14} />{t("fullVersion")}</h2>
+        {pur.unlocked
+          ? <p style={{ margin: 0, lineHeight: 1.6, fontSize: 14, color: "var(--green)", fontWeight: 700 }}>✓ {t("unlockedState")}</p>
+          : <UnlockCard t={t} />}
+      </div>
       <div className="card">
         <h2 className="sec"><Ic n="lock" size={14} />{t("aboutPrivacyTitle")}</h2>
         <p style={{ margin: 0, lineHeight: 1.6, fontSize: 15 }}>{t("aboutPrivacy")}</p>
@@ -425,16 +474,16 @@ function App() {
         <div className="row" style={{ justifyContent: "space-between" }}><span className="lbl">{t("publisher")}</span><strong>{PUBLISHER}</strong></div>
         <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("developedBy")}</span><strong>{DEVELOPER}</strong></div>
         <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("version")}</span><span>{APP_VER}</span></div>
-        <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("edition")}</span><span>{isPro ? "Pro" : "Lite"}</span></div>
+        <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("edition")}</span><span>{pur.unlocked ? t("editionFull") : t("editionFree")}</span></div>
         <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("contact")}</span><span style={{ color: "var(--sub)" }}>{CONTACT}</span></div>
         {(PRIVACY_URL || IMPRINT_URL) && (
           <div className="row" style={{ marginTop: 14, flexWrap: "wrap", gap: 8 }}>
             {IMPRINT_URL && (
               <a className="btn-ghost" style={{ textDecoration: "none" }}
-                href={IMPRINT_URL} target="_blank" rel="noopener noreferrer">{t("imprintLink")}</a>)}
+                {...extLinkProps(IMPRINT_URL)}>{t("imprintLink")}</a>)}
             {PRIVACY_URL && (
               <a className="btn-ghost" style={{ textDecoration: "none" }}
-                href={PRIVACY_URL} target="_blank" rel="noopener noreferrer">{t("privacyLink")}</a>)}
+                {...extLinkProps(PRIVACY_URL)}>{t("privacyLink")}</a>)}
           </div>)}
         <div style={{ marginTop: 14, fontSize: 12, color: "var(--faint)" }}>© 2026 {PUBLISHER} · {DEVELOPER}</div>
       </div>
@@ -446,10 +495,8 @@ function App() {
       <button className="btn-ghost" style={{ border: "none", paddingLeft: 0 }} onClick={() => up({ screen: "home" })}>← {t("back")}</button>
       <h1 className="brand" style={{ fontSize: 28, margin: "8px 0 16px" }}><Ic n="percent" size={22} />{t("keyCalc")}</h1>
       <div className="card">
-        <ProGate feature="key" t={t}>
-          <KeyCalc ds={ds} sc={sc} t={t} lang={state.lang} dark={dark}
-            onChangeDs={(patch) => upDs(patch)} />
-        </ProGate>
+        <KeyCalc ds={ds} sc={sc} t={t} lang={state.lang} dark={dark}
+          onChangeDs={(patch) => upDs(patch)} />
       </div>
     </div>);
 
@@ -459,9 +506,7 @@ function App() {
       <button className="btn-ghost" style={{ border: "none", paddingLeft: 0 }} onClick={() => up({ screen: "home" })}>← {t("back")}</button>
       <h1 className="brand" style={{ fontSize: 28, margin: "8px 0 16px" }}><Ic n="cap" size={22} />{t("abi")}</h1>
       <div className="card">
-        <ProGate feature="abi" t={t}>
-          <AbiCalc abi={ds.abi || freshAbi()} t={t} lang={state.lang} onChange={(next) => upDs({ abi: next })} />
-        </ProGate>
+        <AbiCalc abi={ds.abi || freshAbi()} t={t} lang={state.lang} onChange={(next) => upDs({ abi: next })} />
       </div>
     </div>);
 
@@ -489,7 +534,7 @@ function App() {
           <div className="row" style={{ flexWrap: "wrap" }}>
             {[["grades", t("scaleGrades"), t("scaleGradesHint"), true],
               ["points", t("scalePoints"), t("scalePointsHint"), true],
-              ["custom", t("scaleCustom"), "", isPro]].map(([v, l, h, allowed]) => (
+              ["custom", t("scaleCustom"), "", true]].map(([v, l, h, allowed]) => (
               <button key={v} disabled={!allowed} aria-pressed={ds.scale.type === v}
                 onClick={() => allowed && upDs({ scale: { ...ds.scale, type: v } })}
                 style={{
@@ -498,11 +543,11 @@ function App() {
                   background: ds.scale.type === v ? "var(--blue-soft)" : "var(--card)",
                   textAlign: "center", opacity: allowed ? 1 : 0.5,
                 }}>
-                <div className="brand" style={{ fontSize: 15 }}>{l}{!allowed && <ProBadge t={t} />}</div>
+                <div className="brand" style={{ fontSize: 15 }}>{l}</div>
                 {h && <div style={{ fontSize: 11, color: "var(--sub)", marginTop: 2 }}>{h}</div>}
               </button>))}
           </div>
-          {ds.scale.type === "custom" && isPro && (
+          {ds.scale.type === "custom" && (
             <div className="row" style={{ marginTop: 12, flexWrap: "wrap", gap: 12 }}>
               <label className="lbl">{t("min")} <input className="inp" inputMode="decimal" style={{ width: 70, marginLeft: 6, display: "inline-block", padding: 8 }}
                 value={ds.scale.min} onChange={(e) => upDs({ scale: { ...ds.scale, min: filterNumInput(e.target.value) } })} /></label>
@@ -527,10 +572,10 @@ function App() {
           </div>
           {[["wish", "star", t("featWish"), true],
             ["cats", "book", t("featCats"), true],
-            ["charts", "chart", t("featCharts"), isPro],
-            ["groups", "sigma", t("featGroups"), isPro]].map(([k, ic, label, allowed]) => (
+            ["charts", "chart", t("featCharts"), true],
+            ["groups", "sigma", t("featGroups"), true]].map(([k, ic, label, allowed]) => (
             <div key={k} className="row" style={{ justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid var(--line)", opacity: state.features.simple || !allowed ? 0.45 : 1 }}>
-              <strong style={{ fontWeight: 600 }}><Ic n={ic} size={16} />{label}{!allowed && <ProBadge t={t} />}</strong>
+              <strong style={{ fontWeight: 600 }}><Ic n={ic} size={16} />{label}</strong>
               <Toggle on={eff[k]} label={label} disabled={!allowed}
                 onChange={(v) => allowed && up({ features: { ...state.features, [k]: v, simple: false } })} />
             </div>))}
@@ -549,8 +594,7 @@ function App() {
             <h2 className="sec"><Ic n="calendar" size={14} />{t("terms")}</h2>
             <div className="hint" style={{ marginBottom: 8 }}>{t("termsHint")}</div>
 
-            <ProGate feature="terms" t={t} compact>
-              {years.map((yr) => {
+            {years.map((yr) => {
                 const inYear = state.datasets.filter((d) => d.yearId === yr.id);
                 return (
                   <div key={yr.id} className="year-block">
@@ -603,17 +647,27 @@ function App() {
                     })}
 
                     <button className="btn-ghost" style={{ marginTop: 10, marginLeft: 18, padding: "6px 12px", fontSize: 13 }}
-                      onClick={() => up({ datasets: [...state.datasets, freshDataset(state.lang === "de" ? "Neues Halbjahr" : "New term", yr.id)] })}>
-                      + {t("newTerm")}
+                      onClick={() => {
+                        if (!canTerm) { setAskUnlock(true); return; }
+                        up({ datasets: [...state.datasets, freshDataset(state.lang === "de" ? "Neues Halbjahr" : "New term", yr.id)] });
+                      }}>
+                      + {t("newTerm")}{!canTerm && <Ic n="star" size={12} color="var(--blue)" style={{ marginLeft: 6, marginRight: 0 }} />}
                     </button>
                   </div>);
               })}
 
-              <button className="btn-ghost" style={{ marginTop: 14 }}
-                onClick={() => up({ years: [...state.years, freshYear(state.lang === "de" ? "Neues Schuljahr" : "New school year")] })}>
-                + {t("newYear")}
-              </button>
-            </ProGate>
+            <button className="btn-ghost" style={{ marginTop: 14 }}
+              onClick={() => {
+                if (!canYear) { setAskUnlock(true); return; }
+                up({ years: [...state.years, freshYear(state.lang === "de" ? "Neues Schuljahr" : "New school year")] });
+              }}>
+              + {t("newYear")}{!canYear && <Ic n="star" size={12} color="var(--blue)" style={{ marginLeft: 6, marginRight: 0 }} />}
+            </button>
+            {!pur.unlocked && (askUnlock
+              ? <UnlockCard t={t} compact style={{ marginTop: 14 }} />
+              : <div className="hint" style={{ marginTop: 12, fontSize: 12 }}>{t("freeLimitHint")(FREE_TERMS)}</div>)}
+            {pur.unlocked && askUnlock && (
+              <div role="status" style={{ marginTop: 12, fontWeight: 700, color: "var(--green)" }}>✓ {t("unlockDone")}</div>)}
           </div>
 
           {/* ---------- PIN-Sperre ---------- */}
@@ -636,7 +690,7 @@ function App() {
                 {flashBox}
               </React.Fragment>
             ) : (
-            <ProGate feature="lock" t={t} compact>
+            <React.Fragment>
               <div className="banner banner-info" style={{ marginBottom: 10 }}>
                 <Ic n="alert" size={14} />{t("lockHint")}
               </div>
@@ -660,7 +714,7 @@ function App() {
                 <Ic n="lock" size={14} />{t("lockSave")}
               </button>
               {flashBox}
-            </ProGate>)}
+            </React.Fragment>)}
           </div>
 
           {/* ---------- Daten ---------- */}
@@ -672,10 +726,11 @@ function App() {
               <button className="btn-ghost" onClick={() => fileRef.current && fileRef.current.click()}><Ic n="upload" size={15} />{t("importBtn")}</button>
               <input ref={fileRef} type="file" accept=".json,application/json" style={{ display: "none" }}
                 onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) doImport(f); e.target.value = ""; }} />
-              {isPro && <button className="btn-ghost" onClick={doCsv}><Ic n="table" size={15} />{t("exportCsvBtn")}</button>}
-              <button className="btn-ghost" onClick={doPrint}><Ic n="printer" size={15} />{t("printBtn")}</button>
+              <button className="btn-ghost" onClick={doCsv}><Ic n="table" size={15} />{t("exportCsvBtn")}</button>
+              <button className="btn-ghost" onClick={doPrint}><Ic n="printer" size={15} />{isNative() ? t("printBtnApp") : t("printBtn")}</button>
             </div>
-            {isPro && <div className="hint" style={{ marginTop: 8 }}>{t("csvHint")}</div>}
+            <div className="hint" style={{ marginTop: 8 }}>{t("csvHint")}</div>
+            {flashBox}
             <div style={{ borderTop: "1px solid var(--line)", marginTop: 14, paddingTop: 14 }}>
               <button className="btn-danger" style={{ width: "100%", background: confirmReset ? "var(--red)" : "var(--card)", color: confirmReset ? "#fff" : "var(--red)" }}
                 onClick={() => { if (!confirmReset) return setConfirmReset(true); hardReset(); }}>
@@ -760,7 +815,7 @@ function App() {
         {!state.features.simple && (
           <div className="card">
             <h2 className="sec"><Ic n="scale" size={14} />{t("subjWeight")}</h2>
-            <ProGate feature="subjWeight" t={t} compact>
+            <React.Fragment>
               <div className="hint" style={{ marginBottom: 10 }}>{t("subjWeightHint")}</div>
               <div className="row" style={{ gap: 10 }}>
                 <input className="num-weight" inputMode="decimal" value={String(subjWeight(subject))} aria-label={t("subjWeight")}
@@ -793,7 +848,7 @@ function App() {
                   <Ic n="sliders" size={13} />{t("keyManage")}
                 </button>
               </div>
-            </ProGate>
+            </React.Fragment>
           </div>)}
 
         {eff.cats && eff.charts && (
@@ -848,8 +903,8 @@ function App() {
                     })}
                     <QuickAdd ph={t("addGrade")} label={t("addGradeFull")}
                       dateLabel={t("gradeDate")} dateHint={t("gradeDateHint")}
-                      keyObj={isPro ? subjKey : null} sc={isPro ? sc : null}
-                      lang={state.lang} t={isPro ? t : null} dark={dark}
+                      keyObj={subjKey} sc={sc}
+                      lang={state.lang} t={t} dark={dark}
                       onAdd={(v) => upCat(c.id, { grades: [...c.grades, v] })} />
                   </div>
                 </div>);
@@ -869,9 +924,7 @@ function App() {
         {eff.cats && (
           <div className="card">
             <h2 className="sec"><Ic n="sliders" size={14} />{t("whatIf")}</h2>
-            <ProGate feature="whatIf" t={t} compact>
-              <WhatIf subject={subject} sc={sc} lang={state.lang} t={t} dark={dark} current={calc} />
-            </ProGate>
+            <WhatIf subject={subject} sc={sc} lang={state.lang} t={t} dark={dark} current={calc} />
           </div>)}
 
         {eff.cats && eff.wish && (
@@ -935,7 +988,6 @@ function App() {
         <div>
           <div className="brand" style={{ fontSize: 24 }}>
             {APP_NAME}<span style={{ color: "var(--blue)" }}>.</span>
-            {isPro && <span className="pro-badge" style={{ marginLeft: 6 }}>Pro</span>}
           </div>
           {state.datasets.length > 1 && <div style={{ fontSize: 12, color: "var(--sub)", fontWeight: 700 }}>{ds.label}</div>}
         </div>
@@ -966,7 +1018,7 @@ function App() {
             <div style={{ textAlign: "center" }}>
               <div className="brand" style={{ fontSize: 34, color: overallAvg != null ? C(overallAvg, "bright") : "var(--hero-ink)" }}>{fmt(overallAvg, state.lang)}</div>
               <div style={{ fontSize: 11, color: "var(--hero-ink)", fontWeight: 700 }}>
-                {t("avg")}{anyWeighted && isPro ? " · " + t("weighted") : ""}
+                {t("avg")}{anyWeighted ? " · " + t("weighted") : ""}
               </div>
             </div>
             {eff.wish && (
@@ -984,10 +1036,10 @@ function App() {
         <h2 className="sec"><Ic n="sliders" size={14} />{t("tools")}</h2>
         <div className="row" style={{ flexWrap: "wrap" }}>
           <button className="btn-ghost" onClick={() => up({ screen: "key" })}>
-            <Ic n="percent" size={15} />{t("keyCalc")}<ProBadge t={t} stop />
+            <Ic n="percent" size={15} />{t("keyCalc")}
           </button>
           <button className="btn-ghost" onClick={() => up({ screen: "abi" })}>
-            <Ic n="cap" size={15} />{t("abiShort")}<ProBadge t={t} stop />
+            <Ic n="cap" size={15} />{t("abiShort")}
           </button>
         </div>
       </div>
@@ -1019,7 +1071,7 @@ function App() {
       {!state.features.simple && state.features.groups && (
         <div className="card">
           <h2 className="sec"><Ic n="sigma" size={14} />{t("groups")}</h2>
-          <ProGate feature="groups" t={t} compact>
+          <React.Fragment>
             <div className="hint" style={{ marginBottom: 10 }}>{t("groupsHint")}</div>
             {ds.groups.map((g) => (
               <GroupRow key={g.id} g={g} a={groupAvg(g)} ok={groupOk(g)} sc={sc} ds={ds} upDs={upDs}
@@ -1036,7 +1088,7 @@ function App() {
               </div>
             </div>
             {flashBox}
-          </ProGate>
+          </React.Fragment>
         </div>)}
 
       {/* ---------- Fächer ---------- */}
@@ -1071,7 +1123,7 @@ function App() {
                   style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", fontSize: 16, fontWeight: 600, color: "var(--ink)", display: "flex", alignItems: "center", gap: 8, padding: 0, minWidth: 0 }}>
                   <span style={{ width: 10, height: 10, borderRadius: "50%", background: C(sg), flexShrink: 0 }}></span>
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sName(s, state.lang)}</span>
-                  {isPro && wt !== 1 && (
+                  {wt !== 1 && (
                     <span className="wt-badge" title={t("subjWeight")}>{wt === 0 ? "0" : "×" + fmt(wt, state.lang, 1)}</span>)}
                   {eff.charts && eff.cats && <span style={{ marginLeft: "auto", display: "flex" }}><Spark subject={s} sc={sc} /></span>}
                   <span style={{ color: "var(--border)", fontSize: 13 }} aria-hidden="true">›</span>
@@ -1086,19 +1138,9 @@ function App() {
           onAdd={(name) => upDs({ subjects: [...ds.subjects, { id: uid(), name, grade: "", wish: "", weight: 1, cats: defaultCats(), goals: "", notes: "" }] })} />
       </div>
 
-      {!isPro && (
-        <div className="card pro-teaser">
-          <div className="row" style={{ gap: 6 }}>
-            <Ic n="star" size={15} color="var(--blue)" />
-            <strong style={{ fontSize: 15 }}>{t("proTeaser")}</strong>
-          </div>
-          <div className="hint" style={{ marginTop: 6 }}>{t("proList")}</div>
-          <ProLink t={t} style={{ marginTop: 12 }} />
-        </div>)}
-
       <div style={{ textAlign: "center", marginTop: 6 }}>
         <button className="btn-ghost" style={{ border: "none", color: "var(--faint)", fontSize: 13 }} onClick={() => up({ screen: "about", aboutFrom: "home" })}>
-          <Ic n="info" size={13} />{t("aboutBtn")} · v{APP_VER} {TIER === "pro" ? "Pro" : "Lite"}
+          <Ic n="info" size={13} />{t("aboutBtn")} · v{APP_VER}
         </button>
       </div>
       {snack}
