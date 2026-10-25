@@ -46,16 +46,14 @@ export function downloadBlob(blob, filename) {
   }
 }
 
-/* ---------- Sicherung (JSON) ---------- */
-export function exportBackup(state) {
-  try {
-    const json = JSON.stringify(state, null, 2);
-    const stamp = new Date().toISOString().slice(0, 10);
-    return downloadBlob(new Blob([json], { type: "application/json" }), `gradegoal-sicherung-${stamp}.json`);
-  } catch (e) {
-    logError("Sicherung konnte nicht erstellt werden", e);
-    return false;
-  }
+/* ---------- Sicherung (JSON) ----------
+   Die Export-Funktionen liefern nur Inhalt und Dateinamen. Die Ausgabe
+   uebernimmt lib/filesave.js – im Browser als Download, in der App
+   ueber das Teilen-Menue. */
+const stamp = () => new Date().toISOString().slice(0, 10);
+
+export function backupPayload(state) {
+  return { text: JSON.stringify(state, null, 2), name: `gradegoal-sicherung-${stamp()}.json`, mime: "application/json" };
 }
 
 /* ---------- CSV ---------- */
@@ -114,17 +112,8 @@ export function buildCsv(state, opts = {}) {
   return "\uFEFF" + body + "\r\n";
 }
 
-export function exportCsv(state) {
-  try {
-    const stamp = new Date().toISOString().slice(0, 10);
-    return downloadBlob(
-      new Blob([buildCsv(state)], { type: "text/csv;charset=utf-8" }),
-      `gradegoal-noten-${stamp}.csv`
-    );
-  } catch (e) {
-    logError("CSV konnte nicht erstellt werden", e);
-    return false;
-  }
+export function csvPayload(state) {
+  return { text: buildCsv(state), name: `gradegoal-noten-${stamp()}.csv`, mime: "text/csv;charset=utf-8" };
 }
 
 /* ---------- Druckansicht ---------- */
@@ -169,4 +158,21 @@ export function buildPrintHtml(state, ds, t, app) {
     app.developer
   )} · ${e(printed)}</p>
   </div>`;
+}
+
+/* Eigenstaendiges HTML-Dokument des Zeugnisses fuer die App.
+   Dort gibt es kein window.print(). Die Datei laesst sich ueber das
+   Teilen-Menue sichern und z. B. in „Dateien“ oeffnen und drucken. */
+export function printDocument(state, ds, t, app) {
+  const css = `body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#000;background:#fff;margin:0}
+.print-sheet{padding:24px;max-width:760px;margin:0 auto}
+h1{margin:0 0 4px;font-size:22px}.print-meta{font-size:13px;color:#444}
+table{width:100%;border-collapse:collapse;margin-top:16px}
+td,th{border-bottom:1px solid #ccc;padding:8px 6px;text-align:left}
+th:nth-child(n+2),td:nth-child(n+2){text-align:center;width:90px}
+tr{break-inside:avoid}.print-foot{font-size:12px;color:#666}`;
+  return `<!DOCTYPE html><html lang="${escapeHtml(state.lang)}"><head><meta charset="utf-8">` +
+    `<meta name="viewport" content="width=device-width,initial-scale=1">` +
+    `<title>${escapeHtml(app.name)} – ${escapeHtml(t("report"))}</title><style>${css}</style></head>` +
+    `<body>${buildPrintHtml(state, ds, t, app)}</body></html>`;
 }

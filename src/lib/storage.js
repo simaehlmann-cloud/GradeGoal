@@ -12,6 +12,23 @@
 ========================================================= */
 
 import { logWarn, logError } from "./logger.js";
+import { isNative } from "./platform.js";
+
+/* ---------- Zweitablage in der App ----------
+   iOS darf den Speicher einer WebView bei Platzmangel leeren. Fuer eine
+   Noten-App waere das ein Totalverlust. In der App wird deshalb jeder
+   Stand zusaetzlich ueber @capacitor/preferences (iOS: UserDefaults,
+   Android: SharedPreferences) abgelegt und beim Start herangezogen,
+   falls localStorage leer ist. */
+async function prefs() {
+  if (!isNative()) return null;
+  try {
+    return (await import("@capacitor/preferences")).Preferences;
+  } catch (e) {
+    logWarn("Preferences nicht verfuegbar", e);
+    return null;
+  }
+}
 
 export const STORAGE_KEY = "gradegoal:data";
 
@@ -35,7 +52,17 @@ export const store = {
     }
     try {
       if (!hasLocal()) return null;
-      const v = localStorage.getItem(key);
+      let v = localStorage.getItem(key);
+      if (!v) {
+        const P = await prefs();
+        if (P) {
+          const r = await P.get({ key });
+          if (r && r.value) {
+            v = r.value;
+            logWarn("Daten aus der Zweitablage wiederhergestellt");
+          }
+        }
+      }
       return v ? JSON.parse(v) : null;
     } catch (e) {
       logError("Gespeicherte Daten konnten nicht gelesen werden", e);
@@ -63,6 +90,10 @@ export const store = {
     try {
       if (!hasLocal()) return { ok: false, reason: "unavailable" };
       localStorage.setItem(key, json);
+      const P = await prefs();
+      if (P) {
+        try { await P.set({ key, value: json }); } catch (e) { logWarn("Zweitablage nicht geschrieben", e); }
+      }
       return { ok: true };
     } catch (e) {
       const quota =
@@ -89,6 +120,7 @@ export const store = {
     } catch (e) {}
     try {
       if (hasLocal()) localStorage.removeItem(key);
+      prefs().then((P) => P && P.remove({ key })).catch(() => {});
       return true;
     } catch (e) {
       logError("Zuruecksetzen fehlgeschlagen", e);

@@ -8,7 +8,7 @@
 
 export const APP_NAME = "GradeGoal";
 export const APP_SUB = "Schulnoten & Grades";
-export const APP_VER = "1.6.2";
+export const APP_VER = "1.8.0";
 export const DEVELOPER = "Simon Mählmann";
 export const CONTACT = "smaehlmann.appdev@gmail.com";
 export const PUBLISHER = "Wisdompeak Apps";
@@ -172,7 +172,7 @@ export const T = {
     importErr: "Diese Datei konnte nicht gelesen werden. Wähle eine Sicherung im Format von " + APP_NAME + ".",
     importRead: "Die Datei konnte nicht geöffnet werden. Versuche es erneut.",
     exportErr: "Der Export hat nicht geklappt. Prüfe, ob Downloads erlaubt sind.",
-    printBtn: "Zeugnis drucken / als PDF speichern",
+    printBtn: "Zeugnis drucken / als PDF speichern", printBtnApp: "Zeugnis als Datei teilen (zum Drucken)",
     resetBtn: "Alles zurücksetzen", resetConfirm: "Wirklich? Alle Noten, Fächer und Einstellungen werden gelöscht.",
     undoDeleted: "Gelöscht", undoBtn: "Rückgängig",
     saveFailQuota: "Der Gerätespeicher ist voll. Änderungen werden gerade nicht gesichert – exportiere deine Daten und schaffe Platz.",
@@ -181,14 +181,22 @@ export const T = {
     diagnosticsHint: "Bleibt nur auf deinem Gerät und wird nicht übertragen. Hilfreich, wenn du einen Fehler melden möchtest.",
     copyLog: "Protokoll kopieren", copied: "Kopiert.", clearLogBtn: "Protokoll leeren", logEmpty: "Keine Einträge.",
 
-    /* Pro */
-    proBadge: "Pro",
-    proTitle: "Gehört zu " + APP_NAME + " Pro",
-    proHint: "Diese Funktion ist in der Pro-Version enthalten – einmalig, werbefrei, ohne Konto.",
-    proOpen: "Pro ansehen",
-    proTeaser: "Mehr in Pro",
-    proList: "Mehrere Halbjahre und Schuljahre · Notenverlauf-Diagramme · Ausgewählte Durchschnitte · Fachgewichtung · Abitur-Rechner · Notenschlüssel · PIN-Sperre · CSV-Export",
-    proMigrate: "Deine Daten nimmst du über „Sicherung exportieren“ mit – in Pro einfach wieder importieren.",
+    /* Vollversion (In-App-Kauf) */
+    fullVersion: "Vollversion",
+    unlockTitle: "Unbegrenzt nutzen",
+    unlockText: (n) => `Gratis verwaltest du ein Schuljahr mit bis zu ${n} Halbjahren bzw. Profilen – mit allen Funktionen. Mit einem einmaligen Kauf legst du beliebig viele Schuljahre an. Kein Abo, kein Konto.`,
+    unlockBuy: (price) => (price ? `Unbegrenzt freischalten – ${price}` : "Unbegrenzt freischalten"),
+    unlockFine: "Einmaliger Kauf über deinen App-Store. Gilt auf allen deinen Geräten mit demselben Store-Konto.",
+    unlockUnavailable: "Der Store ist gerade nicht erreichbar. Prüfe die Internetverbindung und öffne diese Seite erneut.",
+    restoreBtn: "Kauf wiederherstellen",
+    unlockWebHint: "Die Freischaltung ist in der App erhältlich.",
+    unlockDone: "Danke! GradeGoal ist jetzt unbegrenzt freigeschaltet.",
+    unlockPending: "Der Kauf wartet noch auf Bestätigung. Sobald er abgeschlossen ist, wird die App automatisch freigeschaltet.",
+    unlockError: "Das hat nicht geklappt. Bitte versuche es später noch einmal.",
+    restoreNone: "Für dieses Store-Konto wurde kein Kauf gefunden.",
+    unlockedState: "Unbegrenzt freigeschaltet – danke für deine Unterstützung!",
+    editionFull: "Unbegrenzt", editionFree: "Gratis",
+    freeLimitHint: (n) => `Gratis: ein Schuljahr mit bis zu ${n} Halbjahren bzw. Profilen.`,
 
     about: "Über die App", aboutBtn: "Info & Impressum",
     aboutText: [
@@ -213,7 +221,7 @@ export const T = {
       ["moon", "Design", "Hell, dunkel oder automatisch nach Systemeinstellung."],
     ],
     aboutPrivacyTitle: "Datenschutz",
-    aboutPrivacy: "Alle Daten bleiben ausschließlich auf deinem Gerät. Es werden keine Daten an Server übertragen, es gibt keine Werbung und es wird kein Konto benötigt. Auch das Diagnose-Protokoll verlässt dein Gerät nicht.",
+    aboutPrivacy: "Alle Daten bleiben ausschließlich auf deinem Gerät. Es werden keine Daten an Server übertragen, es gibt keine Werbung und es wird kein Konto benötigt. Auch das Diagnose-Protokoll verlässt dein Gerät nicht. Einen Kauf wickelt allein dein App-Store ab; die App erfährt nur, ob die Freischaltung gekauft wurde.",
     privacyLink: "Datenschutzerklärung öffnen", imprintLink: "Impressum öffnen",
     legalTitle: "Impressum",
     publisher: "Herausgeber",
@@ -362,7 +370,7 @@ export const T = {
     importErr: "This file could not be read. Choose a backup in " + APP_NAME + " format.",
     importRead: "The file could not be opened. Please try again.",
     exportErr: "The export did not work. Check whether downloads are allowed.",
-    printBtn: "Print report card / save as PDF",
+    printBtn: "Print report card / save as PDF", printBtnApp: "Share report card as a file (for printing)",
     resetBtn: "Reset everything", resetConfirm: "Really? All grades, subjects and settings will be deleted.",
     undoDeleted: "Deleted", undoBtn: "Undo",
     saveFailQuota: "Device storage is full. Changes are not being saved – export your data and free up space.",
@@ -371,13 +379,21 @@ export const T = {
     diagnosticsHint: "Stays on your device and is never transmitted. Useful if you want to report a problem.",
     copyLog: "Copy log", copied: "Copied.", clearLogBtn: "Clear log", logEmpty: "No entries.",
 
-    proBadge: "Pro",
-    proTitle: "Part of " + APP_NAME + " Pro",
-    proHint: "This feature is included in the Pro version – one-time purchase, ad-free, no account.",
-    proOpen: "See Pro",
-    proTeaser: "More in Pro",
-    proList: "Multiple terms and school years · Grade history charts · Selected averages · Subject weighting · Abitur calculator · Grade key · PIN lock · CSV export",
-    proMigrate: "Take your data with you via “Export backup” – simply import it again in Pro.",
+    fullVersion: "Full version",
+    unlockTitle: "Use without limits",
+    unlockText: (n) => `For free you can manage one school year with up to ${n} terms or profiles – with every feature. A one-time purchase lets you add as many school years as you like. No subscription, no account.`,
+    unlockBuy: (price) => (price ? `Unlock unlimited – ${price}` : "Unlock unlimited"),
+    unlockFine: "One-time purchase through your app store. Applies to all your devices using the same store account.",
+    unlockUnavailable: "The store can't be reached right now. Check your internet connection and open this page again.",
+    restoreBtn: "Restore purchase",
+    unlockWebHint: "Unlocking is available in the app.",
+    unlockDone: "Thank you! GradeGoal is now unlocked without limits.",
+    unlockPending: "The purchase is still awaiting approval. The app unlocks automatically once it completes.",
+    unlockError: "That didn't work. Please try again later.",
+    restoreNone: "No purchase was found for this store account.",
+    unlockedState: "Unlocked without limits – thanks for your support!",
+    editionFull: "Unlimited", editionFree: "Free",
+    freeLimitHint: (n) => `Free: one school year with up to ${n} terms or profiles.`,
 
     about: "About this app", aboutBtn: "Info & legal notice",
     aboutText: [
@@ -402,7 +418,7 @@ export const T = {
       ["moon", "Appearance", "Light, dark or automatic following your system setting."],
     ],
     aboutPrivacyTitle: "Privacy",
-    aboutPrivacy: "All data stays on your device only. Nothing is sent to any server, there are no ads and no account is needed. The diagnostic log never leaves your device either.",
+    aboutPrivacy: "All data stays on your device only. Nothing is sent to any server, there are no ads and no account is needed. The diagnostic log never leaves your device either. Purchases are handled entirely by your app store; the app only learns whether the unlock was bought.",
     privacyLink: "Open privacy policy", imprintLink: "Open legal notice",
     legalTitle: "Legal notice",
     publisher: "Publisher",
