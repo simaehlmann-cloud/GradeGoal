@@ -1,5 +1,13 @@
 # Play Console – Checkliste
 
+> **Hinweis (ab Version 1.8.0):** Die Aufteilung in Lite und Pro gibt es
+> nicht mehr. GradeGoal ist jetzt **eine** App: ein Schuljahr gratis mit
+> allen Funktionen, danach einmaliger In-App-Kauf. Die Angaben unten
+> stammen aus der Zeit davor und müssen vor der Play-Veröffentlichung
+> angepasst werden (ein Eintrag, In-App-Käufe „ja“). Für den App Store
+> gilt `APP-STORE-CHECKLISTE.md` bzw. `APP-STORE-TEXTE.md`.
+
+
 Die Reihenfolge ist bewusst so gewählt: Der geschlossene Test ist der
 lange Posten. Alles andere lässt sich parallel dazu erledigen.
 
