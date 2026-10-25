@@ -5,11 +5,12 @@ name: iOS – TestFlight
 #
 # Läuft NICHT bei jedem Push: jeder Upload verbraucht eine Build-Nummer.
 #
-# Signierung ohne eigenen Mac („Cloud Signing“): Das Archiv wird
-# unsigniert gebaut, erst beim Export signiert Apple mit einem von Apple
-# verwalteten Zertifikat. Dafür braucht der API-Schlüssel die Rolle
-# „Admin“. Optional kann ein eigenes Verteilungszertifikat (.p12)
-# hinterlegt werden – dann wird dieses verwendet.
+# Signierung ohne eigenen Mac: Das Archiv wird unsigniert gebaut und
+# beim Export mit dem eigenen Verteilungszertifikat (Secret
+# IOS_DIST_P12_BASE64) signiert; das Profil legt Xcode ueber den
+# API-Schluessel selbst an. Reines Cloud Signing reicht NICHT: Apple
+# lehnt dann die eingebetteten Frameworks als ungueltig signiert ab.
+# Das Zertifikat erzeugt einmalig der Workflow "iOS – Zertifikat erstellen".
 
 on:
   workflow_dispatch:
@@ -29,7 +30,7 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Zugangsdaten prüfen
         # Früh und mit klarer Meldung abbrechen statt mitten in xcodebuild.
@@ -63,7 +64,7 @@ jobs:
           MAJOR=$(xcodebuild -version | head -1 | sed -E 's/Xcode ([0-9]+).*/\1/')
           [ "$MAJOR" -ge 26 ] || { echo "FEHLER: Xcode 26 oder neuer nötig, gefunden: $MAJOR"; exit 1; }
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -104,14 +105,17 @@ jobs:
           grep -q "BEGIN PRIVATE KEY" "$RUNNER_TEMP/keys/AuthKey.p8" \
             || { echo "FEHLER: ASC_KEY_P8_BASE64 ist kein gültiger .p8-Schlüssel. Base64 vollständig kopiert?"; exit 1; }
 
-      - name: Eigenes Zertifikat importieren (optional)
+      - name: Verteilungszertifikat importieren
         env:
           P12: ${{ secrets.IOS_DIST_P12_BASE64 }}
           P12_PW: ${{ secrets.IOS_DIST_P12_PASSWORD }}
         run: |
           if [ -z "$P12" ]; then
-            echo "Kein eigenes Zertifikat hinterlegt – Apple signiert per Cloud Signing."
-            exit 0
+            echo "FEHLER: Secret IOS_DIST_P12_BASE64 fehlt."
+            echo "Cloud Signing allein signiert die eingebetteten Frameworks (Capacitor) nicht"
+            echo "gueltig – App Store Connect lehnt den Upload dann ab. Zertifikat einmalig mit"
+            echo "dem Workflow 'iOS – Zertifikat erstellen' anlegen und als Secret hinterlegen."
+            exit 1
           fi
           KC="$RUNNER_TEMP/signing.keychain-db"
           KC_PW=$(uuidgen)
@@ -119,7 +123,8 @@ jobs:
           security create-keychain -p "$KC_PW" "$KC"
           security set-keychain-settings -lut 3600 "$KC"
           security unlock-keychain -p "$KC_PW" "$KC"
-          security import "$RUNNER_TEMP/dist.p12" -P "$P12_PW" -A -t cert -f pkcs12 -k "$KC"
+          security import "$RUNNER_TEMP/dist.p12" -P "$P12_PW" -A -f pkcs12 -k "$KC"
+          security find-identity -v -p codesigning "$KC"
           security set-key-partition-list -S apple-tool:,apple: -k "$KC_PW" "$KC" >/dev/null
           security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
           rm -f "$RUNNER_TEMP/dist.p12"
