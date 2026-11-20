@@ -1,21 +1,30 @@
-/* Rechtstexte: eingebettet in der App oder eigenständig im Browser.
+/* Rechtstexte: als Webseite oder eingebettet in der App.
 
-   Die App zeigt Impressum und Datenschutz in einem Rahmen (iframe) an,
-   damit sie auch ohne Netz erreichbar sind. Im Rahmen gilt:
-   - Kopf- und Fußzeile mit „Zur App“ ausblenden (sonst lädt die App
-     sich selbst in den Rahmen)
-   - Verweise nach außen (https, mailto) an die App weiterreichen; in der
-     App-WebView täte ein Verweis aus einem Rahmen sonst nichts
-   Eigenständig im Browser ändert sich nichts. */
+   1. Plattform (?platform=ios|android): In der App erscheinen nur die
+      Angaben zum Store des eigenen Geraets. Apple untersagt in der App
+      Namen anderer Mobilplattformen (Richtlinie 2.3.10), Google sieht das
+      sinngemaess genauso. Als Webseite (ohne Angabe) stehen beide Stores
+      da – sie gilt fuer beide Eintraege. Die Umschaltung selbst steckt
+      in recht.css (data-p), hier wird nur die Klasse gesetzt.
+   2. Im Rahmen (iframe) der App:
+      - Kopf- und Fusszeile ausblenden, die App hat eigene Navigation
+      - Verweise nach aussen (https, mailto) an die App weiterreichen; in
+        der App-WebView taete ein Verweis aus einem Rahmen sonst nichts
+      - Hoehe melden, damit nur die App-Seite scrollt
+      - Design der App uebernehmen (?theme=dark|light) */
 (function () {
+  var root = document.documentElement;
+  var q = window.location.search;
+  var p = /[?&]platform=(ios|android)\b/.exec(q);
+  if (p) root.className += " p-" + p[1];
+
   var framed = false;
   try { framed = window.self !== window.top; } catch (e) { framed = true; }
   if (!framed) return;
-  document.documentElement.className += " embedded";
-  /* Design der App uebernehmen (?theme=dark|light), sonst folgt die
-     Seite der Systemeinstellung und passt nicht zur gewaehlten Ansicht. */
-  var m = /[?&]theme=(dark|light)/.exec(window.location.search);
-  if (m) document.documentElement.className += " theme-" + m[1];
+  root.className += " embedded";
+  var m = /[?&]theme=(dark|light)\b/.exec(q);
+  if (m) root.className += " theme-" + m[1];
+
   document.addEventListener("click", function (e) {
     var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
     if (!a) return;
@@ -25,13 +34,11 @@
       try { window.parent.postMessage({ gg: "open", url: href }, "*"); } catch (err) {}
     }
   });
-  /* Höhe melden: Die App passt den Rahmen an und scrollt selbst. Ein
-     Rahmen mit eigenem Scrollbereich lässt sich auf älteren iPads nur
-     zäh bedienen. */
+
+  /* Hoehe des Inhalts, nicht des Rahmens – sonst kann der Rahmen nach
+     dem Drehen des Geraets nicht mehr schrumpfen. */
   function report() {
     try {
-      /* Höhe des Inhalts, nicht des Rahmens – sonst kann der Rahmen nach
-         dem Drehen des Geräts nicht mehr schrumpfen. */
       var h = Math.ceil(document.body.getBoundingClientRect().height);
       window.parent.postMessage({ gg: "height", h: h }, "*");
     } catch (err) {}

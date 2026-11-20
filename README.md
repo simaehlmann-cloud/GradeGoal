@@ -24,9 +24,9 @@ Seit 1.8.0 gibt es **eine** App mit allen Funktionen (vorher: Lite und Pro).
   Schuljahren bleibt vollständig nutzbar, nur **neue** Schuljahre bzw.
   Halbjahre über den Rahmen hinaus brauchen den Kauf.
 - Der Kaufstatus liegt nicht in der Sicherungsdatei.
-- Im Browser (GitHub Pages) gibt es keinen Kauf – dort gilt der
-  Gratis-Rahmen. `npm run dev` ist immer freigeschaltet. Zum Testen des
-  freigeschalteten Zustands im Browser: in der Konsole
+- Eine Web-Version gibt es nicht. Beim Entwickeln im Browser ist
+  `npm run dev` immer freigeschaltet; ein gebautes `dist/` im Browser
+  zeigt den Gratis-Rahmen. Zum Testen des freigeschalteten Zustands dort: in der Konsole
   `localStorage.setItem("gradegoal:unlocked", "1")` und neu laden
   (zurück mit `localStorage.removeItem("gradegoal:unlocked")`).
 
@@ -67,6 +67,20 @@ legt in `store-bilder/` sechs Bilder je Satz ab: iPhone 6,9″
 Deutsch und Englisch. Jedes Bild wird gegen sein Sollmaß geprüft.
 `store-bilder/` steht in `.gitignore`.
 
+## App-Vorschauvideos
+
+```bash
+npm run store-video      # braucht zusätzlich ffmpeg (Windows: winget install ffmpeg)
+```
+
+Vier Videos nach `store-bilder/video/`: iPhone 6,9″ (886 × 1920) und
+iPad 13″ (1200 × 1600), jeweils Deutsch und Englisch, rund 25 Sekunden.
+Aufgenommen wird die lokal gebaute App mit dem Beispielzeugnis über den
+Screencast von Chromium, Bildunterschriften und Fingertipps werden dabei
+eingeblendet. Apples Vorgaben (15–30 s, H.264, ≤ 30 Bilder/s,
+Stereo-Ton) prüft das Skript am Ende mit ffprobe. Die Szenen stehen in
+`scenes()` in `tools/store-video.mjs`.
+
 ## Bewertungen
 
 `src/lib/review.js` bittet über das Bewertungsfenster des Systems um
@@ -79,17 +93,21 @@ Die erzeugte `dist/index.html` enthält den kompletten Code und läuft
 offline. Zum Entwickeln immer `npm run dev` verwenden – die `index.html`
 im Projektordner ist nur das Gerüst.
 
-## Web-Version am Handy (ohne APK)
+## Rechtsseiten (GitHub Pages)
 
-Der Workflow `deploy-pages.yml` veröffentlicht bei jedem Push über GitHub
-Pages. Einmalig aktivieren:
-**Repository → Settings → Pages → Source: „GitHub Actions"**
+**Eine Web-Version der App gibt es nicht.** GitHub Pages veröffentlicht
+nur Impressum und Datenschutz (de/en) plus eine kleine Startseite
+(`pages/index.html`) – das erledigt der Workflow `deploy-pages.yml`,
+sobald sich etwas in `public/` oder `pages/` ändert. Die Adressen stehen
+in den Store-Einträgen und müssen erreichbar bleiben. Einmalig
+aktivieren: **Settings → Pages → Source: „GitHub Actions“**.
 
-Danach ist die App unter `https://DEINNAME.github.io/REPOSITORY-NAME/`
-erreichbar – am Handy im Browser öffnen und über „Zum Startbildschirm
-hinzufügen" ablegen.
-
-Im Browser gilt der Gratis-Rahmen; ein Kauf ist nur in der App möglich.
+In der App zeigen dieselben Seiten nur den Store des eigenen Geräts
+(`?platform=ios|android`, siehe `public/recht.js`): Apple untersagt in
+der App Namen anderer Plattformen (Richtlinie 2.3.10). Die Webseite
+nennt beide Stores. Neue plattformabhängige Stellen in den Rechtstexten
+mit `data-p="ios"`, `data-p="android"` und `data-p="all"` (Webseite)
+auszeichnen.
 
 ## iOS / TestFlight (ohne eigenen Mac)
 
@@ -128,7 +146,7 @@ Voraussetzungen ab Capacitor 8: Node 22, JDK 21; iOS braucht Xcode 26.
 `assets/icon.png` (1024×1024) und `assets/splash.png` /
 `assets/splash-dark.png` (2732×2732) ersetzen, dann
 `npx capacitor-assets generate --android` bzw. `--ios` erneut ausführen.
-`public/icon.svg` ist das Favicon der Web-Version.
+`public/icon.svg` ist das Favicon der Rechtsseiten.
 
 ## Play-Store-Release
 
@@ -260,7 +278,8 @@ Im Ordner `store/`:
 
 Impressum und Datenschutzerklärung liegen als `public/impressum.html`,
 `public/datenschutz.html` und englisch als `…-en.html` im Projekt. Sie
-werden über GitHub Pages veröffentlicht (Adressen für die Stores) und
+werden über GitHub Pages veröffentlicht (nur die Rechtsseiten, Adressen
+für die Stores) und
 stecken außerdem im App-Paket: Die App zeigt sie unter „Info &
 Impressum“ ohne Internet an (`public/recht.js` sorgt für die Darstellung
 im Rahmen).

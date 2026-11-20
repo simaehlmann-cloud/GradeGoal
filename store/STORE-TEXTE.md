@@ -24,6 +24,7 @@ wie „Nr. 1“, „beste“, „kostenlos“ oder Preise im Namen – das lehnt
 | Feature-Grafik 1024 × 500 | `store/feature-graphic.png` (`python3 tools/make_feature_graphic.py`) |
 | Telefon-Screenshots 1080 × 2160 | `store-bilder/android-de`, `store-bilder/android-en` (`npm run store-bilder`) |
 | Tablet-Screenshots | `store-bilder/ipad-de` bzw. `-en` passen auch für 10″-Tablets |
+| Video (optional) | Google nimmt nur einen YouTube-Link. Dafür z. B. `store-bilder/video/iphone-de.mp4` als „nicht gelistet“ bei YouTube hochladen. |
 
 ---
 

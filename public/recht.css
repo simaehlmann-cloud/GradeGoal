@@ -49,3 +49,8 @@ ul{padding-left:1.2rem}
 .theme-dark .hint,.theme-dark .sub{color:#A5B4CB}
 .theme-dark a{color:#7C9BFF}
 li{margin:.3rem 0}
+/* Plattformabhaengige Stellen (siehe recht.js). Ohne Angabe – also als
+   Webseite und auch ohne JavaScript – gilt die Fassung „all“. */
+[data-p]{display:none}
+html:not(.p-ios):not(.p-android) [data-p~="all"]{display:revert}
+.p-ios [data-p~="ios"],.p-android [data-p~="android"]{display:revert}

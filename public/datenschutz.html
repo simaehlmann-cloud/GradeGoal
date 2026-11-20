@@ -18,8 +18,7 @@
 
 <h1>Datenschutzerklärung</h1>
 <p class="sub">
-  Gilt für die App <strong>GradeGoal: Noten bis zum Abi</strong> (Apple App
-  Store und Google Play) sowie für die Webversion.<br>
+  Gilt für die App <strong>GradeGoal: Noten bis zum Abi</strong>.<br>
   Stand: November 2026
 </p>
 
@@ -50,9 +49,10 @@
 <p>
   Was in der App eingetragen wird, verlässt das Gerät nicht. Die Daten liegen
   im lokalen Speicher der App (<code>localStorage</code> der eingebetteten
-  Ansicht). In der App aus dem Store wird jeder Stand zusätzlich in den
-  App-Einstellungen des Betriebssystems abgelegt (iOS: UserDefaults,
-  Android: SharedPreferences). Diese Zweitablage liegt ebenfalls nur im
+  Ansicht). Jeder Stand wird zusätzlich in den App-Einstellungen des
+  Betriebssystems abgelegt
+  (<span data-p="ios">UserDefaults</span><span data-p="android">SharedPreferences</span><span data-p="all">iOS: UserDefaults, Android: SharedPreferences</span>).
+  Diese Zweitablage liegt ebenfalls nur im
   geschützten Bereich der App auf dem Gerät und dient allein dazu, einen
   Datenverlust zu verhindern, falls das System den Speicher der Ansicht leert.
 </p>
@@ -188,33 +188,35 @@
   ausdrücklich selbst kopieren und versenden.
 </p>
 
-<h2>10. Webversion</h2>
+<h2>10. Bereitstellung dieser Seiten</h2>
 <p>
-  Die Webversion wird über GitHub Pages bereitgestellt. Beim Abruf der Seite
-  verarbeitet der Hostinganbieter GitHub, Inc. technisch notwendige
-  Verbindungsdaten wie IP-Adresse, Zeitpunkt des Abrufs und
-  Browserkennung. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; das
+  GradeGoal gibt es ausschließlich als App. Impressum und
+  Datenschutzerklärung werden zusätzlich als Webseiten über GitHub Pages
+  bereitgestellt, damit sie vor dem Herunterladen einsehbar sind. Beim Abruf
+  einer dieser Seiten im Browser verarbeitet der Hostinganbieter GitHub, Inc.
+  technisch notwendige Verbindungsdaten wie IP-Adresse, Zeitpunkt des Abrufs
+  und Browserkennung. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; das
   berechtigte Interesse liegt in der technisch fehlerfreien Auslieferung.
   Auf Art und Dauer dieser Protokollierung besteht kein Einfluss. Nähere
   Angaben: <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"
   target="_blank" rel="noopener noreferrer">GitHub General Privacy Statement</a>.
 </p>
 <p>
-  Die App aus dem App Store bzw. von Google Play greift im laufenden Betrieb
-  nicht auf diese Adresse zu. Impressum und Datenschutzerklärung sind in die
-  App eingebaut und werden ohne Netzverbindung angezeigt.
+  Die App selbst greift nicht auf diese Adresse zu. Impressum und
+  Datenschutzerklärung sind in die App eingebaut und werden ohne
+  Netzverbindung angezeigt.
 </p>
 
 <h2>11. Bezug über einen App-Store</h2>
 <p>
-  Beim Herunterladen aus dem Apple App Store oder von Google Play
-  verarbeiten die jeweiligen Betreiber Daten in eigener Verantwortung, etwa
-  Nutzerkennung, Zahlungsangaben und Gerätedaten. Darauf besteht kein
-  Einfluss. Es gelten die Datenschutzbestimmungen des jeweiligen Betreibers:
+  Beim Herunterladen und beim Kauf über einen App-Store verarbeitet dessen
+  Betreiber Daten in eigener Verantwortung, etwa Nutzerkennung,
+  Zahlungsangaben und Gerätedaten. Darauf besteht kein Einfluss. Es gelten
+  die Datenschutzbestimmungen des Betreibers:
 </p>
 <ul>
-  <li><a href="https://www.apple.com/legal/privacy/de-ww/" target="_blank" rel="noopener noreferrer">Apple – Datenschutzrichtlinie</a></li>
-  <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google – Datenschutzerklärung</a></li>
+  <li data-p="ios all"><a href="https://www.apple.com/legal/privacy/de-ww/" target="_blank" rel="noopener noreferrer">Apple – Datenschutzrichtlinie</a></li>
+  <li data-p="android all"><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google – Datenschutzerklärung</a></li>
 </ul>
 
 <h2>12. In-App-Kauf und Bewertung</h2>
@@ -250,7 +252,7 @@
   Kontaktfunktionen und keine Verknüpfung mit sozialen Netzwerken. Der
   einzige Kauf ist die einmalige Freischaltung über den Store
   (Abschnitt 12); dort greifen die Jugendschutz- und Kaufbeschränkungen des
-  Stores, etwa „Kaufen fragen“ in der Apple-Familienfreigabe.
+  Stores<span data-p="ios">, etwa „Kaufen fragen“ in der Familienfreigabe</span><span data-p="android">, etwa die Kaufgenehmigung über Family Link</span><span data-p="all">, etwa „Kaufen fragen“ in der Apple-Familienfreigabe oder die Kaufgenehmigung über Google Family Link</span>.
 </p>
 
 <h2>14. Ihre Rechte</h2>
@@ -305,7 +307,7 @@
 </p>
 
 <footer>
-  <a href="./">Zur App</a> · <a href="./impressum.html">Impressum</a> ·
+  <a href="./impressum.html">Impressum</a> ·
   <a href="./datenschutz-en.html" hreflang="en" lang="en">English</a>
 </footer>
 </body>

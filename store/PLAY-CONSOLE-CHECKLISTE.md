@@ -63,7 +63,8 @@ nicht.
 ## Datenschutz-URL
 
 Beide Stores verlangen eine öffentlich erreichbare Adresse.
-Zwei Seiten werden über GitHub Pages mitveröffentlicht:
+GitHub Pages veröffentlicht ausschließlich die Rechtsseiten (eine
+Web-Version der App gibt es nicht):
 
 ```
 https://simaehlmann-cloud.github.io/GradeGoal/datenschutz.html

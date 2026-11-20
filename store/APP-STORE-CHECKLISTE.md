@@ -238,6 +238,11 @@ aufklappen) hier hineinkopieren.
   Weil die App auch auf dem iPad läuft, zusätzlich iPad 13"
   (2064 × 2752). Beide Sätze erzeugt `npm run store-bilder`
   (Ordner `store-bilder/iphone-de`, `ipad-de`, jeweils auch `-en`).
+- **App-Vorschau (optional, bis zu 3 je Gerät und Sprache):**
+  `store-bilder/video/iphone-de.mp4` bzw. `ipad-de.mp4` (Englisch:
+  `-en`) bei der jeweiligen Sprache unter „App-Vorschau“ hochladen. Das
+  Standbild (Sekunde 5) zeigt das Konfetti; ändern lässt es sich in App
+  Store Connect.
 - **App-Datenschutz:** „Keine Daten erfasst“. Den Kauf wickelt Apple ab;
   die App sendet nichts an eigene Server.
 - **Altersfreigabe:** Fragebogen ehrlich ausfüllen – ergibt 4+.

@@ -12,10 +12,10 @@ import { getMeta, countEdit, markBackup, snoozeBackup, backupDue, daysSince, hid
 import { maybeAskReview, countGrades, canOpenStore, openStorePage } from "./lib/review.js";
 import { backupPayload, csvPayload, buildPrintHtml, printDocument } from "./lib/exporters.js";
 import { saveText, copyText } from "./lib/filesave.js";
-import { isNative, extLinkProps, openExternal } from "./lib/platform.js";
+import { isNative, platform, extLinkProps, openExternal } from "./lib/platform.js";
 import { usePurchase, initPurchases, yearsAllowed, termsAllowed, FREE_TERMS } from "./lib/purchase.js";
 import { logError, logInfo, formatLog, getLog, clearLog } from "./lib/logger.js";
-import { makeT, APP, APP_NAME, APP_VER, DEVELOPER, CONTACT, PUBLISHER, WEB_BASE, LEGAL_FILES, T } from "./lib/i18n.js";
+import { makeT, APP, APP_NAME, APP_VER, DEVELOPER, CONTACT, PUBLISHER, LEGAL_FILES, T } from "./lib/i18n.js";
 import { makeLock, isValidPin, PIN_MIN, PIN_MAX } from "./lib/security.js";
 
 import { Ic, FlagDE, FlagEN } from "./components/icons.jsx";
@@ -649,13 +649,11 @@ function App() {
           {doc === "privacy" ? t("aboutPrivacyTitle") : t("legalTitle")}
         </h1>
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          <iframe key={file} src={"./" + file + "?theme=" + (dark ? "dark" : "light")} title={doc === "privacy" ? t("privacyLink") : t("imprintLink")}
+          {/* platform: Die Seite zeigt nur den Store dieses Geraets (recht.js) */}
+          <iframe key={file} src={"./" + file + "?theme=" + (dark ? "dark" : "light") + "&platform=" + platform()} title={doc === "privacy" ? t("privacyLink") : t("imprintLink")}
             scrolling="no" className="legal-frame" style={{ height: legalH }} />
         </div>
-        <div className="hint" style={{ fontSize: 12, textAlign: "center" }}>
-          {t("legalOffline")}{" "}
-          <a {...extLinkProps(WEB_BASE + file)} style={{ color: "var(--blue)" }}>{t("legalOnline")}</a>
-        </div>
+        <div className="hint" style={{ fontSize: 12, textAlign: "center" }}>{t("legalOffline")}</div>
         {floats}
       </div>);
   }

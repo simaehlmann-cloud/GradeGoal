@@ -26,6 +26,21 @@ Neueste Version oben. Bis 1.8.0 lagen die Einträge in einzelnen
   aus, meldet die Höhe und reicht Verweise nach außen an die App weiter).
   Vorher brauchte die Anzeige Internet.
 - Untertitel überall „Noten bis zum Abi“ (vorher „Schulnoten & Grades“).
+- **Plattformgerecht:** In der App nennen Impressum und Datenschutz nur
+  den Store des eigenen Geräts (Apple-Richtlinie 2.3.10 untersagt in der
+  App Namen anderer Plattformen). Die Webseiten für die Store-Einträge
+  nennen beide Stores. Umschaltung über `?platform=` in `recht.js`,
+  Auszeichnung mit `data-p` in den Seiten.
+
+## Keine Web-Version mehr
+
+- GitHub Pages veröffentlicht nur noch Impressum und Datenschutz (de/en)
+  und eine kleine Startseite (`pages/index.html`) – nicht mehr die App.
+  Der Workflow prüft dabei, dass keine App im Paket landet und die
+  USt-IdNr. in beiden Impressen steht. Die Adressen für die Stores
+  bleiben gleich.
+- Datenschutz: Abschnitt „Webversion“ wird „Bereitstellung dieser
+  Seiten“, Verweise „Zur App“ entfernt. README angepasst.
 
 ## Neue Funktionen
 
@@ -91,6 +106,12 @@ Neueste Version oben. Bis 1.8.0 lagen die Einträge in einzelnen
   Sicherungs- und Bewertungsregeln. Läuft in allen Workflows vor dem Build.
 - **Store-Screenshots** per `npm run store-bilder` (wie FairMix): iPhone
   6,9″, iPad 13″ und Android, jeweils Deutsch und Englisch, Maße geprüft.
+- **App-Vorschauvideos** per `npm run store-video`: iPhone 6,9″
+  (886 × 1920) und iPad 13″ (1200 × 1600), Deutsch und Englisch, rund
+  25 s, H.264 mit 30 Bildern/s und stiller Stereo-Tonspur. Echte
+  Bedienung der App mit Bildunterschriften; bei Sekunde 5 (Apples
+  Standbild) fliegt das Konfetti. Jedes Video wird mit ffprobe gegen
+  Apples Vorgaben geprüft.
 - Feature-Grafik nur noch einmal (`store/feature-graphic.png`).
 - Aufgeräumt: Reste der Lite/Pro-Zeit (siehe Löschliste in der
   Upload-Anleitung), ungenutzte CSS-Klassen.

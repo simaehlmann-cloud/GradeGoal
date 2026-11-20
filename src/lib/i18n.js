@@ -14,8 +14,8 @@ export const CONTACT = "smaehlmann.appdev@gmail.com";
 export const PUBLISHER = "Wisdompeak Apps";
 
 /* Rechtstexte. Die App zeigt die mitgelieferten Seiten aus public/ an
-   (laufen offline). Die Web-Adressen sind fuer die Store-Eintraege
-   und als Ausweichweg. */
+   (laufen offline). Die Web-Adressen (GitHub Pages, nur Rechtsseiten –
+   eine Web-Version der App gibt es nicht) sind fuer die Store-Eintraege. */
 export const WEB_BASE = "https://simaehlmann-cloud.github.io/GradeGoal/";
 export const LEGAL_FILES = {
   de: { imprint: "impressum.html", privacy: "datenschutz.html" },
@@ -256,7 +256,6 @@ export const T = {
     rateBtn: "App bewerten", rateHint: "Gefällt dir GradeGoal? Eine Bewertung im Store hilft sehr.",
     writeMail: "E-Mail schreiben",
     legalOffline: "Diese Fassung ist in die App eingebaut und funktioniert auch ohne Internet.",
-    legalOnline: "Im Browser öffnen",
     langName: "Deutsch",
   },
 
@@ -480,7 +479,6 @@ export const T = {
     rateBtn: "Rate the app", rateHint: "Enjoying GradeGoal? A rating in the store helps a lot.",
     writeMail: "Send email",
     legalOffline: "This version is built into the app and works without internet.",
-    legalOnline: "Open in browser",
     langName: "English",
   },
 };
