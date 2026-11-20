@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Privacy-Manifest für GradeGoal (wie bei FairMix und PitchPro).
+
+  Apple verlangt diese Angaben für „Required Reason APIs“. Fehlen sie,
+  meldet App Store Connect den Build erst NACH der Verarbeitung zurück –
+  die Build-Nummer ist dann verbraucht.
+
+  Der Inhalt muss das tatsächliche Verhalten abbilden und deckt sich mit
+  der Datenschutzerklärung: GradeGoal erhebt nichts, sendet nichts und
+  trackt nicht.
+
+  Einziger meldepflichtiger Zugriff: UserDefaults. Die Zweitablage
+  (@capacitor/preferences) legt dort jeden Stand der Noten ab.
+  Grund CA92.1 = nur Daten des eigenen App-Containers.
+
+  Fremde Plugins (Capacitor, Käufe, Bewertung) bringen eigene Manifeste mit.
+  tools/prepare-ios.sh kopiert diese Datei bei jedem Build in das
+  iOS-Projekt und trägt sie dort als Ressource ein.
+-->
+<plist version="1.0">
+<dict>
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+
+    <!-- Leer und bewusst so: Die App sammelt keine Daten. -->
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array/>
+
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>

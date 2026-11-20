@@ -42,7 +42,7 @@ def font(size, bold=True):
 
 def build(lite):
     src = "assets-lite" if lite else "assets"
-    out = f"store/feature-graphic-{'lite' if lite else 'pro'}.png"
+    out = "store/feature-graphic-lite.png" if lite else "store/feature-graphic.png"
     os.makedirs("store", exist_ok=True)
 
     # Verlauf von links nach rechts
@@ -81,7 +81,7 @@ def build(lite):
         d.rounded_rectangle([bx, by, bx + tw + 34, by + th + 22], radius=(th + 22) / 2, fill=YELLOW)
         d.text((bx + 17 - l, by + 11 - t), "LITE", font=f_tag, fill=INK)
 
-    d.text((x0 + 3, 258), "Schulnoten & Grades", font=font(34, bold=False), fill=MUTED)
+    d.text((x0 + 3, 258), "Noten bis zum Abi", font=font(34, bold=False), fill=MUTED)
     d.text((x0 + 3, 312), "Noten eintragen. Ziele erreichen.", font=font(30), fill=YELLOW)
 
     img.save(out)
@@ -89,5 +89,5 @@ def build(lite):
 
 
 if __name__ == "__main__":
+    # Seit 1.8.0 gibt es nur noch eine App – die Lite-Grafik entfaellt.
     build(lite=False)
-    build(lite=True)

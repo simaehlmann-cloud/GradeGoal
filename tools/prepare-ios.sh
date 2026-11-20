@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-VERSION="${1:?Version fehlt (z. B. 1.8.0)}"
+VERSION="${1:?Version fehlt (z. B. 1.9.0)}"
 BUILD="${2:?Build-Nummer fehlt (z. B. 12)}"
 PLIST="ios/App/App/Info.plist"
 PB=/usr/libexec/PlistBuddy
@@ -43,6 +43,16 @@ put ITSAppUsesNonExemptEncryption bool false
 # Exportierte Diagramme lassen sich im Teilen-Menü in Fotos sichern.
 # Fehlt diese Begründung, beendet iOS die App beim Tippen darauf.
 put NSPhotoLibraryAddUsageDescription string "GradeGoal speichert ein exportiertes Diagramm nur dann in deinen Fotos, wenn du das im Teilen-Menü auswählst. / GradeGoal only saves an exported chart to Photos when you choose that in the share sheet."
+
+# --- Privacy-Manifest ---------------------------------------------------
+# Wie bei FairMix und PitchPro. Datei kopieren UND im Projekt als
+# Ressource eintragen (sonst landet sie nicht in der App).
+cp tools/apple/PrivacyInfo.xcprivacy ios/App/App/PrivacyInfo.xcprivacy
+if ! ruby -e 'require "xcodeproj"' 2>/dev/null; then
+  gem install xcodeproj --no-document --user-install >/dev/null 2>&1 || true
+  export GEM_PATH="$(ruby -e 'print Gem.user_dir'):${GEM_PATH:-}"
+fi
+ruby tools/apple/add-resource.rb PrivacyInfo.xcprivacy
 
 # --- Gegenprobe ---------------------------------------------------------
 echo "--- Info.plist ---"

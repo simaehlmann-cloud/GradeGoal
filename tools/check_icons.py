@@ -18,7 +18,7 @@ def check(cond, msg):
     if not cond:
         fails.append(msg)
 
-for d in ("assets", "assets-lite"):
+for d in ("assets",):
     print(f"\n=== {d} ===")
     if not os.path.isdir(d):
         fails.append(f"{d} fehlt"); continue

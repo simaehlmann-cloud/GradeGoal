@@ -204,9 +204,9 @@ def build(out_dir, lite):
         sp.save(f"{out_dir}/{name}")
     del art
 
-    print(f"{out_dir}: fertig ({'Lite' if lite else 'Pro'})")
+    print(f"{out_dir}: fertig")
 
 
 if __name__ == "__main__":
     build(OUT_PRO, lite=False)
-    build(OUT_LITE, lite=True)
+    # Seit 1.8.0 gibt es nur noch eine App – keine Lite-Icons mehr.
