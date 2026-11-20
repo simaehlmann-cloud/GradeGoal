@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Ic } from "./icons.jsx";
-import { InfoTip } from "./ui.jsx";
+import { InfoTip, Hint } from "./ui.jsx";
 import { parseNum, filterNumInput, fmt, colorFor, cName, catMean, mean, sName } from "../lib/grades.js";
 import { catColor } from "./charts.jsx";
 
@@ -45,7 +45,7 @@ export function WhatIf({ subject, sc, lang, t, dark, current }) {
 
   return (
     <div>
-      <div className="hint" style={{ marginBottom: 10 }}>{t("whatIfHint")}</div>
+      <Hint id="what-if" gotIt={t("hintGot")} more={t("hintMore")}>{t("whatIfHint")}</Hint>
 
       {cats.length > 1 && (
         <div style={{ marginBottom: 10 }}>

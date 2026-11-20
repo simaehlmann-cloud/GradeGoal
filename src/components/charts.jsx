@@ -140,7 +140,7 @@ export function Spark({ subject, sc }) {
   const col = dir === "up" ? "var(--green)" : dir === "down" ? "var(--red)" : "var(--faint)";
   const line = pts.map((p, i) => x(i).toFixed(1) + "," + y(p.v).toFixed(1)).join(" ");
   return (
-    <svg width={W} height={Hh} viewBox={`0 0 ${W} ${Hh}`} style={{ flexShrink: 0 }} aria-hidden="true">
+    <svg className="spark" width={W} height={Hh} viewBox={`0 0 ${W} ${Hh}`} style={{ flexShrink: 0 }} aria-hidden="true">
       <polyline points={line} fill="none" stroke={col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>);
 }
@@ -175,6 +175,7 @@ export function LongTermChart({ datasets, years, lang, t, dark, onError, fileNam
 
   /* Nur jede n-te Beschriftung zeichnen, sonst ueberlappen sie auf dem Handy */
   const every = Math.ceil(pts.length / 6);
+  const anchor = (i) => (i === 0 ? "start" : i === pts.length - 1 ? "end" : "middle");
 
   return (
     <div>
@@ -183,23 +184,25 @@ export function LongTermChart({ datasets, years, lang, t, dark, onError, fileNam
         xmlns="http://www.w3.org/2000/svg">
         <line x1={l} y1={tp} x2={W - r} y2={tp} stroke={CLR.line} strokeDasharray="3 4" />
         <line x1={l} y1={H - bp} x2={W - r} y2={H - bp} stroke={CLR.line} />
-        <polyline points={line} fill="none" stroke="#4C7DFF" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        <polyline points={line} fill="none" stroke={dark ? "#86A3FF" : "#2F5DE0"} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
         {pts.map((p, i) => (
           <g key={i}>
             <circle cx={x(i)} cy={y(p.q)} r={i === pts.length - 1 ? 4.5 : 3.4}
-              fill={colorFor(p.avg, p.sc, "bright", dark)} stroke={CLR.card} strokeWidth="1.5" />
+              fill={colorFor(p.avg, p.sc, null, dark)} stroke={CLR.card} strokeWidth="1.5" />
+            {/* Randbeschriftungen buendig statt mittig – sonst wurde
+                „1. Halbjahr“ links zu „. Halbjah“ abgeschnitten */}
             {i % every === 0 && (
-              <text x={x(i)} y={H - bp + 12} fontSize="8" fill={CLR.faint} textAnchor="middle" fontFamily="Karla,sans-serif">
-                {String(p.label).slice(0, 10)}
+              <text x={x(i)} y={H - bp + 12} fontSize="8" fill={CLR.faint} textAnchor={anchor(i)} fontFamily="Karla,sans-serif">
+                {String(p.label).slice(0, 14)}
               </text>)}
             {i % every === 0 && (
-              <text x={x(i)} y={H - bp + 22} fontSize="7" fill={CLR.faint} textAnchor="middle" fontFamily="Karla,sans-serif">
+              <text x={x(i)} y={H - bp + 22} fontSize="7" fill={CLR.faint} textAnchor={anchor(i)} fontFamily="Karla,sans-serif">
                 {String(yearLabel(p.yearId)).slice(0, 10)}
               </text>)}
           </g>))}
       </svg>
       <div className="row" style={{ marginTop: 6, justifyContent: "space-between", flexWrap: "wrap" }}>
-        <span className="hint">{t("longTermHint")}</span>
+        <span className="hint" style={{ fontSize: 12 }}>{t("longTermHint")}</span>
         <button className="btn-ghost" style={{ padding: "5px 10px", fontSize: 12 }}
           onClick={() => exportSvg(svgRef.current, W, H, CLR.bg, fileName, onError)}>
           <Ic n="download" size={13} />{t("shareChart")}

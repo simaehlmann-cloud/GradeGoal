@@ -37,9 +37,12 @@ export function InfoTip({ text }) {
 }
 
 /* ---------- Zahleneingabe ---------- */
-export const NumInput = ({ value, onChange, ph, width = 74, color, label }) => (
-  <input className="num" inputMode="decimal" enterKeyHint="done" value={value} placeholder={ph}
-    aria-label={label} style={{ width, color: color || "var(--ink)" }}
+/* tone: {fg,bg} aus colors.js – Feld in der Notenfarbe hinterlegt.
+   wishy: Wunschnote, schlicht gestrichelt. */
+export const NumInput = ({ value, onChange, ph, width = 74, color, label, tone, wishy }) => (
+  <input className={"num" + (tone ? " toned" : "") + (wishy ? " wishy" : "")} inputMode="decimal" enterKeyHint="done" value={value} placeholder={ph}
+    aria-label={label}
+    style={{ width, color: tone ? tone.fg : color || "var(--ink)", ...(tone ? { background: tone.bg } : {}) }}
     onChange={(e) => onChange(filterNumInput(e.target.value))} />
 );
 
@@ -263,4 +266,72 @@ export function EditableName({ value, onSave, label, maxLength = 80, textStyle, 
         <Ic n="pencil" size={14} style={{ marginRight: 0 }} />
       </button>
     </span>);
+}
+
+/* =========================================================
+   Seitenkopf fuer Unterseiten (seit 1.10.0)
+   Schmale Leiste mit „← Zurueck“, die beim Scrollen oben stehen bleibt
+   und dann auch den Seitentitel zeigt (wie bei iOS). Darunter der
+   grosse Titel mit Textmarker.
+========================================================= */
+export function PageHead({ title, barTitle, icon, onBack, backLabel, accent, children }) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const f = () => setScrolled(window.scrollY > 64);
+    f();
+    window.addEventListener("scroll", f, { passive: true });
+    return () => window.removeEventListener("scroll", f);
+  }, []);
+  return (
+    <React.Fragment>
+      <div className={"page-bar" + (scrolled ? " scrolled" : "")}>
+        {onBack
+          ? <button className="btn-text back-btn" onClick={onBack}>← {backLabel}</button>
+          : <span style={{ width: 8 }}></span>}
+        <span className="page-bar-title" aria-hidden="true">{barTitle || title}</span>
+        <span className="back-spacer" aria-hidden="true"></span>
+      </div>
+      <h1 className="brand page-h1">
+        {accent && <span className="page-accent" style={{ background: accent }} aria-hidden="true"></span>}
+        {icon && <Ic n={icon} size={24} />}
+        <span className="page-title">{children || title}</span>
+      </h1>
+    </React.Fragment>);
+}
+
+/* =========================================================
+   Einklappbarer Hilfetext (seit 1.10.0)
+   Beim ersten Mal offen, mit „Verstanden“. Danach nur noch ein kleines
+   ⓘ, das ihn wieder aufklappt. Was schon gesehen wurde, steht im
+   Geraetespeicher (nicht in der Sicherung).
+========================================================= */
+const SEEN_KEY = "gradegoal:hints";
+function seenHints() {
+  try { return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || "[]")); } catch (e) { return new Set(); }
+}
+function markHint(id) {
+  try {
+    const s = seenHints(); s.add(id);
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...s].slice(-200)));
+  } catch (e) { /* nur Komfort */ }
+}
+/* Nach „Alles zuruecksetzen“ sollen die Hilfen wieder erscheinen */
+export function resetHints() {
+  try { localStorage.removeItem(SEEN_KEY); } catch (e) { /* egal */ }
+}
+export function Hint({ id, children, gotIt = "OK", more = "Info", style }) {
+  const [open, setOpen] = useState(() => !seenHints().has(id));
+  const [first] = useState(open);
+  if (!open) {
+    return (
+      <button className="hint-toggle" onClick={() => setOpen(true)} aria-expanded="false" style={style}>
+        <Ic n="info" size={13} style={{ marginRight: 4 }} />{more}
+      </button>);
+  }
+  return (
+    <div className="hint hint-box" style={style}>
+      <span style={{ flex: 1 }}>{children}</span>
+      <button className="hint-close" onClick={() => { markHint(id); setOpen(false); }}
+        aria-label={gotIt} title={gotIt}>{first ? gotIt : "✕"}</button>
+    </div>);
 }

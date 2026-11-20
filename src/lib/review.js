@@ -26,7 +26,7 @@ export const REVIEW_MIN_GRADES = 10;
    https://apps.apple.com/app/id6740123456
    Leer lassen, solange die App nicht im App Store ist – dann bleibt der
    Knopf „App bewerten“ auf iOS ausgeblendet. */
-export const APPSTORE_ID = "";
+export const APPSTORE_ID = "6826882996";
 
 /* Wie viele Noten stecken im Zustand? Zeugnisnoten und Einzelnoten. */
 export function countGrades(state) {

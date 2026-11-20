@@ -4,6 +4,8 @@
    nebenwirkungsfrei und dadurch einzeln testbar.
 ========================================================= */
 
+import { gradeTone } from "./colors.js";
+
 /* ID: Zufall + Zeitanteil. Rein zufaellige 8 Zeichen kollidieren bei
    vielen Einzelnoten theoretisch; der Zeitanteil schliesst das aus. */
 export const uid = () =>
@@ -79,14 +81,19 @@ export function quality(v, sc) {
 /* Notenfarbe. "dark" wird jetzt als Parameter uebergeben statt ueber eine
    modulweite Variable gesetzt zu werden – die war beim Rendern mehrerer
    Instanzen eine versteckte Abhaengigkeit. */
+/* Schriftfarbe einer Note: fuenf feste Stufen (siehe colors.js) statt
+   eines stufenlosen Verlaufs – der ergab bei mittleren Noten ein
+   schwer lesbares Gelbgruen. "bright" = auf dunklem Grund (Kopfkarte). */
 export function colorFor(v, sc, mode, dark) {
   if (v == null || !Number.isFinite(v)) return "var(--faint)";
-  const p = quality(v, sc);
-  const h = Math.round(p * 122);
-  if (mode === "bright") return `hsl(${h},72%,68%)`;
-  return dark
-    ? `hsl(${h},62%,${Math.round(63 - p * 6)}%)`
-    : `hsl(${h},62%,${Math.round(44 - p * 4)}%)`;
+  const t = gradeTone(quality(v, sc), dark || mode === "bright");
+  return t ? t.fg : "var(--faint)";
+}
+
+/* Schrift- und Hintergrundfarbe fuer hinterlegte Notenfelder */
+export function toneFor(v, sc, dark) {
+  if (v == null || !Number.isFinite(v)) return null;
+  return gradeTone(quality(v, sc), dark);
 }
 
 export function mean(arr) {

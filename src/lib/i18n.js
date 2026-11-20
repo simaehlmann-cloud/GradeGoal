@@ -8,7 +8,7 @@
 
 export const APP_NAME = "GradeGoal";
 export const APP_SUB = "Noten bis zum Abi";
-export const APP_VER = "1.9.0";
+export const APP_VER = "1.10.0";
 export const DEVELOPER = "Simon Mählmann";
 export const CONTACT = "smaehlmann.appdev@gmail.com";
 export const PUBLISHER = "Wisdompeak Apps";
@@ -231,6 +231,14 @@ export const T = {
     publisher: "Herausgeber",
     developedBy: "Entwickelt von", contact: "Kontakt", version: "Version", edition: "Ausgabe",
 
+    /* Neu in 1.10.0 */
+    keyCalcDesc: "Punkte in eine Note umrechnen",
+    abiDesc: "Abiturnote aus Block I und II",
+    goalLeft: (d) => `Noch ${d} bis zum Wunschschnitt`,
+    goalReached: "Wunschschnitt erreicht!",
+    hintGot: "Verstanden", hintMore: "Hilfe",
+    subjColor: "Farbe",
+    switchLang: "Switch to English",
     /* Neu in 1.9.0 */
     appSub: APP_SUB,
     loading: "Wird geladen …",
@@ -454,6 +462,14 @@ export const T = {
     publisher: "Publisher",
     developedBy: "Developed by", contact: "Contact", version: "Version", edition: "Edition",
 
+    /* New in 1.10.0 */
+    keyCalcDesc: "Turn points into a grade",
+    abiDesc: "Final grade from Block I and II",
+    goalLeft: (d) => `${d} to go to your target average`,
+    goalReached: "Target average reached!",
+    hintGot: "Got it", hintMore: "Help",
+    subjColor: "Colour",
+    switchLang: "Auf Deutsch umschalten",
     /* New in 1.9.0 */
     appSub: "Grades to Abitur",
     loading: "Loading …",

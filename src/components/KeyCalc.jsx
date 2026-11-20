@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Ic } from "./icons.jsx";
-import { Segmented, InfoTip } from "./ui.jsx";
+import { Segmented, InfoTip, Hint } from "./ui.jsx";
 import {
-  uid, parseNum, filterNumInput, fmt, keyGrade, keyTable, colorFor,
+  uid, parseNum, filterNumInput, fmt, keyGrade, keyTable, colorFor, toneFor,
   freshKey, IHK_STEPS, evenSteps, tendencySteps, sortedSteps, pctOf,
   STANDARD_STEPS, standardKeyFor,
 } from "../lib/grades.js";
@@ -84,31 +84,56 @@ function Calculator({ keyObj, sc, lang, t, dark }) {
         </label>
       </div>
 
-      {valid && (
-        <div className="card" style={{ marginTop: 14, marginBottom: 0, background: "var(--chip)", boxShadow: "none" }}>
-          <div className="row" style={{ justifyContent: "space-between" }}>
-            <div>
-              <div className="lbl">{t("keyPercent")}</div>
-              <div className="brand" style={{ fontSize: 22 }}>{fmt(pct, lang, 1)} %</div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div className="lbl">{t("keyResult")}</div>
-              <div className="brand" style={{ fontSize: 32, color: colorFor(grade, sc, null, dark) }}>
-                {fmt(grade, lang, 1)}
+      {valid && (() => {
+        /* Ergebnis gross in seiner Notenfarbe */
+        const tn = toneFor(parseNum(String(grade)), sc, dark);
+        return (
+          <div className="card" style={{ marginTop: 14, marginBottom: 0, background: tn ? tn.bg : "var(--chip)", boxShadow: "none" }}>
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <div>
+                <div className="lbl">{t("keyPercent")}</div>
+                <div className="brand" style={{ fontSize: 24 }}>{fmt(pct, lang, 1)} %</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div className="lbl">{t("keyResult")}</div>
+                <div className="brand" style={{ fontSize: 46, lineHeight: 1.05, color: tn ? tn.fg : colorFor(grade, sc, null, dark) }}>
+                  {fmt(grade, lang, 1)}
+                </div>
               </div>
             </div>
-          </div>
-        </div>)}
+          </div>);
+      })()}
 
       {table.length > 0 && (
         <div style={{ marginTop: 14 }}>
-          <div className="lbl" style={{ marginBottom: 6 }}><Ic n="table" size={13} />{t("keyTable")}</div>
+          <div className="lbl" style={{ marginBottom: 8 }}><Ic n="table" size={13} />{t("keyTable")}</div>
+          {/* Stufenleiste: jede Note so breit wie ihr Punktebereich, der
+              Pfeil zeigt die eingegebene Punktzahl */}
+          <div style={{ position: "relative", marginBottom: 12 }} aria-hidden="true">
+            <div style={{ display: "flex", height: 30, borderRadius: 10, overflow: "hidden" }}>
+              {[...table].reverse().map((row, i, arr) => {
+                const upper = i + 1 < arr.length ? arr[i + 1].from : m;
+                const w = Math.max(0, (upper - row.from) / m) * 100;
+                const tn = toneFor(row.grade, sc, dark);
+                return (
+                  <div key={i} style={{ width: w + "%", background: tn ? tn.bg : "var(--chip)", color: tn ? tn.fg : "var(--ink)",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12,
+                    fontFamily: "'Space Grotesk',sans-serif", borderRight: "2px solid var(--card)", overflow: "hidden", whiteSpace: "nowrap" }}>
+                    {w >= 7 ? (row.label || fmt(row.grade, lang, 1)) : ""}
+                  </div>);
+              })}
+            </div>
+            {r >= 0 && r <= m && (
+              <div style={{ position: "absolute", top: -7, left: `calc(${(r / m) * 100}% - 6px)`, width: 0, height: 0,
+                borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderTop: "8px solid var(--ink)" }}></div>)}
+          </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {table.map((row, i) => (
               <span key={i} style={{
                 display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 20,
-                border: `1.5px solid ${colorFor(row.grade, sc, null, dark)}`,
-                color: colorFor(row.grade, sc, null, dark),
+                border: "1.5px solid transparent",
+                background: (toneFor(row.grade, sc, dark) || {}).bg || "var(--chip)",
+                color: (toneFor(row.grade, sc, dark) || {}).fg || "var(--ink)",
                 padding: "3px 12px", fontWeight: 700, fontSize: 13,
                 fontFamily: "'Space Grotesk',sans-serif",
               }}>
@@ -215,7 +240,7 @@ function KeyEditor({ k, sc, lang, t, onChange, onDelete, dark }) {
                   onClick={() => { onChange({ ...k, type: "steps", steps: confirmReplace }); setConfirmReplace(null); }}>
                   {t("keyReplaceOk")}
                 </button>
-                <button className="btn-ghost" style={{ padding: "6px 14px", fontSize: 13, border: "none" }}
+                <button className="btn-text" style={{ padding: "6px 14px", fontSize: 13 }}
                   onClick={() => setConfirmReplace(null)}>{t("back")}</button>
               </div>
             </div>)}
@@ -255,7 +280,7 @@ export default function KeyCalc({ ds, sc, lang, t, dark, onChangeDs }) {
 
   return (
     <div>
-      <div className="hint" style={{ marginBottom: 12 }}>{t("keyCalcHint")}</div>
+      <Hint id="key-calc" gotIt={t("hintGot")} more={t("hintMore")}>{t("keyCalcHint")}</Hint>
 
       {/* Auswahl, mit welchem Schlüssel gerechnet wird */}
       <div className="row" style={{ justifyContent: "space-between", marginBottom: 6 }}>
@@ -275,7 +300,7 @@ export default function KeyCalc({ ds, sc, lang, t, dark, onChangeDs }) {
       {/* Verwaltung */}
       <div style={{ marginTop: 24, borderTop: "2px solid var(--line)", paddingTop: 14 }}>
         <h2 className="sec"><Ic n="sliders" size={14} />{t("keyManage")}</h2>
-        <div className="hint">{t("keyManageHint")}</div>
+        <Hint id="key-manage" gotIt={t("hintGot")} more={t("hintMore")}>{t("keyManageHint")}</Hint>
 
         {keys.map((k) => (
           <KeyEditor key={k.id} k={k} sc={sc} lang={lang} t={t} dark={dark}

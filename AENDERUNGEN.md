@@ -5,6 +5,72 @@ Neueste Version oben. Bis 1.8.0 lagen die Einträge in einzelnen
 
 ---
 
+# GradeGoal 1.10.0 – Ruhigeres, farbiges Design
+
+Enthält auch die Änderung aus 1.9.1 (App-Store-ID für „App bewerten“).
+
+## Farbsystem (neu: `src/lib/colors.js`)
+
+- **Klare Rollen:** Blau = Bedienelemente, Gelb = Ziele/Wünsche.
+  Noten werden nur noch über ihre Notenfarbe hervorgehoben.
+- **Fünf Notenstufen** (sehr gut … ungenügend) mit hinterlegter Fläche
+  statt farbiger Ränder, jeweils für Hell und Dunkel; alle Paare erfüllen
+  WCAG AA (Kontrast ≥ 4,5:1, per Test geprüft).
+- **Fachfarben:** jedes Fach hat eine von zehn Farben (Streifen in der
+  Liste, Kopf der Fachseite). Auf der Fachseite frei wählbar. Neue Fächer
+  bekommen automatisch die nächste freie Farbe; ältere Daten und
+  Sicherungen werden beim Laden ergänzt.
+- Dunkelmodus wärmer und weniger hart (blauschwarz statt reinem Grau).
+
+## Startseite
+
+- Kopfkarte mit großem Schnitt, Wunschschnitt und **Fortschrittsleiste
+  zum Wunschschnitt** („Noch 0,4 bis zum Wunschschnitt“ / „Wunschschnitt erreicht!“).
+- Notenschlüssel- und Abi-Rechner als Kacheln mit Kurzbeschreibung.
+- Sprachumschalter als kleiner DE/EN-Knopf statt großer Flagge.
+- Fächerliste mit Fachfarbe, Note farbig hinterlegt, Wunschfeld
+  gestrichelt mit ☆.
+
+## Unterseiten
+
+- Einheitlicher Kopf mit „← Zurück“, der beim Scrollen stehen bleibt und
+  dann den Seitentitel zeigt.
+- Fachseite: Kopf in der Fachfarbe, Kategorien mit farbiger Kante,
+  Noten-Chips in der Notenfarbe, Farbwahl für das Fach.
+- Notenschlüssel: große farbige Ergebnisnote, Notenspiegel als Stufenleiste.
+- Abi-Rechner: Ergebnis bleibt beim Scrollen oben sichtbar, Punktefelder
+  in Notenfarbe.
+- Langzeit-Diagramm: Beschriftung am Rand wird nicht mehr abgeschnitten.
+
+## Hilfetexte
+
+- Erklärtexte sind beim ersten Mal offen und lassen sich mit
+  „Verstanden“ einklappen; danach reicht ein kleines „ⓘ Hilfe“.
+  „Alles zurücksetzen“ zeigt sie wieder an.
+
+## Knöpfe
+
+- Drei klare Stufen: Hauptknopf (gefüllt), Zweitknopf (getönt),
+  Textknopf. Überschriften ohne Großbuchstaben-Stil.
+
+## Technik
+
+- Neuer Test `tests/colors.test.mjs` (Kontraste, Notenstufen,
+  Farbvergabe, Übernahme alter Daten). Insgesamt 24 Tests.
+- Store-Bilder, App-Vorschauvideos und YouTube-Videos im neuen Design
+  neu erzeugt.
+
+---
+
+# GradeGoal 1.9.1 – „App bewerten“ auch auf iPhone und iPad
+
+- Apple-ID der App (6826882996) in `src/lib/review.js` eingetragen. Der
+  Knopf „App bewerten“ unter Info & Impressum erscheint jetzt auch auf
+  iOS und öffnet die Bewertungsseite im App Store.
+- Store-Seite: https://apps.apple.com/app/id6826882996
+
+---
+
 # GradeGoal 1.9.0 – Feinschliff nach dem Vorbild von FairMix und PitchPro
 
 ## Rechtstexte

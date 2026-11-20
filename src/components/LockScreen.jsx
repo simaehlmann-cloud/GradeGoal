@@ -91,7 +91,7 @@ export default function LockScreen({ lock, t, onUnlock, onResetAll }) {
           {t("lockUnlock")}
         </button>
 
-        <button className="btn-ghost" style={{ border: "none", color: "var(--faint)", marginTop: 18, fontSize: 13 }}
+        <button className="btn-text" style={{ color: "var(--faint)", marginTop: 18, fontSize: 13 }}
           onClick={() => setShowForgot(!showForgot)} aria-expanded={showForgot}>
           {t("lockForgot")}
         </button>
@@ -109,7 +109,7 @@ export default function LockScreen({ lock, t, onUnlock, onResetAll }) {
                   onClick={onResetAll}>
                   <Ic n="alert" size={14} />{t("resetConfirm")}
                 </button>
-                <button className="btn-ghost" style={{ width: "100%", marginTop: 8, border: "none" }}
+                <button className="btn-text" style={{ width: "100%", marginTop: 8, justifyContent: "center" }}
                   onClick={() => setConfirmReset(false)}>{t("back")}</button>
               </React.Fragment>)}
           </div>)}

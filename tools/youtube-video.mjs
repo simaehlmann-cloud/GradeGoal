@@ -224,9 +224,40 @@ async function slide(app, from, to, ms = 1600) {
   }
 }
 
+/* Zeitmarken der Einblendungen – daraus entsteht die englische
+   Untertiteldatei zum deutschen Video, immer passend zum Schnitt. */
+let MARKS = [];
+const srtTime = (x) => {
+  const ms = Math.max(0, Math.round(x * 1000));
+  const p = (n, l = 2) => String(n).padStart(l, "0");
+  return `${p(Math.floor(ms / 3600000))}:${p(Math.floor(ms / 60000) % 60)}:${p(Math.floor(ms / 1000) % 60)},${p(ms % 1000, 3)}`;
+};
+function writeSrt(rec, file) {
+  const t0 = rec.frames[0].t, end = rec.t1 - t0, en = T.en, out = [];
+  const add = (a, b, text) => out.push(`${out.length + 1}\n${srtTime(a)} --> ${srtTime(b)}\n${text}\n`);
+  const intro = MARKS.find((m) => m.fn === "introEnd");
+  add(0.3, (intro ? intro.t - t0 : 2.4), "GradeGoal – " + en.tagline);
+  const caps = MARKS.filter((m) => m.fn === "caption");
+  const stop = MARKS.find((m) => m.fn === "set");
+  caps.forEach((m, i) => {
+    const a = m.t - t0 + 0.42;
+    const b = (i + 1 < caps.length ? caps[i + 1].t : (stop ? stop.t : rec.t1)) - t0 - 0.05;
+    const sc = en.scenes[m.a[0] - 1];
+    add(a, b, sc[0] + " " + sc[1] + "\n" + sc[2]);
+  });
+  const pills = MARKS.find((m) => m.fn === "pills");
+  if (pills) add(pills.t - t0 + 0.5, end - 0.2, "GradeGoal – " + en.tagline + "\n" + en.outro.join(" · "));
+  fs.writeFileSync(file, out.join("\n"));
+  console.log(`✓ ${path.relative(ROOT, file)}  ${out.length} Untertitel`);
+}
+
 /* ---------- Ablauf (rund 40 Sekunden) ---------- */
 async function scenes(page, app, t) {
-  const S = (fn, ...a) => page.evaluate(([f, args]) => window.stage[f](...args), [fn, a]);
+  const S = async (fn, ...a) => {
+    if (fn === "caption" || (fn === "set" && a[0] === "cap") || (fn === "pills")) MARKS.push({ fn, a, t: Date.now() / 1000 });
+    if (fn === "set" && a[0] === "intro" && a[1] === "off") MARKS.push({ fn: "introEnd", t: Date.now() / 1000 });
+    return page.evaluate(([f, args]) => window.stage[f](...args), [fn, a]);
+  };
   const wait = (ms) => page.waitForTimeout(ms);
   const u = t.ui;
 
@@ -275,7 +306,7 @@ async function scenes(page, app, t) {
   await tap(app, app.getByText("← " + u.back).first());
   await wait(300);
   await smoothScroll(app, 0, 400);
-  await tap(app, app.getByRole("button", { name: u.abi, exact: true }));
+  await tap(app, app.locator(".tile").filter({ hasText: u.abi }));
   await wait(900);
   await smoothScroll(app, await app.evaluate(() => document.body.scrollHeight - window.innerHeight), 2600);
   await wait(1400);
@@ -284,7 +315,7 @@ async function scenes(page, app, t) {
   await S("caption", 5, ...t.scenes[4]);
   await tap(app, app.getByText("← " + u.back).first());
   await wait(300);
-  await tap(app, app.getByRole("button", { name: u.key, exact: true }));
+  await tap(app, app.locator(".tile").filter({ hasText: u.key }));
   await wait(500);
   const nums = app.locator("input[inputmode=decimal]");
   await tap(app, nums.nth(0));
@@ -381,6 +412,8 @@ for (const lang of ["de", "en"]) {
         localStorage.clear();
         localStorage.setItem("gradegoal:data", s);
         localStorage.setItem("gradegoal:unlocked", "1");
+        // Hilfetexte als gelesen markieren: ruhigere Bilder
+        localStorage.setItem("gradegoal:hints", JSON.stringify(["groups","home-subjects","key-calc","key-manage","presets","subj-weight","tendency","what-if"]));
         localStorage.setItem("gradegoal:meta", JSON.stringify({ firstUse: Date.now(), lastBackup: Date.now(), demoOff: true }));
         sessionStorage.setItem("gg-yt", "1");
       }
@@ -397,7 +430,9 @@ for (const lang of ["de", "en"]) {
   await page.waitForTimeout(500);
 
   const dir = path.join(TMP, lang);
+  MARKS = [];
   const rec = await record(page, dir, () => scenes(page, app, t));
+  if (lang === "de") writeSrt(rec, path.join(OUT, "gradegoal-de.en.srt"));
   const out = path.join(OUT, `gradegoal-${lang}.mp4`);
   encode(rec, dir, out);
   ok = check(out) && ok;

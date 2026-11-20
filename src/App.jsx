@@ -3,7 +3,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from
 import {
   uid, parseNum, filterNumInput, fmt, scaleOf, quality, colorFor,
   sName, cName, catMean, weightedCalc, neededGrade, subjWeight, subjectsMean, gv,
-  keyOf, standardKeyFor, todayISO,
+  keyOf, standardKeyFor, todayISO, toneFor,
 } from "./lib/grades.js";
 import { store, STORAGE_KEY } from "./lib/storage.js";
 import { freshState, freshDataset, freshYear, freshAbi, defaultCats, migrateState, datasetFrom } from "./lib/state.js";
@@ -19,7 +19,8 @@ import { makeT, APP, APP_NAME, APP_VER, DEVELOPER, CONTACT, PUBLISHER, LEGAL_FIL
 import { makeLock, isValidPin, PIN_MIN, PIN_MAX } from "./lib/security.js";
 
 import { Ic, FlagDE, FlagEN } from "./components/icons.jsx";
-import { Toggle, Segmented, InfoTip, NumInput, AddRow, QuickAdd, Stamp, UnlockCard, EditableName } from "./components/ui.jsx";
+import { Toggle, Segmented, InfoTip, NumInput, AddRow, QuickAdd, Stamp, UnlockCard, EditableName, PageHead, Hint, resetHints } from "./components/ui.jsx";
+import { subjectColor, nextSubjectColor, SUBJECT_COLORS } from "./lib/colors.js";
 import { TrendChart, Spark, LongTermChart, catColor } from "./components/charts.jsx";
 import { WhatIf, GroupRow } from "./components/panels.jsx";
 import KeyCalc from "./components/KeyCalc.jsx";
@@ -27,7 +28,7 @@ import AbiCalc from "./components/AbiCalc.jsx";
 import LockScreen from "./components/LockScreen.jsx";
 
 /* =========================================================
-   GradeGoal: Noten bis zum Abi  ·  Version 1.9.0
+   GradeGoal: Noten bis zum Abi  ·  Version 1.10.0
    Entwickelt von / developed by Simon Mählmann
 ========================================================= */
 
@@ -478,6 +479,7 @@ function App() {
     setUndo(null);
     setConfirmReset(false);
     setUnlocked(true);
+    resetHints();
     setState(f);
     store.set(STORAGE_KEY, f);
   };
@@ -569,7 +571,7 @@ function App() {
           datasets: s.datasets.map((d) => (d.label === "1. Halbjahr / 1st term" ? { ...d, label: makeT(s.lang)("termDefault") } : d)),
         }))}>{t("start")} →</button>
         <div style={{ marginTop: 22 }}>
-          <button className="btn-ghost" style={{ border: "none", color: "var(--faint)" }} onClick={() => up({ screen: "about", aboutFrom: "start" })}>
+          <button className="btn-text" style={{ color: "var(--faint)" }} onClick={() => up({ screen: "about", aboutFrom: "start" })}>
             <Ic n="info" size={14} />{t("aboutBtn")}
           </button>
         </div>
@@ -579,9 +581,7 @@ function App() {
   /* ============ ÜBER / INFO ============ */
   if (state.screen === "about") return (
     <div className="wrap">
-      <button className="btn-ghost" style={{ border: "none", paddingLeft: 0 }}
-        onClick={() => up({ screen: state.aboutFrom || "home" })}>← {t("back")}</button>
-      <h1 className="brand" style={{ fontSize: 30, margin: "8px 0 16px" }}><Ic n="info" size={24} />{t("about")}</h1>
+      <PageHead title={t("about")} icon="info" backLabel={t("back")} onBack={() => up({ screen: state.aboutFrom || "home" })} />
       <div className="card">
         <div className="brand" style={{ fontSize: 22 }}>
           {APP_NAME}<span style={{ color: "var(--blue)" }}>.</span>{" "}
@@ -644,10 +644,7 @@ function App() {
     const file = (LEGAL_FILES[state.lang] || LEGAL_FILES.de)[doc];
     return (
       <div className="wrap">
-        <button className="btn-ghost" style={{ border: "none", paddingLeft: 0 }} onClick={() => up({ screen: "about" })}>← {t("back")}</button>
-        <h1 className="brand" style={{ fontSize: 28, margin: "8px 0 12px" }}>
-          {doc === "privacy" ? t("aboutPrivacyTitle") : t("legalTitle")}
-        </h1>
+        <PageHead title={doc === "privacy" ? t("aboutPrivacyTitle") : t("legalTitle")} backLabel={t("back")} onBack={() => up({ screen: "about" })} />
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
           {/* platform: Die Seite zeigt nur den Store dieses Geraets (recht.js) */}
           <iframe key={file} src={"./" + file + "?theme=" + (dark ? "dark" : "light") + "&platform=" + platform()} title={doc === "privacy" ? t("privacyLink") : t("imprintLink")}
@@ -661,8 +658,7 @@ function App() {
   /* ============ RECHNER: NOTENSCHLÜSSEL ============ */
   if (state.screen === "key") return (
     <div className="wrap">
-      <button className="btn-ghost" style={{ border: "none", paddingLeft: 0 }} onClick={() => up({ screen: "home" })}>← {t("back")}</button>
-      <h1 className="brand" style={{ fontSize: 28, margin: "8px 0 16px" }}><Ic n="percent" size={22} />{t("keyCalc")}</h1>
+      <PageHead title={t("keyCalc")} icon="percent" backLabel={t("back")} onBack={() => up({ screen: "home" })} />
       <div className="card">
         <KeyCalc ds={ds} sc={sc} t={t} lang={state.lang} dark={dark}
           onChangeDs={(patch) => upDs(patch)} />
@@ -673,10 +669,9 @@ function App() {
   /* ============ RECHNER: ABITUR ============ */
   if (state.screen === "abi") return (
     <div className="wrap">
-      <button className="btn-ghost" style={{ border: "none", paddingLeft: 0 }} onClick={() => up({ screen: "home" })}>← {t("back")}</button>
-      <h1 className="brand" style={{ fontSize: 28, margin: "8px 0 16px" }}><Ic n="cap" size={22} />{t("abi")}</h1>
+      <PageHead title={t("abi")} icon="cap" backLabel={t("back")} onBack={() => up({ screen: "home" })} />
       <div className="card">
-        <AbiCalc abi={ds.abi || freshAbi()} t={t} lang={state.lang} onChange={(next) => upDs({ abi: next })} />
+        <AbiCalc abi={ds.abi || freshAbi()} t={t} lang={state.lang} dark={dark} onChange={(next) => upDs({ abi: next })} />
       </div>
       {floats}
     </div>);
@@ -686,10 +681,8 @@ function App() {
     const isSettings = state.screen === "settings";
     return (
       <div className="wrap">
-        {isSettings && <button className="btn-ghost" style={{ border: "none", paddingLeft: 0 }} onClick={() => up({ screen: "home" })}>← {t("back")}</button>}
-        <h1 className="brand" style={{ fontSize: 30, margin: "8px 0 16px" }}>
-          {isSettings ? <React.Fragment><Ic n="settings" size={24} />{t("settings")}</React.Fragment> : t("profile")}
-        </h1>
+        <PageHead title={isSettings ? t("settings") : t("profile")} icon={isSettings ? "settings" : null}
+          backLabel={t("back")} onBack={isSettings ? () => up({ screen: "home" }) : null} />
         {banner}
 
         <div className="card">
@@ -915,7 +908,7 @@ function App() {
                 onClick={() => { if (!confirmReset) return setConfirmReset(true); hardReset(); }}>
                 <Ic n={confirmReset ? "alert" : "trash"} size={15} />{confirmReset ? t("resetConfirm") : t("resetBtn")}
               </button>
-              {confirmReset && <button className="btn-ghost" style={{ width: "100%", marginTop: 8, border: "none" }} onClick={() => setConfirmReset(false)}>{t("back")}</button>}
+              {confirmReset && <button className="btn-text" style={{ width: "100%", marginTop: 8, justifyContent: "center" }} onClick={() => setConfirmReset(false)}>{t("back")}</button>}
             </div>
           </div>
 
@@ -964,23 +957,26 @@ function App() {
 
     return (
       <div className="wrap">
-        <button className="btn-ghost" style={{ border: "none", paddingLeft: 0 }} onClick={() => { up({ selSubject: null }); setConfirmDel(false); }}>← {t("back")}</button>
-        <h1 className="brand" style={{ fontSize: 30, margin: "8px 0 16px", overflowWrap: "anywhere" }}>
+        <PageHead barTitle={sName(subject, state.lang)} accent={subjectColor(subject, dark)} backLabel={t("back")}
+          onBack={() => { up({ selSubject: null }); setConfirmDel(false); }}>
           <EditableName key={subject.id} value={sName(subject, state.lang)} label={t("renameSubject")} maxLength={80}
             inputStyle={{ fontSize: 22, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif" }}
             onSave={(name) => upSubject(subject.id, { name })} />
-        </h1>
+        </PageHead>
         {banner}
 
-        <div className="card row" style={{ justifyContent: "space-around" }}>
+        {/* Kopf des Fachs: Streifen in der Fachfarbe, Zeugnisnote in ihrer
+            Notenfarbe, darunter Ziel-Rueckmeldung und Farbwahl */}
+        <div className="card" style={{ borderTop: "5px solid " + subjectColor(subject, dark), paddingTop: 16 }}>
+        <div className="row" style={{ justifyContent: "space-around" }}>
           <div style={{ textAlign: "center" }}>
-            <NumInput value={subject.grade} label={t("reportGrade")} onChange={(v) => upSubject(subject.id, { grade: v })} ph="–" color={C(g)} />
+            <NumInput value={subject.grade} label={t("reportGrade")} onChange={(v) => upSubject(subject.id, { grade: v })} ph="–" tone={toneFor(g, sc, dark)} />
             <div style={{ fontSize: 12, color: "var(--sub)", marginTop: 6, fontWeight: 600 }}>{t("reportGrade")}</div>
           </div>
           {eff.wish && (<React.Fragment>
             <div style={{ fontSize: 22, color: "var(--border)" }} aria-hidden="true">→</div>
             <div style={{ textAlign: "center" }}>
-              <NumInput value={subject.wish} label={t("wishGrade")} onChange={(v) => upSubject(subject.id, { wish: v })} ph="–" color="var(--blue)" />
+              <NumInput value={subject.wish} label={t("wishGrade")} onChange={(v) => upSubject(subject.id, { wish: v })} ph="☆" wishy />
               <div style={{ fontSize: 12, color: "var(--sub)", marginTop: 6, fontWeight: 600 }}><Ic n="star" size={11} />{t("wishGrade")}</div>
             </div>
           </React.Fragment>)}
@@ -988,18 +984,28 @@ function App() {
         </div>
 
         {eff.wish && diff != null && (
-          <div style={{ margin: "-6px 0 14px", textAlign: "center", fontSize: 14, fontWeight: 700, color: diff <= 0 ? "var(--green)" : "var(--red)" }}>
+          <div style={{ marginTop: 12, textAlign: "center", fontSize: 14, fontWeight: 700, color: diff <= 0 ? "var(--green)" : "var(--red)" }}>
             {diff <= 0 ? `✓ ${t("onTrack")}` : `${fmt(diff, state.lang)} ${t("gap")}`}
           </div>)}
         {ds.scale.type === "grades" && (
-          <div className="hint" style={{ margin: "-4px 0 14px", textAlign: "center", fontSize: 12 }}>{t("tendHint")}</div>)}
+          <div style={{ marginTop: 10 }}><Hint id="tendency" gotIt={t("hintGot")} more={t("hintMore")}>{t("tendHint")}</Hint></div>)}
+        <div className="row" style={{ marginTop: 8, gap: 10, flexWrap: "wrap" }}>
+          <span className="lbl">{t("subjColor")}</span>
+          <div className="swatches" role="radiogroup" aria-label={t("subjColor")}>
+            {SUBJECT_COLORS.map((c, i) => (
+              <button key={i} className="swatch" role="radio" aria-checked={subject.color === i}
+                aria-label={t("subjColor") + " " + (i + 1)} style={{ background: c[dark ? 1 : 0] }}
+                onClick={() => upSubject(subject.id, { color: i })} />))}
+          </div>
+        </div>
+        </div>
 
         {/* ---------- Fachgewichtung ---------- */}
         {!state.features.simple && (
           <div className="card">
             <h2 className="sec"><Ic n="scale" size={14} />{t("subjWeight")}</h2>
             <React.Fragment>
-              <div className="hint" style={{ marginBottom: 10 }}>{t("subjWeightHint")}</div>
+              <Hint id="subj-weight" gotIt={t("hintGot")} more={t("hintMore")}>{t("subjWeightHint")}</Hint>
               <div className="row" style={{ gap: 10 }}>
                 <input className="num-weight" inputMode="decimal" value={String(subjWeight(subject))} aria-label={t("subjWeight")}
                   onChange={(e) => {
@@ -1048,7 +1054,7 @@ function App() {
             {subject.cats.map((c, ci) => {
               const m = catMean(c);
               return (
-                <div key={c.id} style={{ borderTop: "1px solid var(--line)", padding: "12px 0" }}>
+                <div key={c.id} className="cat-block" style={{ borderLeft: "4px solid " + catColor(ci) }}>
                   {/* Zwei Zeilen statt einer umbrechenden: oben Name, Schnitt
                       und Loeschen, darunter die Gewichtung. */}
                   <div className="row">
@@ -1073,10 +1079,11 @@ function App() {
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8, alignItems: "center" }}>
                     {c.grades.map((gr, i) => {
                       const val = parseNum(gv(gr));
+                      const tn = toneFor(val, sc, dark);
                       return (
                         <span key={i} style={{
-                          display: "inline-flex", alignItems: "center", gap: 4, background: "var(--chip)",
-                          border: `1.5px solid ${C(val)}`, color: C(val),
+                          display: "inline-flex", alignItems: "center", gap: 4, background: tn ? tn.bg : "var(--chip)",
+                          border: "1.5px solid transparent", color: tn ? tn.fg : "var(--ink)",
                           borderRadius: 20, padding: "3px 6px 3px 12px", fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif",
                         }}>
                           {fmt(val, state.lang)}
@@ -1180,16 +1187,13 @@ function App() {
   return (
     <div className="wrap">
       <div className="row" style={{ justifyContent: "space-between", marginBottom: 12 }}>
-        <div>
-          <div className="brand" style={{ fontSize: 24 }}>
-            {APP_NAME}<span style={{ color: "var(--blue)" }}>.</span>
-          </div>
-          {state.datasets.length > 1 && <div style={{ fontSize: 12, color: "var(--sub)", fontWeight: 700 }}>{ds.label}</div>}
+        <div className="brand" style={{ fontSize: 26, letterSpacing: "-.02em" }}>
+          {APP_NAME}<span style={{ color: "var(--blue)" }}>.</span>
         </div>
-        <div className="row">
-          <button onClick={() => up({ lang: state.lang === "de" ? "en" : "de" })} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}
-            aria-label={state.lang === "de" ? "Switch to English" : "Auf Deutsch umschalten"}>
-            {state.lang === "de" ? <FlagEN size={34} /> : <FlagDE size={34} />}
+        <div className="row" style={{ gap: 6 }}>
+          {/* Sprache als kleiner Knopf statt grosser Flagge */}
+          <button className="lang-btn" onClick={() => up({ lang: state.lang === "de" ? "en" : "de" })} aria-label={t("switchLang")} title={t("switchLang")}>
+            {state.lang === "de" ? "EN" : "DE"}
           </button>
           <button onClick={() => up({ screen: "settings" })} title={t("settings")} aria-label={t("settings")}
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink)", padding: 4 }}>
@@ -1200,30 +1204,49 @@ function App() {
 
       {banner}
 
-      <div className="card" style={{ background: "linear-gradient(135deg,var(--hero1),var(--hero2))", color: "#fff" }}>
-        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+      {/* ---------- Kopfkarte ---------- */}
+      <div className="card hero">
+        {(() => {
+          const k = [state.datasets.length > 1 ? ds.label : null, state.name].filter(Boolean).join(" · ");
+          return k ? <div className="hero-kicker" style={{ marginBottom: 6 }}>{k}</div> : null;
+        })()}
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", rowGap: 10 }}>
           <div>
-            <div className="brand" style={{ fontSize: 19, color: "#fff" }}>{t("report")}</div>
-            {(state.name || state.school) && (
-              <div style={{ fontSize: 13, color: "var(--hero-ink)", marginTop: 3, overflowWrap: "anywhere" }}>
-                {state.name}{state.name && state.school ? " · " : ""}{state.school}
-              </div>)}
+            <div className="brand" style={{ fontSize: 21, color: "#fff" }}>{t("report")}</div>
+            {state.school && <div style={{ fontSize: 13, color: "var(--hero-ink)", marginTop: 2, overflowWrap: "anywhere" }}>{state.school}</div>}
           </div>
-          <div className="row" style={{ gap: 18 }}>
-            <div style={{ textAlign: "center" }}>
-              <div className="brand" style={{ fontSize: 34, color: overallAvg != null ? C(overallAvg, "bright") : "var(--hero-ink)" }}>{fmt(overallAvg, state.lang)}</div>
-              <div style={{ fontSize: 11, color: "var(--hero-ink)", fontWeight: 700 }}>
+          <div className="row" style={{ gap: 20 }}>
+            <div style={{ textAlign: "right" }}>
+              <div className="brand" style={{ fontSize: 40, lineHeight: 1, color: overallAvg != null ? C(overallAvg, "bright") : "var(--hero-ink)" }}>{fmt(overallAvg, state.lang)}</div>
+              <div style={{ fontSize: 11, color: "var(--hero-ink)", fontWeight: 700, marginTop: 4 }}>
                 {t("avg")}{anyWeighted ? " · " + t("weighted") : ""}
               </div>
             </div>
             {eff.wish && (
-              <div style={{ textAlign: "center" }}>
-                <div className="brand" style={{ fontSize: 34, color: "var(--yellow)" }}>{fmt(wishAvg, state.lang)}</div>
-                <div style={{ fontSize: 11, color: "var(--hero-ink)", fontWeight: 700 }}><Ic n="star" size={10} color="var(--yellow)" />{t("wishAvg")}</div>
+              <div style={{ textAlign: "right" }}>
+                <div className="brand" style={{ fontSize: 40, lineHeight: 1, color: "var(--yellow)" }}>{fmt(wishAvg, state.lang)}</div>
+                <div style={{ fontSize: 11, color: "var(--hero-ink)", fontWeight: 700, marginTop: 4 }}><Ic n="star" size={10} color="var(--yellow)" />{t("wishAvg")}</div>
               </div>)}
           </div>
         </div>
-        {overallAvg == null && <div style={{ fontSize: 13, color: "var(--hero-ink)", marginTop: 8 }}>{t("noGrades")}</div>}
+        {/* Abstand zum Wunschschnitt als Leiste: wie viel der Strecke von der
+            schlechtesten Note bis zum Wunsch ist geschafft? */}
+        {eff.wish && overallAvg != null && wishAvg != null && (() => {
+          const qa = quality(overallAvg, sc), qw = quality(wishAvg, sc);
+          const done = qw <= 0 ? 1 : Math.max(0, Math.min(1, qa / qw));
+          const gap = sc.bestLow ? overallAvg - wishAvg : wishAvg - overallAvg;
+          const reached = gap <= 0.005;
+          return (
+            <div style={{ marginTop: 14 }}>
+              <div className="goal-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(done * 100)}>
+                <div className="goal-fill" style={{ width: (reached ? 100 : done * 100) + "%" }}></div>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, marginTop: 6, color: reached ? "var(--yellow)" : "var(--hero-ink)" }}>
+                {reached ? "✓ " + t("goalReached") : t("goalLeft")(fmt(gap, state.lang))}
+              </div>
+            </div>);
+        })()}
+        {overallAvg == null && <div style={{ fontSize: 13, color: "var(--hero-ink)", marginTop: 10 }}>{t("noGrades")}</div>}
       </div>
 
       {/* ---------- Beispielzeugnis ---------- */}
@@ -1238,7 +1261,7 @@ function App() {
           <p className="hint" style={{ margin: "0 0 12px" }}>{t("demoText")}</p>
           <div className="row" style={{ flexWrap: "wrap" }}>
             <button className="btn" onClick={loadDemo}>{t("demoLoad")}</button>
-            <button className="btn-ghost" style={{ border: "none" }} onClick={() => { hideDemoOffer(); setMetaTick((n) => n + 1); }}>{t("demoNo")}</button>
+            <button className="btn-text" onClick={() => { hideDemoOffer(); setMetaTick((n) => n + 1); }}>{t("demoNo")}</button>
           </div>
         </div>)}
 
@@ -1249,21 +1272,20 @@ function App() {
           <p className="hint" style={{ margin: "0 0 12px" }}>{t("backupDueText")(daysSince(meta.lastBackup))}</p>
           <div className="row" style={{ flexWrap: "wrap" }}>
             <button className="btn" onClick={doExport}><Ic n="download" size={15} />{t("backupNow")}</button>
-            <button className="btn-ghost" style={{ border: "none" }} onClick={() => { snoozeBackup(); setMetaTick((n) => n + 1); }}>{t("backupLater")}</button>
+            <button className="btn-text" onClick={() => { snoozeBackup(); setMetaTick((n) => n + 1); }}>{t("backupLater")}</button>
           </div>
         </div>)}
 
       {/* ---------- Rechner ---------- */}
-      <div className="card">
-        <h2 className="sec"><Ic n="sliders" size={14} />{t("tools")}</h2>
-        <div className="row" style={{ flexWrap: "wrap" }}>
-          <button className="btn-ghost" onClick={() => up({ screen: "key" })}>
-            <Ic n="percent" size={15} />{t("keyCalc")}
-          </button>
-          <button className="btn-ghost" onClick={() => up({ screen: "abi" })}>
-            <Ic n="cap" size={15} />{t("abiShort")}
-          </button>
-        </div>
+      <div className="tiles" style={{ marginBottom: 14 }}>
+        <button className="tile" onClick={() => up({ screen: "key" })}>
+          <span className="tile-ico"><Ic n="percent" size={19} /></span>
+          <b>{t("keyCalc")}</b><small>{t("keyCalcDesc")}</small>
+        </button>
+        <button className="tile" onClick={() => up({ screen: "abi" })}>
+          <span className="tile-ico"><Ic n="cap" size={19} /></span>
+          <b>{t("abiShort")}</b><small>{t("abiDesc")}</small>
+        </button>
       </div>
 
       {/* ---------- Langzeitverlauf & Halbjahresvergleich ---------- */}
@@ -1293,7 +1315,7 @@ function App() {
         <div className="card">
           <h2 className="sec"><Ic n="sigma" size={14} />{t("groups")}</h2>
           <React.Fragment>
-            <div className="hint" style={{ marginBottom: 10 }}>{t("groupsHint")}</div>
+            <Hint id="groups" gotIt={t("hintGot")} more={t("hintMore")}>{t("groupsHint")}</Hint>
             {ds.groups.map((g) => (
               <GroupRow key={g.id} g={g} a={groupAvg(g)} ok={groupOk(g)} sc={sc} ds={ds} upDs={upDs}
                 lang={state.lang} t={t} dark={dark} pushUndo={pushUndo} />))}
@@ -1302,7 +1324,7 @@ function App() {
             </div>
             <div style={{ marginTop: 12, borderTop: "1px solid var(--line)", paddingTop: 10 }}>
               <div className="lbl" style={{ marginBottom: 4 }}>{t("presets")}</div>
-              <div className="hint" style={{ marginBottom: 8, fontSize: 12 }}>{t("presetHint")}</div>
+              <Hint id="presets" gotIt={t("hintGot")} more={t("hintMore")}>{t("presetHint")}</Hint>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {PRESETS.map(([key]) => (
                   <button key={key} className="chip-btn" onClick={() => addPreset(key)}>+ {t(key)}</button>))}
@@ -1329,17 +1351,20 @@ function App() {
             <div className="hint" style={{ marginTop: 4 }}>{t("emptySubjectsCta")}</div>
           </div>
         ) : (<React.Fragment>
-          {!sorting && <div className="hint" style={{ marginBottom: 6 }}>{t("empty")}</div>}
+          {!sorting && <Hint id="home-subjects" gotIt={t("hintGot")} more={t("hintMore")}>{t("empty")}</Hint>}
           {!sorting && <div style={{
-            display: "grid", gridTemplateColumns: eff.wish ? "1fr 70px 70px" : "1fr 70px", gap: "0 8px",
+            display: "grid", gridTemplateColumns: eff.wish ? "1fr 60px 60px" : "1fr 60px", gap: "0 8px",
             fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: ".05em", padding: "6px 4px 4px",
           }}>
-            <span></span><span style={{ textAlign: "center" }}>{t("grade")}</span>
-            {eff.wish && <span style={{ textAlign: "center" }}><Ic n="star" size={10} />{t("wish")}</span>}
+            <span></span><span style={{ textAlign: "center", whiteSpace: "nowrap" }}>{t("grade")}</span>
+            {eff.wish && <span style={{ textAlign: "center", whiteSpace: "nowrap" }}><Ic n="star" size={10} style={{ marginRight: 2 }} />{t("wish")}</span>}
           </div>}
           {sorting ? ds.subjects.map((s, i) => (
-            <div key={s.id} className="row" style={{ borderTop: "1px solid var(--line)", padding: "6px 4px", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 16, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{sName(s, state.lang)}</span>
+            <div key={s.id} className="row" style={{ borderTop: "1px solid var(--line)", padding: "6px 4px 6px 0", justifyContent: "space-between" }}>
+              <span className="row" style={{ fontSize: 16, fontWeight: 700, minWidth: 0 }}>
+                <span className="subj-stripe" style={{ background: subjectColor(s, dark) }}></span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{sName(s, state.lang)}</span>
+              </span>
               <span className="row" style={{ gap: 4, flexShrink: 0 }}>
                 <button className="sort-btn" disabled={i === 0} aria-label={t("moveUp") + ": " + sName(s, state.lang)}
                   onClick={() => moveSubject(s.id, -1)}><Ic n="up" size={18} style={{ marginRight: 0 }} /></button>
@@ -1350,14 +1375,12 @@ function App() {
             const sg = parseNum(s.grade);
             const wt = subjWeight(s);
             return (
-              <div key={s.id} style={{
-                display: "grid", gridTemplateColumns: eff.wish ? "1fr 70px 70px" : "1fr 70px", gap: "0 8px",
-                alignItems: "center", borderTop: "1px solid var(--line)", padding: "8px 4px",
+              <div key={s.id} className="subj-row" style={{
+                gridTemplateColumns: eff.wish ? "1fr 60px 60px" : "1fr 60px",
                 opacity: wt === 0 ? 0.55 : 1,
               }}>
-                <button onClick={() => up({ selSubject: s.id })}
-                  style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", fontSize: 16, fontWeight: 600, color: "var(--ink)", display: "flex", alignItems: "center", gap: 8, padding: 0, minWidth: 0 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: C(sg), flexShrink: 0 }}></span>
+                <button className="subj-name" onClick={() => up({ selSubject: s.id })}>
+                  <span className="subj-stripe" style={{ background: subjectColor(s, dark) }}></span>
                   {/* Der Name bekommt Vorrang: Bei wenig Platz wird zuerst die
                       Verlaufslinie abgeschnitten, nicht „Sport“ zu „Sp…“. */}
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: "min(4.6em, 100%)", flexShrink: 1 }}>{sName(s, state.lang)}</span>
@@ -1366,18 +1389,18 @@ function App() {
                   {eff.charts && eff.cats && <span style={{ marginLeft: "auto", display: "flex", minWidth: 0, overflow: "hidden", flexShrink: 3 }}><Spark subject={s} sc={sc} /></span>}
                   <span style={{ color: "var(--border)", fontSize: 13 }} aria-hidden="true">›</span>
                 </button>
-                <NumInput width="100%" label={sName(s, state.lang) + " – " + t("grade")} value={s.grade} onChange={(v) => upSubject(s.id, { grade: v })} ph="–" color={C(sg)} />
-                {eff.wish && <NumInput width="100%" label={sName(s, state.lang) + " – " + t("wish")} value={s.wish} onChange={(v) => upSubject(s.id, { wish: v })} ph="–" color="var(--blue)" />}
+                <NumInput width="100%" label={sName(s, state.lang) + " – " + t("grade")} value={s.grade} onChange={(v) => upSubject(s.id, { grade: v })} ph="–" tone={toneFor(sg, sc, dark)} />
+                {eff.wish && <NumInput width="100%" label={sName(s, state.lang) + " – " + t("wish")} value={s.wish} onChange={(v) => upSubject(s.id, { wish: v })} ph="☆" wishy />}
               </div>);
           })}
         </React.Fragment>)}
 
         {!sorting && <AddRow ph={t("addSubject")} btn={t("add")}
-          onAdd={(name) => upDs({ subjects: [...ds.subjects, { id: uid(), name, grade: "", wish: "", weight: 1, keyId: "", cats: defaultCats(), goals: "", notes: "" }] })} />}
+          onAdd={(name) => upDs({ subjects: [...ds.subjects, { id: uid(), name, color: nextSubjectColor(ds.subjects), grade: "", wish: "", weight: 1, keyId: "", cats: defaultCats(), goals: "", notes: "" }] })} />}
       </div>
 
       <div style={{ textAlign: "center", marginTop: 6 }}>
-        <button className="btn-ghost" style={{ border: "none", color: "var(--faint)", fontSize: 13 }} onClick={() => up({ screen: "about", aboutFrom: "home" })}>
+        <button className="btn-text" style={{ color: "var(--faint)", fontSize: 13 }} onClick={() => up({ screen: "about", aboutFrom: "home" })}>
           <Ic n="info" size={13} />{t("aboutBtn")} · v{APP_VER}
         </button>
       </div>

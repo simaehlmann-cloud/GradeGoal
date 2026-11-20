@@ -48,8 +48,9 @@ function stamped(list, ci, now) {
 }
 
 export function demoSubjects(now = Date.now()) {
-  return SUBJECTS.map(([de, en, grade, wish, weight, ...cats]) => ({
+  return SUBJECTS.map(([de, en, grade, wish, weight, ...cats], si) => ({
     id: uid(),
+    color: si % 10,
     name: { de, en },
     grade,
     wish,

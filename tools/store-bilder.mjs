@@ -99,6 +99,8 @@ async function open(dev, lang, theme, opts) {
         localStorage.clear();
         localStorage.setItem("gradegoal:data", s);
         localStorage.setItem("gradegoal:unlocked", "1");
+        // Hilfetexte als gelesen markieren: ruhigere Bilder
+        localStorage.setItem("gradegoal:hints", JSON.stringify(["groups","home-subjects","key-calc","key-manage","presets","subj-weight","tendency","what-if"]));
         /* Angebote und Erinnerungen haben auf Store-Bildern nichts verloren */
         localStorage.setItem("gradegoal:meta", JSON.stringify({ firstUse: Date.now(), lastBackup: Date.now(), demoOff: true }));
         sessionStorage.setItem("gg-shot", "1");
@@ -137,11 +139,11 @@ for (const [devName, dev] of Object.entries(DEVICES)) {
     await shoot(page, dir, 3, "was-waere-wenn", dev.want);
 
     await page.getByText("← " + t.back).first().click();
-    await page.getByRole("button", { name: t.abi, exact: true }).click();
+    await page.locator(".tile").filter({ hasText: t.abi }).click();
     await shoot(page, dir, 4, "abitur", dev.want);
 
     await page.getByText("← " + t.back).first().click();
-    await page.getByRole("button", { name: t.key, exact: true }).click();
+    await page.locator(".tile").filter({ hasText: t.key }).click();
     const nums = page.locator("input[inputmode=decimal]");
     if (await nums.count() >= 2) { await nums.nth(0).fill("34"); await nums.nth(1).fill("50"); }
     await shoot(page, dir, 5, "notenschluessel", dev.want);

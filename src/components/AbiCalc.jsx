@@ -1,7 +1,7 @@
 import React from "react";
 import { Ic } from "./icons.jsx";
 import { InfoTip } from "./ui.jsx";
-import { uid, parseNum, filterNumInput, fmt, abiBlockI, abiBlockII, abiTotal } from "../lib/grades.js";
+import { uid, parseNum, filterNumInput, fmt, abiBlockI, abiBlockII, abiTotal, toneFor } from "../lib/grades.js";
 import { ABI_EXAM_COUNT } from "../lib/state.js";
 
 /* =========================================================
@@ -14,11 +14,10 @@ import { ABI_EXAM_COUNT } from "../lib/state.js";
    rechnet deshalb nur mit dem, was der Nutzer eintraegt, und sagt das
    auch deutlich.
 ========================================================= */
-const PT_COLORS = (p) => {
-  if (p == null) return "var(--faint)";
-  const q = Math.max(0, Math.min(1, p / 15));
-  return `hsl(${Math.round(q * 122)},62%,46%)`;
-};
+const PT_SCALE = { type: "points", min: 0, max: 15, bestLow: false };
+/* Schriftfarbe der Punkte: dieselben Notenstufen wie ueberall (colors.js).
+   Ohne Eintrag schlicht; die eigentliche Farbe kommt aus ptTone(). */
+const PT_COLORS = (p) => (p == null ? "var(--faint)" : undefined);
 
 function Check({ ok, label }) {
   return (
@@ -28,7 +27,7 @@ function Check({ ok, label }) {
     </div>);
 }
 
-export default function AbiCalc({ abi, onChange, t, lang }) {
+export default function AbiCalc({ abi, onChange, t, lang, dark }) {
   const results = abi.results || [];
   const exams = abi.exams || [];
 
@@ -45,6 +44,10 @@ export default function AbiCalc({ abi, onChange, t, lang }) {
   const setExam = (i, v) =>
     onChange({ ...abi, exams: Array.from({ length: ABI_EXAM_COUNT }, (_, j) => (j === i ? v : exams[j] || "")) });
 
+  /* Notenfarben: Punkte 0–15 und Abiturnote 1,0–4,0 (auf der Skala 1–6) */
+  const ptTone = (v) => toneFor(parseNum(v), PT_SCALE, dark);
+  const gradeTn = total.grade != null ? toneFor(total.grade, { type: "grades", min: 1, max: 6, bestLow: true }, dark) : null;
+
   return (
     <div>
       <div className="hint">{t("abiHint")}</div>
@@ -52,17 +55,34 @@ export default function AbiCalc({ abi, onChange, t, lang }) {
         <Ic n="alert" size={14} />{t("abiDisclaimer")}
       </div>
 
+      {/* ---------- Ergebnis kompakt, bleibt beim Scrollen oben ---------- */}
+      <div className="sticky-result" style={{ marginTop: 12 }}>
+        <div className="row" style={{ justifyContent: "space-between", background: (gradeTn || {}).bg || "var(--surface)",
+          borderRadius: 14, padding: "10px 14px", boxShadow: "0 4px 14px rgba(23,42,70,.10)" }}>
+          <div>
+            <div className="lbl" style={{ fontSize: 11 }}>{t("abiTotal")}</div>
+            <div className="brand" style={{ fontSize: 22 }}>{total.total}<span style={{ fontSize: 13, color: "var(--sub)", fontWeight: 400 }}> / 900</span></div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div className="lbl" style={{ fontSize: 11 }}>{t("abiGrade")}</div>
+            <div className="brand" style={{ fontSize: 30, lineHeight: 1.05, color: gradeTn ? gradeTn.fg : "var(--faint)" }}>
+              {total.grade != null ? fmt(total.grade, lang, 1) : "–"}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ---------- Block I ---------- */}
-      <h2 className="sec" style={{ marginTop: 14 }}>{t("blockI")}</h2>
+      <h2 className="sec" style={{ marginTop: 18 }}>{t("blockI")}</h2>
       <InfoTip text={t("abiDoubleHint")} />
 
       {results.length === 0 && <div className="hint" style={{ padding: "6px 0" }}>{t("abiEmpty")}</div>}
 
       {results.map((r) => (
-        <div key={r.id} className="row" style={{ borderTop: "1px solid var(--line)", padding: "8px 0", flexWrap: "wrap" }}>
+        <div key={r.id} className="row" style={{ borderTop: "1px solid var(--line)", padding: "6px 0", flexWrap: "wrap" }}>
           <input className="inp" style={{ flex: "1 1 90px", minWidth: 0, padding: "8px 10px" }} placeholder={t("abiResultLabel")}
             maxLength={40} value={r.label} onChange={(e) => setResult(r.id, { label: e.target.value })} />
-          <input className="num" inputMode="numeric" style={{ width: 58, color: PT_COLORS(parseNum(r.p)) }}
+          <input className={"num" + (ptTone(r.p) ? " toned" : "")} inputMode="numeric" style={{ width: 58, color: (ptTone(r.p) || {}).fg || PT_COLORS(parseNum(r.p)), background: (ptTone(r.p) || {}).bg }}
             aria-label={t("abiPoints")} placeholder="–" value={r.p}
             onChange={(e) => setResult(r.id, { p: filterNumInput(e.target.value).replace(/[.,+\-\u2212]/g, "").slice(0, 2) })} />
           <label className="lbl row" style={{ gap: 4 }}>
@@ -86,7 +106,7 @@ export default function AbiCalc({ abi, onChange, t, lang }) {
         {Array.from({ length: ABI_EXAM_COUNT }, (_, i) => (
           <label key={i} className="lbl" style={{ textAlign: "center" }}>
             <div style={{ fontSize: 11, marginBottom: 3 }}>{t("abiExam")} {i + 1}</div>
-            <input className="num" inputMode="numeric" style={{ width: 54, color: PT_COLORS(parseNum(exams[i])) }}
+            <input className={"num" + (ptTone(exams[i]) ? " toned" : "")} inputMode="numeric" style={{ width: 54, color: (ptTone(exams[i]) || {}).fg || PT_COLORS(parseNum(exams[i])), background: (ptTone(exams[i]) || {}).bg }}
               placeholder="–" value={exams[i] || ""} aria-label={t("abiExam") + " " + (i + 1)}
               onChange={(e) => setExam(i, filterNumInput(e.target.value).replace(/[.,+\-\u2212]/g, "").slice(0, 2))} />
           </label>))}
@@ -105,7 +125,7 @@ export default function AbiCalc({ abi, onChange, t, lang }) {
           </div>
           <div style={{ textAlign: "right" }}>
             <div className="lbl">{t("abiGrade")}</div>
-            <div className="brand" style={{ fontSize: 34, color: total.grade != null ? "var(--blue)" : "var(--faint)" }}>
+            <div className="brand" style={{ fontSize: 34, color: gradeTn ? gradeTn.fg : "var(--faint)" }}>
               {total.grade != null ? fmt(total.grade, lang, 1) : "–"}
             </div>
           </div>

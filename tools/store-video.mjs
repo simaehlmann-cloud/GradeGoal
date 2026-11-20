@@ -255,7 +255,7 @@ async function scenes(page, t) {
   await tap(page, page.getByText("← " + t.back).first());
   await wait(300);
   await smoothScroll(page, 0, 400);
-  await tap(page, page.getByRole("button", { name: t.abi, exact: true }));
+  await tap(page, page.locator(".tile").filter({ hasText: t.abi }));
   await wait(700);
   await smoothScroll(page, await page.evaluate(() => document.body.scrollHeight - window.innerHeight), 2200);
   await wait(900);
@@ -264,7 +264,7 @@ async function scenes(page, t) {
   await caption(page, t.c5);
   await tap(page, page.getByText("← " + t.back).first());
   await wait(300);
-  await tap(page, page.getByRole("button", { name: t.key, exact: true }));
+  await tap(page, page.locator(".tile").filter({ hasText: t.key }));
   await wait(400);
   const nums = page.locator("input[inputmode=decimal]");
   await tap(page, nums.nth(0));
@@ -295,6 +295,8 @@ for (const [devName, dev] of Object.entries(DEVICES)) {
           localStorage.clear();
           localStorage.setItem("gradegoal:data", s);
           localStorage.setItem("gradegoal:unlocked", "1");
+          // Hilfetexte als gelesen markieren: ruhigere Bilder
+          localStorage.setItem("gradegoal:hints", JSON.stringify(["groups","home-subjects","key-calc","key-manage","presets","subj-weight","tendency","what-if"]));
           localStorage.setItem("gradegoal:meta", JSON.stringify({ firstUse: Date.now(), lastBackup: Date.now(), demoOff: true }));
           sessionStorage.setItem("gg-vid", "1");
         }

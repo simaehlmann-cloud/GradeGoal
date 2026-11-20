@@ -14,10 +14,11 @@
 
 :root {
   --bg: #EEF2F7; --card: #ffffff; --ink: #172A46; --sub: #5B6B84; --faint: #8A97AB;
-  --line: #EDF1F6; --border: #D5DDE8; --blue: #2F5DE0; --blue-soft: #EDF2FE;
+  --line: #EDF1F6; --border: #D5DDE8; --blue: #2F5DE0; --blue-soft: #E8EEFD; --blue-soft2: #DCE5FC;
+  --surface: #F5F7FB; /* Unterbloecke in Karten (Kategorien, Kacheln) */
   --yellow: #FFDE59; --red: #B0392E; --red-soft: #FBE9E7; --green: #1E7B3C; --green-soft: #E4F5E9;
   --warn: #A97400;
-  --hero1: #172A46; --hero2: #20386A; --hero-ink: #B9C6DE; --chip: #F1F4F9; --note-bg: #FFFDF2;
+  --hero1: #1A2D57; --hero2: #2B4C9B; --hero-ink: #B9C6DE; --chip: #F1F4F9; --note-bg: #FFFDF2;
   --shadow: 0 1px 4px rgba(23, 42, 70, .08);
 
   /* Sichere Bereiche einmal zentral, damit sie sich unten nur noch
@@ -31,11 +32,12 @@
 
 /* Vom Nutzer ausdruecklich gewaehltes dunkles Design */
 :root[data-theme="dark"] {
-  --bg: #101826; --card: #1A2436; --ink: #E8EDF5; --sub: #A5B4CB; --faint: #7A8BA6;
-  --line: #26324A; --border: #3A4A68; --blue: #7C9BFF; --blue-soft: #22304E;
+  --bg: #0F1626; --card: #19233A; --ink: #EAEFF7; --sub: #A9B7CE; --faint: #8090AA;
+  --line: #26324C; --border: #3A4A6A; --blue: #86A3FF; --blue-soft: #233258; --blue-soft2: #2B3D6B;
+  --surface: #1F2A44;
   --yellow: #FFD84D; --red: #F09489; --red-soft: #402A27; --green: #6FD694; --green-soft: #21382B;
   --warn: #FFD84D;
-  --hero1: #0C1220; --hero2: #16233B; --hero-ink: #9AACC8; --chip: #233049; --note-bg: #242E42;
+  --hero1: #18264A; --hero2: #22356A; --hero-ink: #9AACC8; --chip: #233049; --note-bg: #242E42;
   --shadow: 0 1px 4px rgba(0, 0, 0, .35);
 }
 
@@ -45,11 +47,12 @@
    eine Regel gleichzeitig innerhalb und ausserhalb einer Media Query zu teilen. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
-    --bg: #101826; --card: #1A2436; --ink: #E8EDF5; --sub: #A5B4CB; --faint: #7A8BA6;
-    --line: #26324A; --border: #3A4A68; --blue: #7C9BFF; --blue-soft: #22304E;
+    --bg: #0F1626; --card: #19233A; --ink: #EAEFF7; --sub: #A9B7CE; --faint: #8090AA;
+    --line: #26324C; --border: #3A4A6A; --blue: #86A3FF; --blue-soft: #233258; --blue-soft2: #2B3D6B;
+    --surface: #1F2A44;
     --yellow: #FFD84D; --red: #F09489; --red-soft: #402A27; --green: #6FD694; --green-soft: #21382B;
     --warn: #FFD84D;
-    --hero1: #0C1220; --hero2: #16233B; --hero-ink: #9AACC8; --chip: #233049; --note-bg: #242E42;
+    --hero1: #18264A; --hero2: #22356A; --hero-ink: #9AACC8; --chip: #233049; --note-bg: #242E42;
     --shadow: 0 1px 4px rgba(0, 0, 0, .35);
   }
 }
@@ -91,11 +94,15 @@ input:focus, textarea:focus, select:focus, button:focus-visible { outline: 2px s
   padding: calc(24px + var(--sa-t)) max(20px, var(--sa-l)) calc(24px + var(--sa-b)) max(20px, var(--sa-r));
 }
 
-.card { background: var(--card); border-radius: 18px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
-h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 10px; display: inline-block; background: linear-gradient(transparent 62%, var(--yellow) 62%); padding-right: 6px; color: var(--ink); }
-:root[data-theme="dark"] h2.sec { background: linear-gradient(transparent 62%, rgba(255, 216, 77, .35) 62%); }
+.card { background: var(--card); border-radius: 20px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
+/* Abschnittsueberschriften (seit 1.10.0): ruhig, normale Schreibweise,
+   Symbol in Blau. Der Textmarker bleibt den Seitentiteln (h1.page-title). */
+h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 10px; display: flex; align-items: center; gap: 2px; color: var(--ink); }
+h2.sec .ico { color: var(--blue); }
+.page-title { display: inline; background: linear-gradient(transparent 64%, var(--yellow) 64%); padding: 0 4px 0 0; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+:root[data-theme="dark"] .page-title { background: linear-gradient(transparent 64%, rgba(255, 216, 77, .35) 64%); }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]):not([data-theme="dark"]) h2.sec { background: linear-gradient(transparent 62%, rgba(255, 216, 77, .35) 62%); }
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .page-title { background: linear-gradient(transparent 64%, rgba(255, 216, 77, .35) 64%); }
 }
 
 .btn { background: var(--blue); color: #fff; border: none; border-radius: 12px; padding: 10px 18px; font-size: 15px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; cursor: pointer; }
@@ -103,8 +110,15 @@ h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight:
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) .btn { color: #0C1220; }
 }
-.btn-ghost { background: var(--card); color: var(--blue); border: 1.5px solid var(--blue); border-radius: 12px; padding: 8px 14px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Space Grotesk', sans-serif; }
-.btn-danger { background: var(--card); color: var(--red); border: 1.5px solid var(--red); border-radius: 12px; padding: 8px 14px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Space Grotesk', sans-serif; }
+/* Drei Stufen (seit 1.10.0): .btn kraeftig = Hauptaktion, .btn-ghost
+   getoent = Nebenaktion, .btn-text = Kleinigkeit. Keine blauen Rahmen mehr. */
+.btn-ghost { background: var(--blue-soft); color: var(--blue); border: 1.5px solid transparent; border-radius: 12px; padding: 8px 14px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Space Grotesk', sans-serif; display: inline-flex; align-items: center; transition: background .15s; }
+.btn-ghost:hover { background: var(--blue-soft2); }
+.btn-ghost:disabled { opacity: .5; cursor: default; }
+.btn-text { background: none; border: none; color: var(--blue); padding: 6px 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Space Grotesk', sans-serif; border-radius: 10px; display: inline-flex; align-items: center; }
+.btn-text:hover { background: var(--blue-soft); }
+.btn-danger { background: var(--red-soft); color: var(--red); border: 1.5px solid transparent; border-radius: 12px; padding: 8px 14px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Space Grotesk', sans-serif; }
+.btn { display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(47, 93, 224, .25); }
 
 /* Alle Eingabefelder mindestens 16px: darunter zoomt iOS Safari beim
    Fokussieren automatisch hinein und der Nutzer verliert die Ansicht.
@@ -228,7 +242,7 @@ h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight:
 
 /* Chip-Schaltfläche für Vorlagen */
 .chip-btn{border-radius:20px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;
-  border:1.5px solid var(--border);background:var(--card);color:var(--sub);
+  border:1.5px solid transparent;background:var(--chip);color:var(--sub);
   font-family:'Space Grotesk',sans-serif}
 
 /* Hinweisstreifen in blau (Erklärung statt Warnung) */
@@ -278,3 +292,70 @@ h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight:
 .name-btn { background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; text-align: left; cursor: text;
   min-width: 0; overflow-wrap: break-word; hyphens: auto; text-decoration: underline dotted var(--border); text-underline-offset: 4px; }
 .name-btn:hover, .name-btn:focus-visible { text-decoration-color: var(--blue); }
+
+/* ---------- Neu in 1.10.0 ---------- */
+
+/* Seitenkopf: haftende Leiste + grosser Titel */
+.page-bar { position: sticky; top: 0; z-index: 60; display: flex; align-items: center; gap: 6px;
+  margin: calc(-14px - var(--sa-t)) calc(-1 * max(16px, var(--sa-r))) 0 calc(-1 * max(16px, var(--sa-l)));
+  padding: calc(8px + var(--sa-t)) max(10px, var(--sa-r)) 8px max(10px, var(--sa-l));
+  background: var(--bg); transition: box-shadow .2s, border-color .2s; border-bottom: 1px solid transparent; }
+.page-bar.scrolled { border-bottom-color: var(--line); box-shadow: 0 4px 14px rgba(23, 42, 70, .08); }
+@supports (backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px)) {
+  .page-bar { background: color-mix(in srgb, var(--bg) 82%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+}
+.page-bar .back-btn { padding-left: 4px; flex-shrink: 0; }
+.page-bar .back-spacer { width: 72px; flex-shrink: 0; }
+.page-bar-title { flex: 1; text-align: center; font: 700 16px 'Space Grotesk', sans-serif; opacity: 0; transform: translateY(4px);
+  transition: opacity .2s, transform .2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.page-bar.scrolled .page-bar-title { opacity: 1; transform: none; }
+.page-h1 { font-size: 30px; margin: 10px 0 18px; overflow-wrap: anywhere; line-height: 1.15; display: flex; align-items: center; gap: 4px; }
+.page-accent { width: 6px; align-self: stretch; border-radius: 4px; margin-right: 8px; flex-shrink: 0; }
+
+/* Hilfetexte: einklappbar */
+.hint-box { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; line-height: 1.45; }
+.hint-close { background: none; border: none; color: var(--blue); font: 700 13px 'Space Grotesk', sans-serif; cursor: pointer; padding: 0 2px; flex-shrink: 0; }
+.hint-toggle { background: none; border: none; color: var(--faint); font: 700 12px 'Space Grotesk', sans-serif; cursor: pointer; padding: 2px 0; margin-bottom: 8px; display: inline-flex; align-items: center; }
+.hint-toggle:hover { color: var(--blue); }
+
+/* Notenfelder: Zeugnisnote in ihrer Notenfarbe hinterlegt, Wunsch schlicht */
+.num.toned { border-color: transparent; }
+.num.wishy { background: var(--card); border-style: dashed; color: var(--ink); }
+
+/* Kopfkarte */
+.hero { background: linear-gradient(135deg, var(--hero1), var(--hero2)); color: #fff; position: relative; overflow: hidden; }
+.hero::after { content: ""; position: absolute; right: -60px; top: -60px; width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 222, 89, .22), transparent 70%); pointer-events: none; }
+.hero-kicker { font: 700 12px 'Space Grotesk', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--hero-ink); }
+.goal-track { height: 8px; border-radius: 6px; background: rgba(255, 255, 255, .14); overflow: hidden; margin-top: 6px; }
+.goal-fill { height: 100%; border-radius: 6px; background: var(--yellow); transition: width .5s ease; }
+.lang-btn { background: var(--chip); border: none; border-radius: 10px; padding: 6px 9px; font: 700 13px 'Space Grotesk', sans-serif; color: var(--ink); cursor: pointer; }
+
+/* Rechner-Kacheln */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { background: var(--card); box-shadow: var(--shadow); border: none; border-radius: 16px; padding: 14px; text-align: left; cursor: pointer; color: var(--ink);
+  display: flex; flex-direction: column; gap: 6px; transition: transform .1s, background .15s; }
+.tile:hover { background: var(--blue-soft); }
+.tile:active { transform: scale(.98); }
+.tile-ico { width: 38px; height: 38px; border-radius: 12px; background: var(--blue-soft2); color: var(--blue); display: flex; align-items: center; justify-content: center; }
+.tile-ico .ico { margin-right: 0; }
+.tile b { font: 700 16px 'Space Grotesk', sans-serif; }
+.tile small { font-size: 13px; color: var(--sub); line-height: 1.35; }
+
+/* Faecherliste */
+.subj-row { display: grid; align-items: center; gap: 0 8px; padding: 7px 4px 7px 0; border-top: 1px solid var(--line); }
+.subj-name { background: none; border: none; text-align: left; cursor: pointer; font-size: 16px; font-weight: 700; color: var(--ink);
+  display: flex; align-items: center; gap: 8px; padding: 4px 0; min-width: 0; }
+.subj-stripe { width: 5px; height: 26px; border-radius: 4px; flex-shrink: 0; }
+.subj-name .spark { opacity: .75; }
+
+/* Farbauswahl je Fach */
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatch { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--card); box-shadow: 0 0 0 1.5px var(--border); cursor: pointer; padding: 0; }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 2.5px var(--ink); }
+
+/* Kategorien als eigene Bloecke */
+.cat-block { background: var(--surface); border-radius: 16px; padding: 12px 12px 10px; margin-top: 10px; }
+
+/* Haftende Ergebniskarte (Abitur) */
+.sticky-result { position: sticky; top: calc(52px + var(--sa-t)); z-index: 40; }

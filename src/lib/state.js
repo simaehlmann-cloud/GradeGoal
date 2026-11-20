@@ -13,6 +13,7 @@
 
 import { uid, freshKey, scaleOf, pctOf } from "./grades.js";
 import { logWarn } from "./logger.js";
+import { withColors, subjectColorCount } from "./colors.js";
 
 export const SCHEMA_VERSION = 4;
 export const LANGS = ["de", "en"];
@@ -48,8 +49,9 @@ export const DEFAULT_SUBJECTS = [
 ];
 
 export const freshSubjects = () =>
-  DEFAULT_SUBJECTS.map(([de, en]) => ({
+  DEFAULT_SUBJECTS.map(([de, en], i) => ({
     id: uid(),
+    color: i % subjectColorCount, /* Fachfarbe (Index, siehe colors.js) */
     name: { de, en },
     grade: "",
     wish: "",
@@ -107,6 +109,7 @@ export function datasetFrom(src, label, yearId) {
     return {
       id,
       name: s.name && typeof s.name === "object" ? { ...s.name } : s.name,
+      ...(Number.isInteger(s.color) ? { color: s.color } : {}),
       grade: "",
       wish: "",
       weight: s.weight,
@@ -216,6 +219,8 @@ function safeSubject(s) {
        sonst haetten alle Altdaten nach dem Update einen leeren Schnitt. */
     weight: Number.isFinite(w) && w >= 0 ? Math.min(w, 99) : 1,
     keyId: str(s.keyId), /* leer = Vorgabe des Halbjahres */
+    /* Fachfarbe; fehlt sie (Altdaten), vergibt safeDataset eine */
+    ...(Number.isInteger(s.color) && s.color >= 0 && s.color < subjectColorCount ? { color: s.color } : {}),
     cats: Array.isArray(s.cats) ? s.cats.map(safeCat).filter(Boolean) : defaultCats(),
     goals: str(s.goals),
     notes: str(s.notes),
@@ -287,7 +292,7 @@ function safeScale(sc) {
 
 function safeDataset(d, i) {
   if (!isObj(d)) return null;
-  let subjects = Array.isArray(d.subjects) ? d.subjects.map(safeSubject).filter(Boolean) : [];
+  let subjects = withColors(Array.isArray(d.subjects) ? d.subjects.map(safeSubject).filter(Boolean) : []);
   const ids = new Set(subjects.map((s) => s.id));
 
   const rawKeys = Array.isArray(d.keys) ? d.keys.map(safeKey).filter(Boolean) : [];
