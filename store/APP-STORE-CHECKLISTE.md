@@ -234,10 +234,12 @@ aufklappen) hier hineinkopieren.
 
 ## E. Später: Veröffentlichung
 
-- **Screenshots:** iPhone 6,9" (1320 × 2868) genügt für alle iPhones.
+- **Screenshots:** Pflicht ist „iPhone mit Dynamic Island (mittleres
+  Display)“, also 6,3" mit 1206 × 2622. Ordner `store-bilder/iphone-6.3-de`
+  bzw. `-en`. Das große Display (6,9", `iphone-6.9-…`) ist optional.
   Weil die App auch auf dem iPad läuft, zusätzlich iPad 13"
   (2064 × 2752). Beide Sätze erzeugt `npm run store-bilder`
-  (Ordner `store-bilder/iphone-de`, `ipad-de`, jeweils auch `-en`).
+  (Ordner `store-bilder/ipad-de`, auch `-en`).
 - **App-Vorschau (optional, bis zu 3 je Gerät und Sprache):**
   `store-bilder/video/iphone-de.mp4` bzw. `ipad-de.mp4` (Englisch:
   `-en`) bei der jeweiligen Sprache unter „App-Vorschau“ hochladen. Das

@@ -112,6 +112,11 @@ Neueste Version oben. Bis 1.8.0 lagen die Einträge in einzelnen
   Bedienung der App mit Bildunterschriften; bei Sekunde 5 (Apples
   Standbild) fliegt das Konfetti. Jedes Video wird mit ffprobe gegen
   Apples Vorgaben geprüft.
+- **YouTube-Video** per `npm run youtube-video`: Querformat 1920 × 1080
+  mit selbst erzeugter Musik (`tools/make_music.py`), Vorschaubild,
+  Texte in `store/YOUTUBE-TEXTE.md`.
+- Store-Screenshots zusätzlich für das 6,3″-iPhone (1206 × 2622), das
+  App Store Connect inzwischen als Pflichtgröße verlangt.
 - Feature-Grafik nur noch einmal (`store/feature-graphic.png`).
 - Aufgeräumt: Reste der Lite/Pro-Zeit (siehe Löschliste in der
   Upload-Anleitung), ungenutzte CSS-Klassen.

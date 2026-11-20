@@ -63,7 +63,7 @@ Block I und Block II nach der bundesweit einheitlichen Formel: Gesamtpunkte, Abi
 34 von 50 Punkten – welche Note ist das? Linear oder mit eigenem Schlüssel je Fach, inklusive Notenspiegel. Punkte lassen sich direkt als Note eintragen.
 
 ★ FÜR JEDE SCHULFORM
-Noten 1–6 (auch mit Tendenzen), Punkte 0–15 oder eine eigene Skala. Fachgewichtung, ausgewählte Durchschnitte für Abschlüsse, Profile für Geschwister. Ein neues Halbjahr übernimmt deine Fächer und Einstellungen – ohne Noten.
+Noten 1–6 (auch mit Tendenzen), Punkte 0–15, Prozent oder jede eigene Zahlenskala – zum Beispiel 1–5 wie in Österreich oder 6 als beste Note wie in der Schweiz. Fachgewichtung, ausgewählte Durchschnitte für Abschlüsse, Profile für Geschwister. Ein neues Halbjahr übernimmt deine Fächer und Einstellungen – ohne Noten.
 
 ★ SICHER UND PRIVAT
 Keine Werbung, kein Konto, kein Tracking. Alle Daten bleiben auf deinem Gerät, die App funktioniert offline. Optional schützt eine PIN vor neugierigen Blicken. Sicherung, CSV-Export und Zeugnis zum Drucken sind eingebaut – und die App erinnert dich, wenn eine Sicherung fällig ist.
@@ -88,19 +88,19 @@ Entwickelt von Simon Mählmann, Wisdompeak Apps.
 
 ## Englisch (en-US bzw. en-GB)
 
-### App name (max. 30) – 27 Zeichen
+### App name (max. 30) – 24 Zeichen
 ```
-GradeGoal: Grades to Abitur
+GradeGoal: School Grades
 ```
 
-### Short description (max. 80) – 74 Zeichen
+### Short description (max. 80) – 77 Zeichen
 ```
-Track grades, calculate averages and reach your target grades – to Abitur.
+Track grades, GPA and averages – and see what you need for your target grade.
 ```
 
 ### Full description (max. 4000)
 ```
-GradeGoal keeps track of your grades – from your first test to your Abitur: enter report grades, calculate your average, set target grades and see what you still need to reach them.
+GradeGoal keeps track of your grades: enter report grades, calculate your average, set target grades and see what you still need to reach them.
 
 ★ YOUR REPORT CARD AT A GLANCE
 All subjects with report grade and overall average. Set target grades – reach one and the confetti flies. A sample report card shows every feature before you enter anything yourself.
@@ -115,13 +115,13 @@ The goal calculator shows the grade you need in your next test to reach your tar
 A chart per subject shows how your grades develop; the long-term view compares all terms.
 
 ★ ABITUR CALCULATOR
-Block I and Block II using the nationwide German formula: total points, final grade and the key conditions.
+For students in Germany: Block I and Block II using the nationwide formula for the Abitur – total points, final grade and the key conditions.
 
 ★ GRADE KEY
 34 out of 50 points – which grade is that? Linear or with your own key per subject, including a full grade table.
 
-★ FOR EVERY SCHOOL
-Grades 1–6 (with + and –), points 0–15 or your own scale. Subject weighting, selected averages for qualifications, profiles for siblings. A new term takes over your subjects and settings – without grades.
+★ FOR YOUR GRADING SYSTEM
+Works with any numeric scale you set up – for example GPA 0–4, percentages 0–100, grades 1–5 or 1–6 (with + and –) and points 0–15. You decide whether the lowest or the highest number is the best grade. Letter grades (A–F) are not supported. Subject weighting, selected averages for qualifications, profiles for siblings. A new term takes over your subjects and settings – without grades.
 
 ★ SAFE AND PRIVATE
 No ads, no account, no tracking. All data stays on your device and the app works offline. An optional PIN keeps curious eyes out. Backup, CSV export and a printable report card are built in – and the app reminds you when a backup is due.

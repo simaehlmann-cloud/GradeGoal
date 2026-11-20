@@ -13,7 +13,8 @@
      npm run store-bilder
 
    Ergebnis in store-bilder/ (steht in .gitignore):
-     iphone-de/ iphone-en/   1320 × 2868  (App Store, iPhone 6,9")
+     iphone-6.3-de/ -en/     1206 × 2622  (App Store, iPhone 6,3" – Pflicht)
+     iphone-6.9-de/ -en/     1320 × 2868  (App Store, iPhone 6,9" – optional)
      ipad-de/   ipad-en/     2064 × 2752  (App Store, iPad 13")
      android-de/ android-en/ 1080 × 2160  (Google Play, Telefon)
    Jedes Bild wird gegen sein Sollmass geprueft.
@@ -44,8 +45,11 @@ if (!fs.existsSync(path.join(DIST, "index.html"))) {
 }
 
 /* Breite × Hoehe in CSS-Pixeln und Skalierung -> exakte Store-Masse */
+/* Apple verlangt seit 2026 mindestens das „mittlere Display mit Dynamic
+   Island“ (6,3″, 1206 × 2622). Das große (6,9″) ist zusaetzlich erlaubt. */
 const DEVICES = {
-  iphone: { viewport: { width: 440, height: 956 }, scale: 3, want: [1320, 2868] },
+  "iphone-6.3": { viewport: { width: 402, height: 874 }, scale: 3, want: [1206, 2622] },
+  "iphone-6.9": { viewport: { width: 440, height: 956 }, scale: 3, want: [1320, 2868] },
   ipad: { viewport: { width: 1032, height: 1376 }, scale: 2, want: [2064, 2752] },
   android: { viewport: { width: 360, height: 720 }, scale: 3, want: [1080, 2160] },
 };

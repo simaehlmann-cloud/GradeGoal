@@ -1,4 +1,4 @@
-# App-Store-Texte (Stand 1.9.0)
+# App-Store-Texte (Stand 1.9.0, Name und Untertitel vom 20.11.2026)
 
 Fertig zum Hineinkopieren in App Store Connect. Zeichengrenzen in
 Klammern, alle Werte nachgezählt. Bewusst **ohne** „kostenlos“ im Namen
@@ -13,7 +13,7 @@ unbegrenzt.
 | Support-URL | `https://simaehlmann-cloud.github.io/GradeGoal/impressum.html` | `https://simaehlmann-cloud.github.io/GradeGoal/impressum-en.html` |
 
 **Screenshots:** `npm run store-bilder` erzeugt alle Sätze in den
-geforderten Maßen (siehe README). iPhone 6,9″: `store-bilder/iphone-de`,
+geforderten Maßen (siehe README). iPhone 6,3″ (Pflicht): `store-bilder/iphone-6.3-de`,
 iPad 13″: `store-bilder/ipad-de` (Englisch entsprechend `-en`).
 
 ---
@@ -25,9 +25,9 @@ iPad 13″: `store-bilder/ipad-de` (Englisch entsprechend `-en`).
 GradeGoal: Noten bis zum Abi
 ```
 
-### Untertitel (max. 30) – 28 Zeichen
+### Untertitel (max. 30) – 29 Zeichen
 ```
-Schnitt, Wunschnoten, Abitur
+Notenrechner, Schnitt & Ziele
 ```
 
 ### Werbetext (max. 170, jederzeit änderbar)
@@ -35,10 +35,11 @@ Schnitt, Wunschnoten, Abitur
 Neu: Beispielzeugnis zum Ausprobieren, Halbjahre mit einem Tipp übernehmen, Erinnerung an die Sicherung. Deine Noten bleiben auf deinem Gerät.
 ```
 
-### Schlüsselwörter (max. 100 Bytes) – 97 Bytes
+### Schlüsselwörter (max. 100 Bytes) – 95 Bytes
 Wörter aus Name und Untertitel werden nicht wiederholt (zählen ohnehin).
+„Matura“ ist das Abitur in Österreich und der Schweiz.
 ```
-Zeugnis,Notenrechner,Durchschnitt,Notenschlüssel,Halbjahr,Oberstufe,Punkte,Klausur,Klassenarbeit
+Wunschnoten,Zeugnis,Durchschnitt,Matura,Klassenarbeit,Halbjahr,Oberstufe,Punkte,Notenschlüssel
 ```
 
 ### Beschreibung (max. 4000)
@@ -64,7 +65,7 @@ NOTENSCHLÜSSEL
 34 von 50 Punkten – welche Note ist das? Linear oder mit eigenem Schlüssel je Fach, inklusive Notenspiegel. Punkte lassen sich direkt als Note eintragen.
 
 FÜR JEDE SCHULFORM
-Noten 1–6 (auch mit Tendenzen), Punkte 0–15 oder eine eigene Skala. Fachgewichtung, ausgewählte Durchschnitte für Abschlüsse, Profile für Geschwister. Ein neues Halbjahr übernimmt deine Fächer und Einstellungen – ohne Noten.
+Noten 1–6 (auch mit Tendenzen), Punkte 0–15, Prozent oder jede eigene Zahlenskala – zum Beispiel 1–5 wie in Österreich oder 6 als beste Note wie in der Schweiz. Fachgewichtung, ausgewählte Durchschnitte für Abschlüsse, Profile für Geschwister. Ein neues Halbjahr übernimmt deine Fächer und Einstellungen – ohne Noten.
 
 SICHER UND PRIVAT
 Keine Werbung, kein Konto, kein Tracking. Alle Daten bleiben auf deinem Gerät, die App funktioniert offline. Optional schützt eine PIN vor neugierigen Blicken. Sicherung, CSV-Export und Zeugnis zum Drucken sind eingebaut – und die App erinnert dich, wenn eine Sicherung fällig ist.
@@ -89,14 +90,19 @@ Entwickelt von Simon Mählmann, Wisdompeak Apps.
 
 ## Englisch (USA bzw. Vereinigtes Königreich)
 
-### Name (max. 30) – 27 Zeichen
+Bewusst breiter als die deutsche Seite: Mit einer eigenen Zahlenskala
+passt die App auch für Schulen außerhalb Deutschlands. Die Beschreibung
+sagt ehrlich, welche Skalen gehen (Buchstabennoten A–F gehen nicht).
+„GradeGoal: Grade Calculator“ und „GradeGoal: Grade Tracker“ waren in App Store Connect schon vergeben.
+
+### Name (max. 30) – 24 Zeichen
 ```
-GradeGoal: Grades to Abitur
+GradeGoal: School Grades
 ```
 
-### Untertitel (max. 30) – 24 Zeichen
+### Untertitel (max. 30) – 29 Zeichen
 ```
-Averages, goals & Abitur
+Grade calculator, GPA & goals
 ```
 
 ### Werbetext (max. 170)
@@ -104,14 +110,14 @@ Averages, goals & Abitur
 New: a sample report card to try everything, terms that take over your subjects with one tap, and backup reminders. Your grades stay on your device.
 ```
 
-### Schlüsselwörter (max. 100 Bytes) – 79 Bytes
+### Schlüsselwörter (max. 100 Bytes) – 82 Bytes
 ```
-report card,GPA,grade calculator,average,school,student,term,marks,exam,Germany
+abitur,report card,average,school,student,term,marks,exam,percentage,study,teacher
 ```
 
 ### Beschreibung (max. 4000)
 ```
-GradeGoal keeps track of your grades – from your first test to your Abitur: enter report grades, calculate your average, set target grades and see what you still need to reach them.
+GradeGoal keeps track of your grades: enter report grades, calculate your average, set target grades and see what you still need to reach them.
 
 YOUR REPORT CARD AT A GLANCE
 All subjects with report grade and overall average. Set target grades – reach one and the confetti flies. A sample report card shows every feature before you enter anything yourself.
@@ -126,13 +132,13 @@ GRADE HISTORY
 A chart per subject shows how your grades develop; the long-term view compares all terms.
 
 ABITUR CALCULATOR
-Block I and Block II using the nationwide German formula: total points, final grade and the key conditions.
+For students in Germany: Block I and Block II using the nationwide formula for the Abitur – total points, final grade and the key conditions.
 
 GRADE KEY
 34 out of 50 points – which grade is that? Linear or with your own key per subject, including a full grade table.
 
-FOR EVERY SCHOOL
-Grades 1–6 (with + and –), points 0–15 or your own scale. Subject weighting, selected averages for qualifications, profiles for siblings. A new term takes over your subjects and settings – without grades.
+FOR YOUR GRADING SYSTEM
+Works with any numeric scale you set up – for example GPA 0–4, percentages 0–100, grades 1–5 or 1–6 (with + and –) and points 0–15. You decide whether the lowest or the highest number is the best grade. Letter grades (A–F) are not supported. Subject weighting, selected averages for qualifications, profiles for siblings. A new term takes over your subjects and settings – without grades.
 
 SAFE AND PRIVATE
 No ads, no account, no tracking. All data stays on your device and the app works offline. An optional PIN keeps curious eyes out. Backup, CSV export and a printable report card are built in – and the app reminds you when a backup is due.

@@ -11,7 +11,8 @@
     "ios": "npm run build && npx cap sync ios",
     "test": "node --test \"tests/*.test.mjs\"",
     "store-bilder": "npm run build && node tools/store-bilder.mjs",
-    "store-video": "npm run build && node tools/store-video.mjs"
+    "store-video": "npm run build && node tools/store-video.mjs",
+    "youtube-video": "npm run build && node tools/youtube-video.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",

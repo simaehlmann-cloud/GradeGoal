@@ -160,7 +160,9 @@ async function record(page, dir, run) {
   cdp.on("Page.screencastFrame", async (f) => {
     const file = path.join(dir, String(frames.length).padStart(5, "0") + ".png");
     fs.writeFileSync(file, Buffer.from(f.data, "base64"));
-    frames.push({ file, t: f.metadata.timestamp });
+    /* Eingangszeit statt metadata.timestamp: dieselbe Uhr wie das Ende
+       der Aufnahme – sonst wird die stehende Schlussszene verschluckt. */
+    frames.push({ file, t: Date.now() / 1000 });
     try { await cdp.send("Page.screencastFrameAck", { sessionId: f.sessionId }); } catch (e) {}
   });
   await cdp.send("Page.startScreencast", { format: "png", everyNthFrame: 1 });

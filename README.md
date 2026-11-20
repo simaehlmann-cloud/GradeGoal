@@ -62,8 +62,8 @@ npm run store-bilder
 ```
 
 Steuert die gebaute App mit dem Beispielzeugnis (`src/lib/demo.js`) und
-legt in `store-bilder/` sechs Bilder je Satz ab: iPhone 6,9″
-(1320 × 2868), iPad 13″ (2064 × 2752) und Android (1080 × 2160), jeweils
+legt in `store-bilder/` sechs Bilder je Satz ab: iPhone 6,3″
+(1206 × 2622, Pflicht bei Apple), iPhone 6,9″ (1320 × 2868, optional), iPad 13″ (2064 × 2752) und Android (1080 × 2160), jeweils
 Deutsch und Englisch. Jedes Bild wird gegen sein Sollmaß geprüft.
 `store-bilder/` steht in `.gitignore`.
 
@@ -80,6 +80,19 @@ Screencast von Chromium, Bildunterschriften und Fingertipps werden dabei
 eingeblendet. Apples Vorgaben (15–30 s, H.264, ≤ 30 Bilder/s,
 Stereo-Ton) prüft das Skript am Ende mit ffprobe. Die Szenen stehen in
 `scenes()` in `tools/store-video.mjs`.
+
+## YouTube-Video (für Google Play)
+
+```bash
+npm run youtube-video    # braucht ffmpeg und python3 mit numpy + scipy
+```
+
+Querformat 1920 × 1080, rund 38 Sekunden, Deutsch und Englisch, dazu je
+ein Vorschaubild (1280 × 720) in `store-bilder/youtube/`. Links ein
+Telefon mit der echten App, rechts große Bildunterschriften, Vor- und
+Abspann. Die Musik erzeugt `tools/make_music.py` selbst (keine fremden
+Aufnahmen, keine Lizenzfragen). Texte zum Hochladen:
+`store/YOUTUBE-TEXTE.md`.
 
 ## Bewertungen
 
