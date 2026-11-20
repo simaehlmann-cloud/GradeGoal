@@ -34,4 +34,18 @@ table.kv th{width:8rem}
 }
 footer{margin-top:3rem;padding-top:1rem;border-top:1px solid rgba(127,127,127,.3);font-size:.9rem}
 ul{padding-left:1.2rem}
+/* In der App eingebettet (siehe recht.js): ohne Kopf- und Fußzeile,
+   die App hat eigene Navigation. */
+.embedded .nav,.embedded footer{display:none}
+.embedded body{padding-top:.5rem;padding-bottom:2rem;background:#fff}
+@media (prefers-color-scheme:dark){.embedded body{background:#1A2436}}
+/* Vom App-Design vorgegeben (Farben wie die Karten der App) */
+.theme-light{color-scheme:light}
+.theme-light body{color:#172A46;background:#fff}
+.theme-light .hint,.theme-light .sub{color:#5B6B84}
+.theme-light a{color:#2F5DE0}
+.theme-dark{color-scheme:dark}
+.theme-dark body{color:#E8EDF5;background:#1A2436}
+.theme-dark .hint,.theme-dark .sub{color:#A5B4CB}
+.theme-dark a{color:#7C9BFF}
 li{margin:.3rem 0}
