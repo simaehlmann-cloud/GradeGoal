@@ -1,7 +1,20 @@
-name: Deploy Web (GitHub Pages)
+name: Rechtsseiten (GitHub Pages)
+
+# Veroeffentlicht NUR Impressum und Datenschutz (de/en) und eine kleine
+# Startseite. Eine Web-Version der App gibt es seit 1.9.1 nicht mehr.
+# Die Adressen stehen in App Store Connect und in der Play Console –
+# sie muessen erreichbar bleiben:
+#   https://simaehlmann-cloud.github.io/GradeGoal/datenschutz.html
+#   https://simaehlmann-cloud.github.io/GradeGoal/datenschutz-en.html
+#   https://simaehlmann-cloud.github.io/GradeGoal/impressum.html
+#   https://simaehlmann-cloud.github.io/GradeGoal/impressum-en.html
 on:
   push:
     branches: [main]
+    paths:
+      - "public/**"
+      - "pages/**"
+      - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -21,19 +34,26 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install dependencies
-        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
-      - name: Tests der Rechenlogik
-        run: npm test
 
-      - name: Build web app
-        run: npm run build
+      - name: Rechtsseiten zusammenstellen
+        run: |
+          set -e
+          mkdir -p _site
+          for f in impressum.html impressum-en.html datenschutz.html datenschutz-en.html recht.css recht.js icon.svg; do
+            [ -f "public/$f" ] || { echo "FEHLER: public/$f fehlt"; exit 1; }
+            cp "public/$f" _site/
+          done
+          cp pages/index.html _site/index.html
+          # Gegenprobe: keine App im Paket
+          if grep -q 'id="app"' _site/index.html; then echo "FEHLER: App-Startseite statt Rechtsseiten"; exit 1; fi
+          # Gegenprobe: USt-IdNr. in beiden Impressen
+          grep -q "DE430437820" _site/impressum.html && grep -q "DE430437820" _site/impressum-en.html \
+            || { echo "FEHLER: USt-IdNr. fehlt im Impressum"; exit 1; }
+          ls -la _site
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
