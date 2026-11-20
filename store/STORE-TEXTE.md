@@ -1,337 +1,173 @@
-# Store-Texte
+# Google-Play-Texte (Stand 1.9.0)
 
-> **Hinweis (ab Version 1.8.0):** Die Aufteilung in Lite und Pro gibt es
-> nicht mehr. GradeGoal ist jetzt **eine** App: ein Schuljahr gratis mit
-> allen Funktionen, danach einmaliger In-App-Kauf. Die Angaben unten
-> stammen aus der Zeit davor und müssen vor der Play-Veröffentlichung
-> angepasst werden (ein Eintrag, In-App-Käufe „ja“). Für den App Store
-> gilt `APP-STORE-CHECKLISTE.md` bzw. `APP-STORE-TEXTE.md`.
+Seit 1.8.0 gibt es **einen** Eintrag (`de.maehlmann.gradegoal`) statt
+Lite und Pro: ein Schuljahr gratis mit allen Funktionen, danach ein
+einmaliger In-App-Kauf. Alle Zeichenzahlen sind nachgezählt.
 
-Fertig zum Hineinkopieren. Die Zeichengrenzen sind eingehalten und in
-Klammern vermerkt.
+Google verlangt: App-Name höchstens 30 Zeichen, Kurzbeschreibung
+höchstens 80, ausführliche Beschreibung höchstens 4000. Keine Wörter
+wie „Nr. 1“, „beste“, „kostenlos“ oder Preise im Namen – das lehnt Google ab.
 
-Google Play verlangt: Kurzbeschreibung höchstens 80 Zeichen,
-ausführliche Beschreibung höchstens 4000 Zeichen, App-Name höchstens
-30 Zeichen.
+**Adressen für die Play Console**
+
+| Feld | Inhalt |
+|---|---|
+| Datenschutzerklärung | `https://simaehlmann-cloud.github.io/GradeGoal/datenschutz.html` |
+| Website (optional) | `https://simaehlmann-cloud.github.io/GradeGoal/impressum.html` |
+| E-Mail | `smaehlmann.appdev@gmail.com` |
+
+**Grafiken**
+
+| Was | Datei |
+|---|---|
+| App-Symbol 512 × 512 | aus `assets/icon.png` verkleinern |
+| Feature-Grafik 1024 × 500 | `store/feature-graphic.png` (`python3 tools/make_feature_graphic.py`) |
+| Telefon-Screenshots 1080 × 2160 | `store-bilder/android-de`, `store-bilder/android-en` (`npm run store-bilder`) |
+| Tablet-Screenshots | `store-bilder/ipad-de` bzw. `-en` passen auch für 10″-Tablets |
 
 ---
 
-# LITE
+## Deutsch
 
-## App-Name (max. 30)
-
+### App-Name (max. 30) – 28 Zeichen
 ```
-GradeGoal: Noten & Schnitt
-```
-(25 Zeichen)
-
-## Kurzbeschreibung, Deutsch (max. 80)
-
-```
-Noten eintragen, Durchschnitt berechnen, Wunschnoten erreichen. Ohne Werbung.
-```
-(76 Zeichen)
-
-## Ausführliche Beschreibung, Deutsch
-
-```
-Wie stehe ich eigentlich gerade? GradeGoal beantwortet diese Frage in
-wenigen Sekunden – und zeigt dir, was du noch brauchst, um dein Ziel zu
-erreichen.
-
-WAS DIE APP KANN
-
-• Fächer anlegen und Zeugnisnoten eintragen
-• Gesamtdurchschnitt sofort im Blick
-• Wunschnote je Fach setzen – die App zeigt dir den Abstand
-• Einzelnoten nach Kategorien erfassen: Klassenarbeiten, mündliche
-  Mitarbeit, Tests, Referate oder eigene
-• Gewichtung in Prozent, daraus ein Notenvorschlag
-• Zielrechner: welche Note brauchst du in der nächsten Arbeit?
-• Ziele und Notizen je Fach
-• Notensysteme 1–6 und Oberstufen-Punkte 0–15
-• Tendenznoten wie 2+ oder 3− werden richtig gerechnet
-• Sicherung exportieren und importieren – beim Handywechsel
-• Zeugnis drucken oder als PDF speichern
-• Helles und dunkles Design
-• Deutsch und Englisch
-
-FÜR WEN
-
-Für Schülerinnen und Schüler ab der Mittelstufe, für Eltern, die
-mitverfolgen möchten, und für Lehrkräfte, die einen schnellen Überblick
-brauchen.
-
-EINFACH ANFANGEN
-
-Die App startet im einfachen Modus: nur Fächer, Noten, Durchschnitt.
-Alles Weitere schaltest du frei, wenn du es brauchst.
-
-DEINE DATEN BLEIBEN BEI DIR
-
-Kein Konto. Keine Anmeldung. Keine Werbung. Keine Server. Alles bleibt
-auf deinem Gerät, die App funktioniert vollständig offline.
-
-MEHR IN GRADEGOAL PRO
-
-Mehrere Halbjahre und Schuljahre, Notenverlauf als Diagramm,
-ausgewählte Durchschnitte für Abschlüsse, Fachgewichtung,
-Was-wäre-wenn-Regler, Abitur-Rechner, Notenschlüssel-Rechner,
-PIN-Sperre und CSV-Export. Einmalig, ohne Abo.
-
-Deine Daten nimmst du über die Sicherungsdatei einfach mit.
-
-Entwickelt von Simon Mählmann.
+GradeGoal: Noten bis zum Abi
 ```
 
-## Kurzbeschreibung, Englisch (max. 80)
-
+### Kurzbeschreibung (max. 80) – 75 Zeichen
 ```
-Track grades, see your average, reach your goals. No ads, no account.
+Noten eintragen, Schnitt berechnen, Wunschnoten erreichen – bis zum Abitur.
 ```
-(69 Zeichen)
 
-## Ausführliche Beschreibung, Englisch
-
+### Ausführliche Beschreibung (max. 4000)
 ```
-Where do I actually stand right now? GradeGoal answers that in seconds –
-and shows you what you still need to reach your goal.
+GradeGoal behält deine Noten im Blick – von der ersten Klassenarbeit bis zum Abi: Zeugnisnoten eintragen, Durchschnitt berechnen, Wunschnoten setzen und sehen, was du noch brauchst, um sie zu erreichen.
 
-WHAT IT DOES
+★ DEIN ZEUGNIS AUF EINEN BLICK
+Alle Fächer mit Zeugnisnote und Gesamtschnitt. Setz dir Wunschnoten – erreichst du eine, gibt es Konfetti. Ein Beispielzeugnis zeigt dir alle Funktionen, bevor du selbst etwas einträgst.
 
-• Add subjects and enter report grades
-• Overall average at a glance
-• Set a wish grade per subject and see how far away you are
-• Record single grades by category: tests, oral participation,
-  quizzes, presentations or your own
-• Percentage weighting, with a suggested grade
-• Goal calculator: what grade do you need in the next test?
-• Goals and notes per subject
-• Grading systems 1–6 and upper-school points 0–15
-• Tendency grades like 2+ or 3− are calculated correctly
-• Export and import a backup – handy when switching phones
-• Print your report card or save it as a PDF
-• Light and dark appearance
-• German and English
+★ EINZELNOTEN MIT GEWICHTUNG
+Klassenarbeiten, Mündliches, Tests, Referate: Trag Einzelnoten in Kategorien ein und gewichte sie wie an deiner Schule. Daraus ergibt sich ein Notenvorschlag. Fächer und Kategorien lassen sich umbenennen und sortieren.
 
-WHO IT IS FOR
+★ WAS BRAUCHE ICH NOCH?
+Der Zielrechner zeigt, welche Note du in der nächsten Arbeit brauchst, um deine Wunschnote zu schaffen. Mit dem Was-wäre-wenn-Regler siehst du sofort, wie eine weitere Note deinen Schnitt verändert.
 
-Students, parents who want to keep track, and teachers who need a quick
-overview.
+★ NOTENVERLAUF
+Ein Diagramm je Fach zeigt die Entwicklung deiner Noten, der Langzeitverlauf alle Halbjahre im Vergleich.
 
-START SIMPLE
+★ ABITUR-RECHNER
+Block I und Block II nach der bundesweit einheitlichen Formel: Gesamtpunkte, Abiturnote und die wichtigsten Bedingungen. Welche Halbjahre eingebracht werden, legt dein Bundesland fest – die App rechnet mit dem, was du einträgst.
 
-The app opens in simple mode: just subjects, grades and the average.
-Turn on more whenever you need it.
+★ NOTENSCHLÜSSEL
+34 von 50 Punkten – welche Note ist das? Linear oder mit eigenem Schlüssel je Fach, inklusive Notenspiegel. Punkte lassen sich direkt als Note eintragen.
 
-YOUR DATA STAYS WITH YOU
+★ FÜR JEDE SCHULFORM
+Noten 1–6 (auch mit Tendenzen), Punkte 0–15 oder eine eigene Skala. Fachgewichtung, ausgewählte Durchschnitte für Abschlüsse, Profile für Geschwister. Ein neues Halbjahr übernimmt deine Fächer und Einstellungen – ohne Noten.
 
-No account. No sign-in. No ads. No servers. Everything stays on your
-device and the app works fully offline.
+★ SICHER UND PRIVAT
+Keine Werbung, kein Konto, kein Tracking. Alle Daten bleiben auf deinem Gerät, die App funktioniert offline. Optional schützt eine PIN vor neugierigen Blicken. Sicherung, CSV-Export und Zeugnis zum Drucken sind eingebaut – und die App erinnert dich, wenn eine Sicherung fällig ist.
 
-MORE IN GRADEGOAL PRO
+★ GRATIS STARTEN
+Ein Schuljahr mit bis zu zwei Halbjahren ist gratis – mit allen Funktionen. Für beliebig viele Schuljahre schaltest du die App einmalig frei. Kein Abo.
 
-Multiple terms and school years, grade history charts, selected averages
-for diplomas, subject weighting, a what-if slider, an Abitur calculator,
-a grade key calculator, a PIN lock and CSV export. One-time purchase,
-no subscription.
+Entwickelt von Simon Mählmann, Wisdompeak Apps.
+```
 
-Take your data with you via the backup file.
-
-Developed by Simon Mählmann.
+### Versionshinweise 1.9.0 (max. 500)
+```
+• Beispielzeugnis zum Ausprobieren
+• Neues Halbjahr übernimmt Fächer und Einstellungen
+• Fächer und Kategorien umbenennen, Fächer sortieren
+• Erinnerung an die Sicherung
+• Impressum und Datenschutz auch offline
+• Viele kleine Verbesserungen
 ```
 
 ---
 
-# PRO
+## Englisch (en-US bzw. en-GB)
 
-## App-Name (max. 30)
-
+### App name (max. 30) – 27 Zeichen
 ```
-GradeGoal Pro: Noten & Abi
-```
-(26 Zeichen)
-
-## Kurzbeschreibung, Deutsch (max. 80)
-
-```
-Noten, Durchschnitte, Abitur-Rechner und Notenverlauf. Einmalig, ohne Abo.
-```
-(73 Zeichen)
-
-## Ausführliche Beschreibung, Deutsch
-
-```
-Die vollständige Fassung von GradeGoal. Einmalig bezahlt, kein Abo,
-keine Werbung, kein Konto.
-
-ALLES AUS DER KOSTENLOSEN FASSUNG
-
-Fächer und Zeugnisnoten, Gesamtdurchschnitt, Wunschnoten mit Konfetti
-beim Erreichen, Kategorien und Einzelnoten mit Gewichtung, Zielrechner,
-Ziele und Notizen, Notensysteme 1–6 und 0–15, Sicherung, Druck als PDF,
-helles und dunkles Design.
-
-UND ZUSÄTZLICH
-
-Schuljahre und Halbjahre
-Lege beliebig viele Halbjahre an, gruppiert nach Schuljahren – oder
-eigene Profile für Geschwister, jeweils mit eigenem Notensystem.
-
-Notenverlauf
-Ein Liniendiagramm je Fach zeigt, wie sich deine Einzelnoten
-entwickeln – nach oben ist immer besser. Über alle Halbjahre hinweg
-gibt es zusätzlich den Langzeitverlauf. Diagramme lassen sich als Bild
-speichern.
-
-Ausgewählte Durchschnitte
-Berechne den Schnitt bestimmter Fächergruppen separat, etwa für einen
-Abschluss. Vorlagen für Kernfächer, Sprachen, Naturwissenschaften und
-Gesellschaftswissenschaften sind enthalten; den Ziel-Ø trägst du nach
-der Vorgabe deiner Schule selbst ein.
-
-Fachgewichtung
-Nicht jedes Fach zählt gleich viel. Stell je Fach ein, ob es einfach,
-doppelt oder gar nicht in den Gesamtschnitt eingeht.
-
-Was-wäre-wenn-Regler
-Schieb den Regler und sieh sofort, wie eine weitere Note deinen Schnitt
-verändert.
-
-Abitur-Rechner
-Block I und Block II nach der bundesweit einheitlichen Formel:
-Gesamtpunktzahl, Abiturnote und die wichtigsten Bedingungen auf einen
-Blick. Hinweis: Welche Halbjahresergebnisse eingebracht werden müssen
-und welche doppelt zählen, legt dein Bundesland fest – die App rechnet
-mit dem, was du einträgst, und ersetzt keine Auskunft deiner Schule.
-
-Notenschlüssel-Rechner
-34 von 50 Punkten – welche Note ist das? Linear oder nach
-IHK-Schlüssel, mit vollständigem Notenspiegel.
-
-PIN-Sperre
-Ein Zahlencode beim Start hält neugierige Blicke fern. Hinweis: Das ist
-ein Sichtschutz, keine Verschlüsselung.
-
-CSV-Export und eigene Notenskala
-Alle Noten als Tabelle für Excel, Numbers oder LibreOffice. Eigene
-Skalen für andere Länder.
-
-DEINE DATEN BLEIBEN BEI DIR
-
-Keine Server, keine Werbung, kein Konto, kein Tracking. Alles bleibt auf
-deinem Gerät, die App funktioniert vollständig offline.
-
-Du kommst von GradeGoal Lite? Exportiere dort deine Sicherung und
-importiere sie hier – nichts geht verloren.
-
-Entwickelt von Simon Mählmann.
+GradeGoal: Grades to Abitur
 ```
 
-## Kurzbeschreibung, Englisch (max. 80)
-
+### Short description (max. 80) – 74 Zeichen
 ```
-Grades, averages, Abitur calculator and history charts. One-time, no ads.
+Track grades, calculate averages and reach your target grades – to Abitur.
 ```
-(72 Zeichen)
 
-## Ausführliche Beschreibung, Englisch
-
+### Full description (max. 4000)
 ```
-The complete edition of GradeGoal. One-time purchase, no subscription,
-no ads, no account.
+GradeGoal keeps track of your grades – from your first test to your Abitur: enter report grades, calculate your average, set target grades and see what you still need to reach them.
 
-EVERYTHING FROM THE FREE EDITION
+★ YOUR REPORT CARD AT A GLANCE
+All subjects with report grade and overall average. Set target grades – reach one and the confetti flies. A sample report card shows every feature before you enter anything yourself.
 
-Subjects and report grades, overall average, wish grades with confetti,
-categories and single grades with weighting, goal calculator, goals and
-notes, grading systems 1–6 and 0–15, backup, PDF printing, light and
-dark appearance.
+★ WEIGHTED SINGLE GRADES
+Tests, oral participation, quizzes, presentations: enter single grades in categories and weight them the way your school does. GradeGoal suggests the resulting grade. Subjects and categories can be renamed and reordered.
 
-AND ADDITIONALLY
+★ WHAT DO I STILL NEED?
+The goal calculator shows the grade you need in your next test to reach your target. The what-if slider shows instantly how another grade would change your average.
 
-School years and terms – any number of terms grouped by school year, or
-separate profiles for siblings, each with its own grading system.
+★ GRADE HISTORY
+A chart per subject shows how your grades develop; the long-term view compares all terms.
 
-Grade history – a line chart per subject shows how your single grades
-develop, plus a long-term view across all terms. Charts can be saved as
-images.
+★ ABITUR CALCULATOR
+Block I and Block II using the nationwide German formula: total points, final grade and the key conditions.
 
-Selected averages – calculate the average of specific subject groups
-separately, with presets for core subjects, languages, sciences and
-social studies.
+★ GRADE KEY
+34 out of 50 points – which grade is that? Linear or with your own key per subject, including a full grade table.
 
-Subject weighting – set per subject whether it counts once, twice or
-not at all.
+★ FOR EVERY SCHOOL
+Grades 1–6 (with + and –), points 0–15 or your own scale. Subject weighting, selected averages for qualifications, profiles for siblings. A new term takes over your subjects and settings – without grades.
 
-What-if slider – see instantly how one more grade changes your average.
+★ SAFE AND PRIVATE
+No ads, no account, no tracking. All data stays on your device and the app works offline. An optional PIN keeps curious eyes out. Backup, CSV export and a printable report card are built in – and the app reminds you when a backup is due.
 
-Abitur calculator – block I and block II using the nationally uniform
-German formula, with the key conditions at a glance. Note: which term
-results must be counted is decided by your federal state; this is
-guidance, not an official statement.
+★ START WITHOUT PAYING
+One school year with up to two terms is included – with every feature. Unlock unlimited school years once. No subscription.
 
-Grade key calculator – 34 out of 50 points, what grade is that? Linear
-or IHK key, with a full breakdown.
+Developed by Simon Mählmann, Wisdompeak Apps.
+```
 
-PIN lock – a numeric code on start. Note: a privacy screen, not
-encryption.
-
-CSV export and custom grading scales.
-
-YOUR DATA STAYS WITH YOU
-
-No servers, no ads, no account, no tracking. Everything stays on your
-device and works fully offline.
-
-Coming from GradeGoal Lite? Export your backup there and import it
-here – nothing is lost.
-
-Developed by Simon Mählmann.
+### Release notes 1.9.0 (max. 500)
+```
+• Sample report card to try everything
+• A new term takes over your subjects and settings
+• Rename subjects and categories, reorder subjects
+• Backup reminder
+• Legal notice and privacy policy available offline
+• Many small improvements
 ```
 
 ---
 
-# Bildmaterial
+## In-App-Produkt `gradegoal_unlimited`
 
-## Feature-Grafik
+Play Console → Monetarisieren → Produkte → In-App-Produkte → Produkt erstellen
 
-Liegt fertig vor, genau 1024 × 500, ohne Transparenz:
+| Feld | Deutsch | Englisch |
+|---|---|---|
+| Produkt-ID | `gradegoal_unlimited` (exakt so) | |
+| Name (max. 55) | `Unbegrenzte Schuljahre` | `Unlimited school years` |
+| Beschreibung (max. 200) | `Beliebig viele Schuljahre und Halbjahre anlegen. Einmaliger Kauf, kein Abo.` | `Add as many school years and terms as you like. One-time purchase, no subscription.` |
+| Preis | 0,99 € | |
 
-- `store/feature-graphic-lite.png`
-- `store/feature-graphic-pro.png`
+## Datensicherheit (Data safety)
 
-Neu erzeugen: `python3 tools/make_feature_graphic.py`
+- Erhebt die App Nutzerdaten? **Nein**
+- Werden Daten geteilt? **Nein**
+- Begründung: Alle Eingaben bleiben auf dem Gerät; kein Konto, keine
+  Analyse, keine Werbung. Kauf und Bewertung laufen über Google Play
+  selbst und gelten nicht als Datenerhebung der App.
 
-## App-Symbol
+## Weitere Angaben
 
-`assets/icon-only.png` bzw. `assets-lite/icon-only.png` – 1024 × 1024,
-ohne Alphakanal, wie von den Stores verlangt.
-
-## Screenshots
-
-Diese musst du selbst aufnehmen, echte Bildschirmfotos sind Pflicht.
-Google verlangt mindestens zwei, empfohlen sind vier bis acht.
-Vorgaben: 16:9 oder 9:16, kürzere Kante mindestens 320 px, längere
-höchstens 3840 px. Ein üblicher Handy-Screenshot passt.
-
-Vorschlag für die Reihenfolge – die ersten beiden entscheiden:
-
-**Lite**
-1. Startseite mit gefüllter Fächerliste und Gesamtdurchschnitt
-2. Fach-Detail mit Kategorien und Einzelnoten
-3. Zielrechner
-4. Einfacher Modus
-5. Dunkles Design
-
-**Pro**
-1. Startseite mit Langzeitverlauf
-2. Notenverlauf eines Fachs mit mehreren Linien
-3. Abitur-Rechner
-4. Ausgewählte Durchschnitte mit Vorlagen
-5. Notenschlüssel-Rechner
-6. Was-wäre-wenn-Regler
-
-Tipp: Vorher ein paar plausible Noten eintragen. Leere Bildschirme
-verkaufen nichts – aber erfinde keine Bildschirme, die es nicht gibt,
-das ist ein Ablehnungsgrund.
+| Frage | Antwort |
+|---|---|
+| Kategorie | Bildung |
+| Werbung enthalten | Nein |
+| In-App-Käufe | Ja |
+| Zielgruppe | auch unter 13 – Einzelheiten zum Programm „Für Familien“ in `PLAY-CONSOLE-CHECKLISTE.md` |
+| Inhaltseinstufung | Fragebogen: keine Gewalt, keine Nutzerkommunikation, Käufe ja |

@@ -159,6 +159,11 @@ dahinter.
 Siehe `UPLOAD-ANLEITUNG.md` im ZIP: Dateien hochladen, alte Dateien
 löschen. Danach sag mir Bescheid – ich prüfe das Repo.
 
+Seit 1.9.0 legt `tools/prepare-ios.sh` bei jedem Build automatisch das
+Privacy-Manifest (`tools/apple/PrivacyInfo.xcprivacy`) in die App. Im
+Protokoll des Workflows steht dann
+„PrivacyInfo.xcprivacy ist Ressource im Ziel App.“
+
 ---
 
 ## C. Build nach TestFlight
@@ -197,7 +202,10 @@ In TestFlight laufen Käufe automatisch in der Testumgebung –
 - [ ] Sicherung importieren (aus „Dateien“)
 - [ ] CSV-Export, Diagramm als Bild (auch „Bild sichern“ → Fotos)
 - [ ] Zeugnis teilen → in „Dateien“ öffnen → drucken
-- [ ] Impressum/Datenschutz öffnen sich (Safari-Ansicht in der App)
+- [ ] Impressum/Datenschutz öffnen sich in der App – auch im Flugmodus
+- [ ] Mail-Adresse unter Info & Impressum öffnet das Mailprogramm
+- [ ] Beispielzeugnis laden und wieder entfernen
+- [ ] Neues Halbjahr anlegen → Fächer werden übernommen
 - [ ] PIN-Sperre setzen, App schließen, wieder öffnen
 - [ ] Dunkles Design
 
@@ -228,13 +236,19 @@ aufklappen) hier hineinkopieren.
 
 - **Screenshots:** iPhone 6,9" (1320 × 2868) genügt für alle iPhones.
   Weil die App auch auf dem iPad läuft, zusätzlich iPad 13"
-  (2064 × 2752).
+  (2064 × 2752). Beide Sätze erzeugt `npm run store-bilder`
+  (Ordner `store-bilder/iphone-de`, `ipad-de`, jeweils auch `-en`).
 - **App-Datenschutz:** „Keine Daten erfasst“. Den Kauf wickelt Apple ab;
   die App sendet nichts an eigene Server.
 - **Altersfreigabe:** Fragebogen ehrlich ausfüllen – ergibt 4+.
 - **Kategorie:** Bildung (zweite: Produktivität).
 - **Support-URL:** `https://simaehlmann-cloud.github.io/GradeGoal/impressum.html`
 - **Datenschutz-URL:** `https://simaehlmann-cloud.github.io/GradeGoal/datenschutz.html`
+  (englische Lokalisierung: `…/datenschutz-en.html`)
+- **Nach der Freigabe:** Apple-ID der App (Ziffern aus
+  `https://apps.apple.com/app/id…`) in `src/lib/review.js` bei
+  `APPSTORE_ID` eintragen. Dann zeigt die App auch auf iOS den Knopf
+  „App bewerten“.
 - **Nicht** in die Kategorie „Kinder“ einordnen – dort gelten für Käufe
   zusätzliche Elternschranken in der App.
 - Der **erste In-App-Kauf** wird zusammen mit der App-Version zur

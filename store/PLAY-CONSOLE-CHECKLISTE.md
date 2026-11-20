@@ -1,10 +1,8 @@
 # Play Console – Checkliste
 
-> **Hinweis (ab Version 1.8.0):** Die Aufteilung in Lite und Pro gibt es
-> nicht mehr. GradeGoal ist jetzt **eine** App: ein Schuljahr gratis mit
-> allen Funktionen, danach einmaliger In-App-Kauf. Die Angaben unten
-> stammen aus der Zeit davor und müssen vor der Play-Veröffentlichung
-> angepasst werden (ein Eintrag, In-App-Käufe „ja“). Für den App Store
+> **Stand 1.9.0:** **Ein** Eintrag (`de.maehlmann.gradegoal`): ein
+> Schuljahr gratis mit allen Funktionen, danach einmaliger In-App-Kauf
+> `gradegoal_unlimited`. Texte: `STORE-TEXTE.md`. Für den App Store
 > gilt `APP-STORE-CHECKLISTE.md` bzw. `APP-STORE-TEXTE.md`.
 
 
@@ -29,8 +27,7 @@ Organisationskonten und ältere persönliche Konten sind ausgenommen.
 
 **Wichtig für dein Vorgehen:** Der Produktionszugriff gilt für das
 **Konto**, nicht für die einzelne App. Du musst den geschlossenen Test
-also nur einmal durchlaufen – sinnvollerweise mit **Lite**, weil du
-dafür leichter Tester findest. Prüf das in deiner Console gegen, bevor
+also nur einmal durchlaufen. Prüf das in deiner Console gegen, bevor
 du dich darauf verlässt.
 
 Zwölf Tester zusammenzubekommen, ist der unangenehmste Teil. Familie,
@@ -44,21 +41,22 @@ nicht.
 
 **Sofort**
 1. Entwicklerkonto anlegen (25 USD einmalig), Identitätsprüfung starten
-2. App „GradeGoal“ (Lite) anlegen
+2. App „GradeGoal: Noten bis zum Abi“ anlegen, Zahlungsprofil einrichten
+   (ohne Zahlungsprofil kein In-App-Produkt)
 3. Datenschutz-Seite veröffentlichen (siehe unten)
 4. Erste `.aab` hochladen und geschlossenen Test starten
 5. 12 Tester einladen
 
 **Während der 14 Tage**
 6. Store-Eintrag ausfüllen (Texte liegen fertig vor)
-7. Screenshots aufnehmen
+7. Screenshots erzeugen: `npm run store-bilder` (siehe README)
 8. Datensicherheit und Inhaltseinstufung ausfüllen
-9. Pro-Eintrag vorbereiten
+9. In-App-Produkt `gradegoal_unlimited` anlegen (Angaben in `STORE-TEXTE.md`)
+   und mit den Testern einen Testkauf machen (Lizenztester eintragen)
 
 **Danach**
 10. Produktionszugriff beantragen
-11. Beide Apps veröffentlichen
-12. `PRO_URL` in `src/lib/tier.js` eintragen und Lite neu bauen
+11. App veröffentlichen
 
 ---
 
@@ -73,11 +71,12 @@ https://simaehlmann-cloud.github.io/GradeGoal/impressum.html
 ```
 
 Die erste Adresse trägst du im Store-Eintrag als Datenschutz-URL ein.
+Englische Fassungen: `datenschutz-en.html`, `impressum-en.html`.
 
-Beide Seiten sind mit den Daten von **Wisdompeak Apps** ausgefüllt, es
-sind keine Platzhalter mehr offen. `CONTACT`, `PRIVACY_URL` und
-`IMPRINT_URL` in `src/lib/i18n.js` stehen ebenfalls – in der App
-erscheinen unter „Info & Impressum" zwei Schaltflächen dorthin.
+Beide Seiten sind mit den Daten von **Wisdompeak Apps** ausgefüllt
+(einschließlich USt-IdNr.), es sind keine Platzhalter offen. Die App
+zeigt dieselben Seiten unter „Info & Impressum“ aus dem App-Paket an –
+also auch offline.
 
 **Prüfen:** Die beiden Adressen funktionieren erst, wenn GitHub Pages
 aktiv ist (Settings → Pages → Source: „GitHub Actions"). Ruf sie einmal
@@ -113,7 +112,7 @@ Erhebung.
 | Glücksspiel, Lootboxen | nein |
 | Nutzerinteraktion, Chat, geteilte Inhalte | nein |
 | Standortweitergabe | nein |
-| Digitale Käufe | **nein** (Lite und Pro sind getrennte Einträge) |
+| Digitale Käufe | **ja** (einmalige Freischaltung) |
 
 Erwartetes Ergebnis: USK 0 bzw. PEGI 3.
 
@@ -148,35 +147,21 @@ gesetzt und ist optional.
 
 ## Kategorie und Angaben
 
-| Feld | Lite | Pro |
-|---|---|---|
-| Kategorie | Bildung | Bildung |
-| Tags | Notenrechner, Schule, Lernen | dieselben |
-| Preis | kostenlos | 1,99 € |
-| In-App-Käufe | nein | nein |
-| Werbung | nein | nein |
-| Länder | Deutschland, Österreich, Schweiz (später ausweiten) | dieselben |
+| Feld | Eintrag |
+|---|---|
+| Kategorie | Bildung |
+| Tags | Notenrechner, Schule, Lernen |
+| Preis der App | kostenlos (Download) |
+| In-App-Käufe | **ja** – `gradegoal_unlimited`, 0,99 € |
+| Werbung | nein |
+| Länder | Deutschland, Österreich, Schweiz (später ausweiten) |
 
-Beim Preis: Google zeigt 1,99 € inklusive Mehrwertsteuer an. Für dich
-bleiben rund 1,42 € je Verkauf, wenn du am Programm für kleine
-Entwickler teilnimmst (15 % statt 30 %). Das musst du **aktiv
-beantragen** – Zahlungsprofil → Google Play Programm für kleine
-Entwickler.
+Beim Kauf behält Google 15 % statt 30 %, wenn du am Programm für kleine
+Entwickler teilnimmst. Das musst du **aktiv beantragen** –
+Zahlungsprofil → Google Play Programm für kleine Entwickler.
 
----
-
-## Beide Einträge
-
-| | Lite | Pro |
-|---|---|---|
-| App-ID | `de.maehlmann.gradegoal` | `de.maehlmann.gradegoal.pro` |
-| Store-Name | GradeGoal: Noten & Schnitt | GradeGoal Pro: Noten & Abi |
-| Feature-Grafik | `store/feature-graphic-lite.png` | `store/feature-graphic-pro.png` |
-| Symbol | `assets-lite/icon-only.png` | `assets/icon-only.png` |
-
-Die App-IDs lassen sich nach der Veröffentlichung **nicht mehr ändern**.
-Vor dem ersten Hochladen im Log des Workflows gegenprüfen – der Schritt
-„Konfiguration und Bildmaterial wählen“ gibt sie aus.
+Die App-ID `de.maehlmann.gradegoal` lässt sich nach der
+Veröffentlichung **nicht mehr ändern**.
 
 ---
 
@@ -190,27 +175,20 @@ Vorschlag, damit es nachvollziehbar bleibt:
 
 | Upload | versionName | versionCode |
 |---|---|---|
-| erster geschlossener Test | 1.6.2 | 1 |
-| Korrektur währenddessen | 1.6.1 | 2 |
-| Produktion | 1.7.0 | 3 |
-
-Beide Ausgaben zählen getrennt, weil sie eigene App-IDs haben. Der
-Einfachheit halber trotzdem dieselbe Nummer für beide vergeben.
+| erster geschlossener Test | 1.9.0 | 1 |
+| Korrektur währenddessen | 1.9.1 | 2 |
+| Produktion | 1.9.x | 3 |
 
 ---
 
 ## Vor dem ersten Upload
 
-- [ ] Beide Rechtsseiten im Browser aufgerufen und erreichbar
+- [ ] Beide Rechtsseiten (de und en) im Browser aufgerufen und erreichbar
 - [ ] Entwicklername in der Play Console: **Wisdompeak Apps**
 - [ ] Keystore erzeugt, **mehrfach gesichert**, vier Secrets hinterlegt
-- [ ] Beide Debug-APKs auf einem echten Gerät im Flugmodus getestet
+- [ ] Test-APK auf einem echten Gerät im Flugmodus getestet
 - [ ] Besonders geprüft: PIN setzen, App schließen, neu öffnen, entsperren
-- [ ] Sicherung exportieren und in der jeweils anderen Ausgabe importieren
+- [ ] Sicherung exportieren und wieder importieren
+- [ ] Gratis-Rahmen: drittes Halbjahr anlegen → Kaufkarte erscheint
+- [ ] Testkauf mit Lizenztester, danach „Kauf wiederherstellen“
 - [ ] GitHub Pages aktiv, Datenschutz-Seite über die URL erreichbar
-
-Zu `PRO_URL`: Die Adresse des Pro-Eintrags existiert erst, wenn die App
-in der Console angelegt ist. Sie lautet
-`https://play.google.com/store/apps/details?id=de.maehlmann.gradegoal.pro`
-und funktioniert erst nach der Veröffentlichung. Solange `PRO_URL` leer
-ist, zeigt Lite nur den Hinweistext – kein toter Link. Das ist Absicht.
