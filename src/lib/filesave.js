@@ -33,8 +33,10 @@ function blobToBase64(blob) {
 /* Fachnamen sind frei waehlbar und koennen Pfadtrenner enthalten. */
 const safeName = (n) => String(n || "datei").replace(/[\\/:*?"<>|]/g, "-").slice(0, 80);
 
-/* Gibt true zurueck, wenn die Datei herausgegeben wurde (oder der
-   Nutzer das Teilen-Menue bewusst geschlossen hat). */
+/* Ergebnis: true = herausgegeben, "cancel" = Teilen-Menue bewusst
+   geschlossen (kein Fehler, aber auch keine Sicherung), false = Fehler.
+   Achtung: Android meldet das Schliessen des Menues nicht – dort gilt
+   jedes geoeffnete Menue als Erfolg. */
 export async function saveFile(blob, filename, opts) {
   const name = safeName(filename);
   if (!isNative()) return downloadBlob(blob, name);
@@ -58,7 +60,7 @@ export async function saveFile(blob, filename, opts) {
     const msg = String((e && e.message) || e || "");
     if (/cancel|abort|dismiss/i.test(msg)) {
       logWarn("Teilen abgebrochen", e);
-      return true;
+      return "cancel";
     }
     logError("Teilen fehlgeschlagen", e);
     return false;

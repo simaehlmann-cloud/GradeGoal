@@ -33,6 +33,12 @@ export function platform() {
    (iOS: Safari-Ansicht innerhalb der App), im Browser als neuer Tab. */
 export async function openExternal(url) {
   if (!url) return;
+  /* mailto: kann die Safari-Ansicht nicht oeffnen. Eine normale
+     Navigation reicht Capacitor an das Mailprogramm weiter. */
+  if (/^mailto:/i.test(url)) {
+    try { window.location.href = url; } catch (e) { logWarn("Mail-Verweis nicht geöffnet", e); }
+    return;
+  }
   if (isNative()) {
     try {
       const { Browser } = await import("@capacitor/browser");
@@ -54,10 +60,10 @@ export async function openExternal(url) {
 /* Eigenschaften fuer einen <a>-Verweis nach aussen.
    Im Browser ein normaler Verweis, in der App faengt onClick ihn ab. */
 export function extLinkProps(url) {
+  const mail = /^mailto:/i.test(String(url));
   return {
     href: url,
-    target: "_blank",
-    rel: "noopener noreferrer",
+    ...(mail ? {} : { target: "_blank", rel: "noopener noreferrer" }),
     onClick: (e) => {
       if (!isNative()) return;
       e.preventDefault();

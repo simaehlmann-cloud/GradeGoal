@@ -15,7 +15,7 @@
       oder Lehrkraefte weitergibt, darf das nicht ausloesen.
 ========================================================= */
 
-import { parseNum, gv, gd, gp, fmt, sName, cName, subjWeight, subjectsMean } from "./grades.js";
+import { parseNum, gv, gd, gp, fmt, sName, cName, subjWeight, subjectsMean, todayISO } from "./grades.js";
 import { logError } from "./logger.js";
 
 export function escapeHtml(s) {
@@ -50,7 +50,8 @@ export function downloadBlob(blob, filename) {
    Die Export-Funktionen liefern nur Inhalt und Dateinamen. Die Ausgabe
    uebernimmt lib/filesave.js – im Browser als Download, in der App
    ueber das Teilen-Menue. */
-const stamp = () => new Date().toISOString().slice(0, 10);
+/* Lokales Datum – toISOString() waere nach Mitternacht noch „gestern“ */
+const stamp = () => todayISO();
 
 export function backupPayload(state) {
   return { text: JSON.stringify(state, null, 2), name: `gradegoal-sicherung-${stamp()}.json`, mime: "application/json" };
@@ -79,7 +80,7 @@ export function buildCsv(state, opts = {}) {
       : ["School year", "Term", "Subject", "Subject weight", "Report grade", "Wish grade", "Category", "Weighting %", "Single grade", "Date", "Points", "of"];
 
   const rows = [head];
-  const dateStr = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
+  const dateStr = (d) => (d ? todayISO(new Date(d)) : "");
 
   const yearLabel = (id) => {
     const y = (state.years || []).find((yy) => yy.id === id);
@@ -154,7 +155,7 @@ export function buildPrintHtml(state, ds, t, app) {
     <p class="print-avg"><strong>${e(t("avg"))}: ${e(fmt(avg, lang))}</strong>${
     showWish ? ` &nbsp;·&nbsp; ${e(t("wishAvg"))}: ${e(fmt(wishAvg, lang))}` : ""
   }</p>
-    <p class="print-foot">${e(app.name)}: ${e(app.sub)} · v${e(app.ver)} · ${e(t("developedBy"))} ${e(
+    <p class="print-foot">${e(app.name)}: ${e(t("appSub") || app.sub)} · v${e(app.ver)} · ${e(t("developedBy"))} ${e(
     app.developer
   )} · ${e(printed)}</p>
   </div>`;

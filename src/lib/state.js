@@ -79,8 +79,69 @@ export const freshDataset = (label, yearId) => {
 
 export const freshYear = (label) => ({ id: uid(), label });
 
+/* Bezeichnung des laufenden Schuljahrs, z. B. "2026/27". Das Schuljahr
+   beginnt in allen Bundeslaendern im Sommer; ab August zaehlt das neue. */
+export function schoolYearLabel(now = new Date()) {
+  const y = now.getFullYear();
+  const start = now.getMonth() >= 7 ? y : y - 1;
+  return start + "/" + String((start + 1) % 100).padStart(2, "0");
+}
+
+/* Neues Halbjahr auf Grundlage eines vorhandenen: Faecher (Namen,
+   Gewichtung, Schluesselzuordnung), Kategorien (Namen, Gewichtung),
+   Notensystem, Schluessel und Faechergruppen werden uebernommen –
+   Noten, Wunschnoten, Ziele, Notizen und Abiturdaten nicht.
+   Alle IDs sind neu; Verweise (Gruppen, Schluessel) werden umgeschrieben. */
+export function datasetFrom(src, label, yearId) {
+  if (!src || !Array.isArray(src.subjects) || !src.subjects.length) return freshDataset(label, yearId);
+  const keyMap = new Map();
+  const keys = (src.keys || []).map((k) => {
+    const id = uid();
+    keyMap.set(k.id, id);
+    return { ...k, id, steps: (k.steps || []).map((st) => ({ ...st })) };
+  });
+  const subjMap = new Map();
+  const subjects = src.subjects.map((s) => {
+    const id = uid();
+    subjMap.set(s.id, id);
+    return {
+      id,
+      name: s.name && typeof s.name === "object" ? { ...s.name } : s.name,
+      grade: "",
+      wish: "",
+      weight: s.weight,
+      keyId: keyMap.get(s.keyId) || "",
+      cats: (s.cats || []).map((c) => ({
+        id: uid(),
+        name: c.name && typeof c.name === "object" ? { ...c.name } : c.name,
+        weight: c.weight,
+        grades: [],
+      })),
+      goals: "",
+      notes: "",
+    };
+  });
+  const groups = (src.groups || []).map((g) => ({
+    id: uid(),
+    name: g.name,
+    subjectIds: (g.subjectIds || []).map((i) => subjMap.get(i)).filter(Boolean),
+    target: g.target,
+  }));
+  return {
+    id: uid(),
+    label,
+    yearId: yearId || "",
+    scale: { ...src.scale },
+    subjects,
+    groups,
+    abi: freshAbi(),
+    keys,
+    defaultKeyId: keyMap.get(src.defaultKeyId) || "",
+  };
+}
+
 export const freshState = () => {
-  const y = freshYear("Schuljahr / School year");
+  const y = freshYear(schoolYearLabel());
   const d = freshDataset("1. Halbjahr / 1st term", y.id);
   return {
     v: SCHEMA_VERSION,
@@ -246,6 +307,13 @@ function safeDataset(d, i) {
     abi: safeAbi(d.abi),
     keys,
     defaultKeyId: keyIds.has(str(d.defaultKeyId)) ? str(d.defaultKeyId) : "",
+    /* Beispielzeugnis: wird auf der Startseite als solches gekennzeichnet */
+    ...(d.demo === true ? { demo: true } : {}),
+    /* Stand vor dem Laden des Beispiels – „Beispiel entfernen“ stellt
+       ihn wieder her (eigene Fachnamen, Notensystem usw.). */
+    ...(d.demo === true && isObj(d.demoPrev) && !d.demoPrev.demo
+      ? { demoPrev: safeDataset({ ...d.demoPrev, id: d.id, yearId: d.yearId }, i) }
+      : {}),
   };
 }
 
@@ -284,7 +352,7 @@ export function migrateState(raw) {
     : [];
   const ySeen = new Set();
   years = years.filter((y) => (ySeen.has(y.id) ? false : (ySeen.add(y.id), true)));
-  if (!years.length) years = [{ id: uid(), label: "Schuljahr / School year" }];
+  if (!years.length) years = [{ id: uid(), label: schoolYearLabel() }];
 
   const yIds = new Set(years.map((y) => y.id));
   datasets = datasets.map((d) => (yIds.has(d.yearId) ? d : { ...d, yearId: years[0].id }));

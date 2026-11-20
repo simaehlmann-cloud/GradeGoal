@@ -121,27 +121,42 @@ async function refreshOwnership() {
   return owned;
 }
 
-let started = false;
-export async function initPurchases() {
-  if (started || !isNative() || override() !== null) return;
-  started = true;
-  try {
-    const { NP, TYPE } = await getPlugin();
-    const { isBillingSupported } = await NP.isBillingSupported();
-    if (!isBillingSupported) { logWarn("Käufe auf diesem Gerät nicht möglich"); return; }
+/* Darf mehrfach aufgerufen werden: War der Store beim Start nicht
+   erreichbar (offline, Vertrag noch nicht aktiv), versucht es die
+   Kaufkarte beim naechsten Anzeigen erneut. Vorher blieb die Karte bis
+   zum Neustart der App auf „Store nicht erreichbar“ stehen. */
+let initOk = false;
+let initRunning = null;
+let listening = false;
+export function initPurchases() {
+  if (!isNative() || override() !== null || initOk) return Promise.resolve();
+  if (initRunning) return initRunning;
+  initRunning = (async () => {
+    try {
+      const { NP, TYPE } = await getPlugin();
+      const { isBillingSupported } = await NP.isBillingSupported();
+      if (!isBillingSupported) { logWarn("Käufe auf diesem Gerät nicht möglich"); return; }
 
-    /* Spaetere Bestaetigungen, z. B. „Kaufen fragen“ bei Familienfreigabe */
-    NP.addListener("transactionUpdated", (tx) => { if (isOwned(tx)) grant("Aktualisierung"); });
+      /* Spaetere Bestaetigungen, z. B. „Kaufen fragen“ bei Familienfreigabe */
+      if (!listening) {
+        listening = true;
+        NP.addListener("transactionUpdated", (tx) => { if (isOwned(tx)) grant("Aktualisierung"); });
+      }
 
-    const { products } = await NP.getProducts({ productIdentifiers: [PRODUCT_ID], productType: TYPE.INAPP });
-    const p = (products || []).find((x) => x.identifier === PRODUCT_ID) || (products || [])[0];
-    if (p) set({ canBuy: true, price: p.priceString || "" });
-    else logWarn("Produkt " + PRODUCT_ID + " im Store nicht gefunden");
+      const { products } = await NP.getProducts({ productIdentifiers: [PRODUCT_ID], productType: TYPE.INAPP });
+      const p = (products || []).find((x) => x.identifier === PRODUCT_ID);
+      if (p) set({ canBuy: true, price: p.priceString || "" });
+      else logWarn("Produkt " + PRODUCT_ID + " im Store nicht gefunden");
 
-    await refreshOwnership();
-  } catch (e) {
-    logError("Store konnte nicht abgefragt werden", e);
-  }
+      await refreshOwnership();
+      initOk = !!p;
+    } catch (e) {
+      logError("Store konnte nicht abgefragt werden", e);
+    } finally {
+      initRunning = null;
+    }
+  })();
+  return initRunning;
 }
 
 const cancelled = (e) => /cancel|abgebrochen|user ?cancel|USER_CANCELED/i.test(String((e && (e.code || e.message)) || e || ""));

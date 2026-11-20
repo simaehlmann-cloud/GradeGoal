@@ -7,20 +7,24 @@
 ========================================================= */
 
 export const APP_NAME = "GradeGoal";
-export const APP_SUB = "Schulnoten & Grades";
-export const APP_VER = "1.8.0";
+export const APP_SUB = "Noten bis zum Abi";
+export const APP_VER = "1.9.0";
 export const DEVELOPER = "Simon Mählmann";
 export const CONTACT = "smaehlmann.appdev@gmail.com";
 export const PUBLISHER = "Wisdompeak Apps";
 
-/* Adressen der Rechtsseiten. Die Stores verlangen eine erreichbare
-   Datenschutz-URL; die App verweist zusaetzlich darauf, damit die
-   Angaben auch ohne Store-Eintrag auffindbar sind.
-   Leer lassen, solange GitHub Pages nicht eingerichtet ist – ein toter
-   Verweis ist schlechter als keiner. */
-export const PRIVACY_URL = "https://simaehlmann-cloud.github.io/GradeGoal/datenschutz.html";
-export const IMPRINT_URL = "https://simaehlmann-cloud.github.io/GradeGoal/impressum.html";
+/* Rechtstexte. Die App zeigt die mitgelieferten Seiten aus public/ an
+   (laufen offline). Die Web-Adressen sind fuer die Store-Eintraege
+   und als Ausweichweg. */
+export const WEB_BASE = "https://simaehlmann-cloud.github.io/GradeGoal/";
+export const LEGAL_FILES = {
+  de: { imprint: "impressum.html", privacy: "datenschutz.html" },
+  en: { imprint: "impressum-en.html", privacy: "datenschutz-en.html" },
+};
+export const PRIVACY_URL = WEB_BASE + LEGAL_FILES.de.privacy;
+export const IMPRINT_URL = WEB_BASE + LEGAL_FILES.de.imprint;
 export const APP = { name: APP_NAME, sub: APP_SUB, ver: APP_VER, developer: DEVELOPER };
+
 
 export const T = {
   de: {
@@ -214,10 +218,10 @@ export const T = {
       ["sigma", "Ausgewählte Durchschnitte", "Berechne den Schnitt bestimmter Fächergruppen separat – mit Vorlagen für Kernfächer, Sprachen, Naturwissenschaften und mehr."],
       ["cap", "Abitur-Rechner", "Block I und Block II nach der bundesweit einheitlichen Formel: Gesamtpunktzahl, Abiturnote und die wichtigsten Bedingungen auf einen Blick."],
       ["percent", "Notenschlüssel", "„34 von 50 Punkten – welche Note ist das?“ Linear oder nach IHK-Schlüssel, inklusive vollständigem Notenspiegel."],
-      ["calendar", "Schuljahre, Halbjahre & Profile", "Lege Schuljahre mit mehreren Halbjahren an – oder Profile für Geschwister, jeweils mit eigenem Notensystem."],
+      ["calendar", "Schuljahre, Halbjahre & Profile", "Lege Schuljahre mit mehreren Halbjahren an – oder Profile für Geschwister, jeweils mit eigenem Notensystem. Ein neues Halbjahr übernimmt deine Fächer und Einstellungen."],
       ["hash", "Notensysteme", "Noten 1–6, Oberstufen-Punkte 0–15 oder eine eigene Skala. Tendenznoten wie 2+ oder 3− werden automatisch als 1,7 bzw. 3,3 gerechnet."],
       ["lock", "PIN-Sperre", "Ein Zahlencode beim Start hält neugierige Blicke fern."],
-      ["save", "Sicherung, Tabelle & Druck", "Exportiere deine Daten als Sicherungsdatei oder CSV-Tabelle, importiere sie wieder oder drucke dein Zeugnis bzw. speichere es als PDF."],
+      ["save", "Sicherung, Tabelle & Druck", "Exportiere deine Daten als Sicherungsdatei oder CSV-Tabelle, importiere sie wieder oder gib dein Zeugnis zum Drucken aus. Die App erinnert dich, wenn eine Sicherung fällig ist."],
       ["moon", "Design", "Hell, dunkel oder automatisch nach Systemeinstellung."],
     ],
     aboutPrivacyTitle: "Datenschutz",
@@ -226,6 +230,33 @@ export const T = {
     legalTitle: "Impressum",
     publisher: "Herausgeber",
     developedBy: "Entwickelt von", contact: "Kontakt", version: "Version", edition: "Ausgabe",
+
+    /* Neu in 1.9.0 */
+    appSub: APP_SUB,
+    loading: "Wird geladen …",
+    backupDueTitle: "Zeit für eine Sicherung",
+    backupDueText: (d) => (d == null
+      ? "Deine Noten liegen nur auf diesem Gerät. Eine Sicherungsdatei schützt sie bei Verlust oder Handywechsel."
+      : `Deine letzte Sicherung ist ${d} Tage her. Deine Noten liegen nur auf diesem Gerät – eine Sicherungsdatei schützt sie bei Verlust oder Handywechsel.`),
+    backupNow: "Jetzt sichern", backupLater: "Später",
+    lastBackup: (d) => (d == null ? "Noch keine Sicherung erstellt." : d === 0 ? "Letzte Sicherung: heute." : d === 1 ? "Letzte Sicherung: gestern." : `Letzte Sicherung: vor ${d} Tagen.`),
+    demoTitle: "Erst mal ausprobieren?",
+    demoText: "Lade ein Beispielzeugnis mit Noten, Kategorien und Wunschnoten. So siehst du alle Funktionen in Aktion, ohne etwas zu tippen.",
+    demoLoad: "Beispielzeugnis laden", demoNo: "Nein danke",
+    demoBanner: "Das ist ein Beispielzeugnis zum Ausprobieren.",
+    demoRemove: "Beispiel entfernen",
+    demoRemoved: "Beispiel entfernt – jetzt kannst du deine eigenen Noten eintragen.",
+    newTermCopyHint: "Ein neues Halbjahr übernimmt Fächer, Notensystem, Gewichtungen, Kategorien und Schlüssel aus dem geöffneten Halbjahr – ohne Noten.",
+    newTermCopied: (n) => `Neu angelegt mit den Fächern aus „${n}“.`,
+    termDefault: "1. Halbjahr", newTermName: "Neues Halbjahr", newYearName: "Neues Schuljahr",
+    renameSubject: "Fach umbenennen", renameCat: "Kategorie umbenennen", deleteCat: "Kategorie löschen",
+    deleteGrade: "Note löschen",
+    sortSubjects: "Reihenfolge ändern", sortDone: "Fertig",
+    moveUp: "Nach oben", moveDown: "Nach unten",
+    rateBtn: "App bewerten", rateHint: "Gefällt dir GradeGoal? Eine Bewertung im Store hilft sehr.",
+    writeMail: "E-Mail schreiben",
+    legalOffline: "Diese Fassung ist in die App eingebaut und funktioniert auch ohne Internet.",
+    legalOnline: "Im Browser öffnen",
     langName: "Deutsch",
   },
 
@@ -411,10 +442,10 @@ export const T = {
       ["sigma", "Selected averages", "Calculate the average of specific subject groups separately – with presets for core subjects, languages, sciences and more."],
       ["cap", "Abitur calculator", "Block I and block II using the nationally uniform formula: total points, Abitur grade and the key conditions at a glance."],
       ["percent", "Grade key", "“34 out of 50 points – what grade is that?” Linear or IHK key, including the full breakdown."],
-      ["calendar", "School years, terms & profiles", "Create school years with several terms – or profiles for siblings, each with its own grading system."],
+      ["calendar", "School years, terms & profiles", "Create school years with several terms – or profiles for siblings, each with its own grading system. A new term takes over your subjects and settings."],
       ["hash", "Grading systems", "Grades 1–6, upper-school points 0–15 or a custom scale. Tendency grades like 2+ or 3− count as 1.7 or 3.3."],
       ["lock", "PIN lock", "A numeric code on start keeps curious glances away."],
-      ["save", "Backup, spreadsheet & print", "Export your data as a backup file or CSV spreadsheet, import it again or print your report card / save it as a PDF."],
+      ["save", "Backup, spreadsheet & print", "Export your data as a backup file or CSV spreadsheet, import it again or output your report card for printing. The app reminds you when a backup is due."],
       ["moon", "Appearance", "Light, dark or automatic following your system setting."],
     ],
     aboutPrivacyTitle: "Privacy",
@@ -423,6 +454,33 @@ export const T = {
     legalTitle: "Legal notice",
     publisher: "Publisher",
     developedBy: "Developed by", contact: "Contact", version: "Version", edition: "Edition",
+
+    /* New in 1.9.0 */
+    appSub: "Grades to Abitur",
+    loading: "Loading …",
+    backupDueTitle: "Time for a backup",
+    backupDueText: (d) => (d == null
+      ? "Your grades are stored only on this device. A backup file protects them if you lose or replace your phone."
+      : `Your last backup was ${d} days ago. Your grades are stored only on this device – a backup file protects them if you lose or replace your phone.`),
+    backupNow: "Back up now", backupLater: "Later",
+    lastBackup: (d) => (d == null ? "No backup created yet." : d === 0 ? "Last backup: today." : d === 1 ? "Last backup: yesterday." : `Last backup: ${d} days ago.`),
+    demoTitle: "Want to try it first?",
+    demoText: "Load a sample report card with grades, categories and target grades. See every feature in action without typing anything.",
+    demoLoad: "Load sample report", demoNo: "No thanks",
+    demoBanner: "This is a sample report card to try things out.",
+    demoRemove: "Remove sample",
+    demoRemoved: "Sample removed – now you can enter your own grades.",
+    newTermCopyHint: "A new term takes over subjects, grading system, weightings, categories and keys from the open term – without grades.",
+    newTermCopied: (n) => `Created with the subjects from “${n}”.`,
+    termDefault: "1st term", newTermName: "New term", newYearName: "New school year",
+    renameSubject: "Rename subject", renameCat: "Rename category", deleteCat: "Delete category",
+    deleteGrade: "Delete grade",
+    sortSubjects: "Change order", sortDone: "Done",
+    moveUp: "Move up", moveDown: "Move down",
+    rateBtn: "Rate the app", rateHint: "Enjoying GradeGoal? A rating in the store helps a lot.",
+    writeMail: "Send email",
+    legalOffline: "This version is built into the app and works without internet.",
+    legalOnline: "Open in browser",
     langName: "English",
   },
 };
