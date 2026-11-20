@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Ic } from "./icons.jsx";
 import { parseNum, filterNumInput, fmt, colorFor, todayISO, isoToStamp, keyGrade } from "../lib/grades.js";
-import { usePurchase, buyUnlock, restoreUnlock, FREE_TERMS } from "../lib/purchase.js";
+import { usePurchase, buyUnlock, restoreUnlock, initPurchases, FREE_TERMS } from "../lib/purchase.js";
 
 /* ---------- Schalter ---------- */
 export const Toggle = ({ on, onChange, label, disabled }) => (
@@ -172,6 +172,8 @@ export const Stamp = ({ value, label, sc, lang, dark }) => (
 export function UnlockCard({ t, compact, style }) {
   const p = usePurchase();
   const [note, setNote] = useState(null);
+  /* Store beim Start nicht erreichbar? Beim Anzeigen erneut fragen. */
+  useEffect(() => { if (p.native && !p.canBuy) initPurchases(); }, [p.native, p.canBuy]);
   if (p.unlocked) return null;
 
   const buy = async () => {
@@ -217,4 +219,48 @@ export function UnlockCard({ t, compact, style }) {
         <div role="status" style={{ marginTop: 8, fontWeight: 700, fontSize: 13, color: note.ok ? "var(--green)" : "var(--red)" }}>{note.text}</div>
       )}
     </div>);
+}
+
+/* =========================================================
+   Umbenennbarer Name (Fach, Kategorie).
+   Anzeige mit Stift-Knopf; beim Bearbeiten ein Eingabefeld, das bei
+   Enter oder beim Verlassen uebernimmt und mit Escape abbricht. Ein
+   leerer Name wird nicht uebernommen – ein Fach ohne Namen waere in
+   der Liste nicht mehr zu finden.
+========================================================= */
+export function EditableName({ value, onSave, label, maxLength = 80, textStyle, inputStyle, children, bare }) {
+  const [edit, setEdit] = useState(false);
+  const [v, setV] = useState(value);
+  const done = useRef(false);
+  const start = () => { setV(value); done.current = false; setEdit(true); };
+  const commit = () => {
+    if (done.current) return;
+    done.current = true;
+    const s = String(v || "").trim().slice(0, maxLength);
+    if (s && s !== value) onSave(s);
+    setEdit(false);
+  };
+  const cancel = () => { done.current = true; setEdit(false); };
+  if (edit) {
+    return (
+      <input className="inp" autoFocus value={v} maxLength={maxLength} aria-label={label} enterKeyHint="done"
+        style={{ padding: "6px 10px", ...inputStyle }}
+        onChange={(e) => setV(e.target.value)} onBlur={commit}
+        onKeyDown={(e) => { if (e.key === "Enter") commit(); else if (e.key === "Escape") cancel(); }} />);
+  }
+  /* bare: Der Name selbst ist der Knopf – spart in engen Zeilen den
+     Platz fuer den Stift (Kategorien neben Gewichtung und Schnitt). */
+  if (bare) {
+    return (
+      <button className="name-btn" onClick={start} aria-label={label + ": " + value} title={label} style={textStyle}>
+        {children || value}
+      </button>);
+  }
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, minWidth: 0, ...textStyle }}>
+      {children || value}
+      <button className="icon-btn" onClick={start} aria-label={label} title={label}>
+        <Ic n="pencil" size={14} style={{ marginRight: 0 }} />
+      </button>
+    </span>);
 }

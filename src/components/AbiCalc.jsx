@@ -60,7 +60,7 @@ export default function AbiCalc({ abi, onChange, t, lang }) {
 
       {results.map((r) => (
         <div key={r.id} className="row" style={{ borderTop: "1px solid var(--line)", padding: "8px 0", flexWrap: "wrap" }}>
-          <input className="inp" style={{ flex: "1 1 130px", padding: "8px 10px" }} placeholder={t("abiResultLabel")}
+          <input className="inp" style={{ flex: "1 1 90px", minWidth: 0, padding: "8px 10px" }} placeholder={t("abiResultLabel")}
             maxLength={40} value={r.label} onChange={(e) => setResult(r.id, { label: e.target.value })} />
           <input className="num" inputMode="numeric" style={{ width: 58, color: PT_COLORS(parseNum(r.p)) }}
             aria-label={t("abiPoints")} placeholder="–" value={r.p}

@@ -58,7 +58,7 @@ export function WhatIf({ subject, sc, lang, t, dark, current }) {
                   style={{
                     borderRadius: 20, padding: "5px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer",
                     border: on ? "1.5px solid var(--blue)" : "1.5px solid var(--border)",
-                    background: on ? "var(--blue)" : "var(--card)", color: on ? "#fff" : "var(--sub)",
+                    background: on ? "var(--blue)" : "var(--card)", color: on ? "var(--card)" : "var(--sub)", /* im dunklen Design dunkle Schrift auf hellem Blau */
                     display: "inline-flex", alignItems: "center", gap: 6,
                   }}>
                   <span style={{ width: 8, height: 8, borderRadius: "50%", background: catColor(subject.cats.indexOf(c)), flexShrink: 0 }}></span>
@@ -129,7 +129,7 @@ export function GroupRow({ g, a, ok, sc, ds, upDs, lang, t, dark, pushUndo }) {
                   style={{
                     borderRadius: 20, padding: "5px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer",
                     border: on ? "1.5px solid var(--blue)" : "1.5px solid var(--border)",
-                    background: on ? "var(--blue)" : "var(--card)", color: on ? "#fff" : "var(--sub)",
+                    background: on ? "var(--blue)" : "var(--card)", color: on ? "var(--card)" : "var(--sub)", /* im dunklen Design dunkle Schrift auf hellem Blau */
                   }}>
                   {sName(s, lang)}
                 </button>);

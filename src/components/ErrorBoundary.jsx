@@ -71,7 +71,7 @@ export default class ErrorBoundary extends React.Component {
     const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
     const payload = `${raw}\n\n/* --- Protokoll ---\n${formatLog()}\n*/`;
     saveText(payload, `gradegoal-rettung-${stamp}.json`, "application/json")
-      .then((ok) => this.setState({ rescued: ok }))
+      .then((ok) => this.setState({ rescued: ok === true }))
       .catch(() => this.setState({ rescued: false }));
   };
 
