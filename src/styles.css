@@ -143,13 +143,23 @@ h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight:
 
 .ico { vertical-align: -3px; margin-right: 5px; flex-shrink: 0; }
 
-.snack {
+/* Schwebende Hinweise unten: Rueckmeldung und „Rueckgaengig“ */
+.float-stack {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
   bottom: calc(18px + var(--sa-b));
   z-index: 100;
+  width: max-content;
   max-width: calc(100vw - 32px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.float-stack > * { pointer-events: auto; }
+.snack, .toast {
   background: var(--hero1);
   color: #fff;
   border-radius: 14px;
@@ -160,7 +170,13 @@ h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight:
   box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
   font-size: 14px;
   font-weight: 600;
+  max-width: 100%;
+  animation: rise .18s ease-out;
 }
+.toast { gap: 8px; line-height: 1.4; }
+.toast-ok .ico { color: var(--yellow); }
+.toast-err { background: #8E2A22; }
+@keyframes rise { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
 .snack button { background: none; border: none; color: var(--yellow); font-weight: 700; cursor: pointer; font-size: 14px; font-family: 'Space Grotesk', sans-serif; padding: 0; white-space: nowrap; }
 
 .confetti { position: fixed; top: -30px; font-size: 22px; pointer-events: none; z-index: 999; animation: fall 1.6s ease-in forwards; }
@@ -189,17 +205,9 @@ h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight:
    Ergänzungen v1.5.0
 ========================================================= */
 
-/* Pro-Abzeichen und -Hinweise */
-.pro-badge{display:inline-block;margin-left:6px;background:var(--blue);color:#fff;border-radius:20px;
-  padding:1px 8px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-  font-family:'Space Grotesk',sans-serif;vertical-align:middle;flex-shrink:0}
-:root[data-theme="dark"] .pro-badge{color:#0C1220}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]):not([data-theme="dark"]) .pro-badge{color:#0C1220}
-}
+/* Kaufkarte (Gratis-Rahmen) */
 .pro-gate{border:1.5px dashed var(--border);border-radius:14px;padding:14px;background:var(--chip)}
 .pro-gate-compact{padding:12px}
-.pro-teaser{border:1.5px solid var(--blue-soft)}
 
 /* Fachgewichtung in der Fächerliste */
 .wt-badge{background:var(--chip);color:var(--sub);border-radius:20px;padding:1px 7px;font-size:11px;
@@ -243,5 +251,30 @@ h2.sec { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight:
   font-weight:700;padding:14px 12px}
 
 /* Abzeichen-Verweis (derzeit ungenutzt) */
-.pro-badge-link{text-decoration:none;cursor:pointer}
-.pro-badge-link:hover{filter:brightness(1.12)}
+
+/* ---------- Neu in 1.9.0 ---------- */
+
+/* Ladeanzeige beim Start */
+.boot .brand { color: var(--ink); }
+.boot-bar { width: 120px; height: 4px; border-radius: 4px; background: var(--chip); margin: 18px auto 0; overflow: hidden; }
+.boot-bar span { display: block; width: 40%; height: 100%; border-radius: 4px; background: var(--blue); animation: boot 1s ease-in-out infinite alternate; }
+@keyframes boot { from { transform: translateX(-10%); } to { transform: translateX(160%); } }
+
+/* Angebotskarten (Beispielzeugnis, Sicherungserinnerung) */
+.offer { border: 1.5px solid var(--blue); background: linear-gradient(180deg, var(--blue-soft), var(--card) 70%); }
+
+/* Kleine Symbolknoepfe (Umbenennen) */
+.icon-btn { background: none; border: none; color: var(--faint); cursor: pointer; padding: 4px; line-height: 0; border-radius: 8px; flex-shrink: 0; }
+.icon-btn:hover, .icon-btn:focus-visible { color: var(--blue); }
+
+/* Sortieren der Faecher – grosse Ziele fuer den Daumen */
+.sort-btn { width: 40px; height: 36px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--card); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.sort-btn:disabled { opacity: .3; cursor: default; }
+
+/* Eingebettete Rechtstexte */
+.legal-frame { display: block; width: 100%; border: 0; background: transparent; }
+
+/* Name als Knopf zum Umbenennen (Kategorien) */
+.name-btn { background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; text-align: left; cursor: text;
+  min-width: 0; overflow-wrap: break-word; hyphens: auto; text-decoration: underline dotted var(--border); text-underline-offset: 4px; }
+.name-btn:hover, .name-btn:focus-visible { text-decoration-color: var(--blue); }

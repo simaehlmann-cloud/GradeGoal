@@ -1,22 +1,25 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 
 import {
   uid, parseNum, filterNumInput, fmt, scaleOf, quality, colorFor,
   sName, cName, catMean, weightedCalc, neededGrade, subjWeight, subjectsMean, gv,
-  keyOf, standardKeyFor,
+  keyOf, standardKeyFor, todayISO,
 } from "./lib/grades.js";
 import { store, STORAGE_KEY } from "./lib/storage.js";
-import { freshState, freshDataset, freshYear, freshAbi, defaultCats, migrateState } from "./lib/state.js";
+import { freshState, freshDataset, freshYear, freshAbi, defaultCats, migrateState, datasetFrom } from "./lib/state.js";
+import { demoDataset } from "./lib/demo.js";
+import { getMeta, countEdit, markBackup, snoozeBackup, backupDue, daysSince, hideDemoOffer } from "./lib/meta.js";
+import { maybeAskReview, countGrades, canOpenStore, openStorePage } from "./lib/review.js";
 import { backupPayload, csvPayload, buildPrintHtml, printDocument } from "./lib/exporters.js";
 import { saveText, copyText } from "./lib/filesave.js";
-import { isNative, extLinkProps } from "./lib/platform.js";
+import { isNative, extLinkProps, openExternal } from "./lib/platform.js";
 import { usePurchase, initPurchases, yearsAllowed, termsAllowed, FREE_TERMS } from "./lib/purchase.js";
 import { logError, logInfo, formatLog, getLog, clearLog } from "./lib/logger.js";
-import { makeT, APP, APP_NAME, APP_SUB, APP_VER, DEVELOPER, CONTACT, PUBLISHER, PRIVACY_URL, IMPRINT_URL, T } from "./lib/i18n.js";
+import { makeT, APP, APP_NAME, APP_VER, DEVELOPER, CONTACT, PUBLISHER, WEB_BASE, LEGAL_FILES, T } from "./lib/i18n.js";
 import { makeLock, isValidPin, PIN_MIN, PIN_MAX } from "./lib/security.js";
 
 import { Ic, FlagDE, FlagEN } from "./components/icons.jsx";
-import { Toggle, Segmented, InfoTip, NumInput, AddRow, QuickAdd, Stamp, UnlockCard } from "./components/ui.jsx";
+import { Toggle, Segmented, InfoTip, NumInput, AddRow, QuickAdd, Stamp, UnlockCard, EditableName } from "./components/ui.jsx";
 import { TrendChart, Spark, LongTermChart, catColor } from "./components/charts.jsx";
 import { WhatIf, GroupRow } from "./components/panels.jsx";
 import KeyCalc from "./components/KeyCalc.jsx";
@@ -24,7 +27,7 @@ import AbiCalc from "./components/AbiCalc.jsx";
 import LockScreen from "./components/LockScreen.jsx";
 
 /* =========================================================
-   GradeGoal: Schulnoten & Grades  ·  Version 1.8.0
+   GradeGoal: Noten bis zum Abi  ·  Version 1.9.0
    Entwickelt von / developed by Simon Mählmann
 ========================================================= */
 
@@ -98,6 +101,9 @@ function App() {
   const [pinB, setPinB] = useState("");
   const [pinBusy, setPinBusy] = useState(false);
   const [askUnlock, setAskUnlock] = useState(false);
+  const [sorting, setSorting] = useState(false);
+  const [metaTick, setMetaTick] = useState(0); /* neu zeichnen nach Sicherung/„Später“ */
+  const [legalH, setLegalH] = useState(400);
 
   const saveT = useRef(null);
   const msgT = useRef(null);
@@ -154,12 +160,19 @@ function App() {
   }, []);
 
   /* ----- Speichern (entprellt) mit Rueckmeldung bei Fehlschlag ----- */
+  /* Fuer die Sicherungserinnerung zaehlen nur echte Aenderungen an
+     Noten und Faechern – nicht das Blaettern zwischen Bildschirmen. */
+  const savedData = useRef(null);
   useEffect(() => {
     if (!loaded) return undefined;
     clearTimeout(saveT.current);
     saveT.current = setTimeout(async () => {
       const r = await store.set(STORAGE_KEY, state);
       if (alive.current) setSaveErr(r.ok ? null : r.reason);
+      if (r.ok) {
+        if (savedData.current && (savedData.current.d !== state.datasets || savedData.current.y !== state.years)) countEdit();
+        savedData.current = { d: state.datasets, y: state.years };
+      }
     }, 600);
     return () => clearTimeout(saveT.current);
   }, [state, loaded]);
@@ -172,17 +185,23 @@ function App() {
      WebView keine Verlaufseintraege kennt. Hier geht sie eine Ebene
      zurueck und beendet die App erst auf der Startseite. */
   const navRef = useRef(null);
-  navRef.current = { screen: state.screen, sel: state.selSubject };
+  navRef.current = { screen: state.screen, sel: state.selSubject, sorting };
   useEffect(() => {
     if (!isNative()) return undefined;
     let handle = null, gone = false;
     import("@capacitor/app").then(({ App: CapApp }) =>
       CapApp.addListener("backButton", () => {
         const n = navRef.current || {};
-        if (n.sel) { setConfirmDel(false); setState((s) => ({ ...s, selSubject: null })); return; }
+        /* Reihenfolge wie die Zurueck-Knoepfe der App: zuerst der Bildschirm,
+           dann das Fach. Vorher wurde bei „Schluessel verwalten“ aus einem
+           Fach heraus zuerst das Fach geschlossen und der Schluessel blieb
+           offen stehen. */
+        if (n.screen === "legal") { setState((s) => ({ ...s, screen: "about" })); return; }
         if (n.screen === "about") { setState((s) => ({ ...s, screen: s.aboutFrom || "home" })); return; }
         if (["settings", "key", "abi"].includes(n.screen)) { setState((s) => ({ ...s, screen: "home" })); return; }
         if (n.screen === "setup") { setState((s) => ({ ...s, screen: "start" })); return; }
+        if (n.sel) { setConfirmDel(false); setState((s) => ({ ...s, selSubject: null })); return; }
+        if (n.sorting) { setSorting(false); return; }
         CapApp.exitApp();
       })
     ).then((h) => { if (gone) h.remove(); else handle = h; })
@@ -195,6 +214,42 @@ function App() {
     clearTimeout(msgT.current);
     clearTimeout(undoT.current);
   }, []);
+
+  /* ----- Scrollposition beim Wechsel der Ansicht -----
+     Ohne das bleibt die Seite beim Oeffnen eines Fachs dort stehen, wo
+     die Startseite gerade war – ein Fach weit unten in der Liste oeffnete
+     sich mitten im Inhalt. Neue Ansichten beginnen oben; zurueck auf der
+     Startseite landet man wieder an der alten Stelle. */
+  const view = state.screen + "|" + (state.selSubject || "");
+  const homeY = useRef(0);
+  const viewRef = useRef(view);
+  useEffect(() => {
+    const onScroll = () => { if (viewRef.current === "home|") homeY.current = window.scrollY; };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  useLayoutEffect(() => {
+    if (viewRef.current === view) return;
+    viewRef.current = view;
+    try { window.scrollTo(0, view === "home|" ? homeY.current : 0); } catch (e) {}
+  }, [view]);
+
+  /* ----- Rechtstexte im Rahmen: Hoehe und Verweise nach aussen ----- */
+  useEffect(() => {
+    const onMsg = (e) => {
+      const d = e && e.data;
+      if (!d || typeof d !== "object" || d.gg == null) return;
+      /* Nur Nachrichten aus dem eigenen Rahmen (gleicher Ursprung) */
+      if (e.origin !== window.location.origin && e.origin !== "null") return;
+      if (d.gg === "height" && Number.isFinite(d.h)) setLegalH(Math.max(200, Math.min(40000, d.h + 24)));
+      if (d.gg === "open" && typeof d.url === "string" && /^(https:|mailto:)/i.test(d.url)) openExternal(d.url);
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, []);
+
+  /* Sprache fuer Vorlesefunktion und Silbentrennung */
+  useEffect(() => { try { document.documentElement.lang = state.lang; } catch (e) {} }, [state.lang]);
 
   /* ----- Design auf das Dokument anwenden ----- */
   useEffect(() => {
@@ -254,7 +309,10 @@ function App() {
     const next = { ...before, ...p };
     const g = parseNum(next.grade), w = parseNum(next.wish);
     const met = g != null && w != null && (sc.bestLow ? g <= w : g >= w);
-    if (met && !prevMet.current[id]) burstConfetti();
+    if (met && !prevMet.current[id]) {
+      burstConfetti();
+      maybeAskReview(state, APP_VER);
+    }
     prevMet.current[id] = met;
   };
 
@@ -299,6 +357,46 @@ function App() {
     upDs({ groups: [...ds.groups, { id: uid(), name, subjectIds: ids, target: "" }] });
   };
 
+  /* ----- Beispielzeugnis ----- */
+  const loadDemo = () => {
+    /* Kein „Rueckgaengig“: Das Angebot erscheint nur, solange noch keine
+       Note eingetragen ist, und „Beispiel entfernen“ steht im Banner. */
+    setUndo(null);
+    prevMet.current = {};
+    setState((s) => ({
+      ...s,
+      selSubject: null,
+      /* Im einfachen Modus waere vom Beispiel kaum etwas zu sehen */
+      features: { ...s.features, simple: false },
+      datasets: s.datasets.map((d) => (d.id === s.activeId ? demoDataset(d, Date.now(), s.lang) : d)),
+    }));
+  };
+  const removeDemo = () => {
+    prevMet.current = {};
+    setUndo(null);
+    setState((s) => ({
+      ...s,
+      selSubject: null,
+      datasets: s.datasets.map((d) => {
+        if (d.id !== s.activeId) return d;
+        const prev = d.demoPrev && Array.isArray(d.demoPrev.subjects) ? d.demoPrev : freshDataset(d.label, d.yearId);
+        /* Bezeichnung und Schuljahr koennen sich inzwischen geaendert haben */
+        return { ...prev, id: d.id, label: d.label, yearId: d.yearId };
+      }),
+    }));
+    hideDemoOffer();
+    flash(t("demoRemoved"), "ok");
+  };
+
+  /* ----- Faecher sortieren ----- */
+  const moveSubject = (id, dir) => {
+    const list = ds.subjects.slice();
+    const i = list.findIndex((x) => x.id === id), j = i + dir;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    upDs({ subjects: list });
+  };
+
   /* ----- Import / Export ----- */
   const sendOut = async (make, opts) => {
     let ok = false;
@@ -309,8 +407,12 @@ function App() {
       logError("Export fehlgeschlagen", e);
     }
     if (!ok && alive.current) flash(t("exportErr"), "err");
+    return ok;
   };
-  const doExport = () => sendOut(() => backupPayload(state));
+  const doExport = async () => {
+    const ok = await sendOut(() => backupPayload(state));
+    if (ok === true) { markBackup(); if (alive.current) setMetaTick((n) => n + 1); }
+  };
   const doCsv = () => sendOut(() => csvPayload(state));
   const doPrint = () => {
     /* In der App gibt es kein window.print(): dort wird das Zeugnis als
@@ -318,7 +420,7 @@ function App() {
     if (isNative()) {
       return sendOut(() => ({
         text: printDocument(state, ds, t, APP),
-        name: `gradegoal-zeugnis-${new Date().toISOString().slice(0, 10)}.html`,
+        name: `gradegoal-zeugnis-${todayISO()}.html`,
         mime: "text/html;charset=utf-8",
       }), { title: t("report") });
     }
@@ -332,12 +434,22 @@ function App() {
     r.onerror = () => { logError("Datei konnte nicht gelesen werden"); flash(t("importRead"), "err"); };
     r.onload = () => {
       let parsed = null;
+      const text = String(r.result || "");
       try {
-        parsed = JSON.parse(r.result);
+        parsed = JSON.parse(text);
       } catch (e) {
-        logError("Sicherung ist kein gültiges JSON", e);
-        flash(t("importErr"), "err");
-        return;
+        /* Rettungsdatei aus dem Fehlerbildschirm: JSON plus angehaengtes
+           Protokoll als Kommentar. Vorher liess sie sich nicht einlesen –
+           ausgerechnet die Datei, die Daten retten soll. */
+        const cut = text.lastIndexOf("\n\n/* --- Protokoll ---");
+        try {
+          if (cut > 0) parsed = JSON.parse(text.slice(0, cut));
+        } catch (e2) { parsed = null; }
+        if (!parsed) {
+          logError("Sicherung ist kein gültiges JSON", e);
+          flash(t("importErr"), "err");
+          return;
+        }
       }
       const migrated = migrateState(parsed);
       if (!migrated) { flash(t("importErr"), "err"); return; }
@@ -389,7 +501,15 @@ function App() {
     }
   };
 
-  if (!loaded) return null;
+  /* Kurze Ladeanzeige statt leerer Flaeche. Gleiche Farben wie der
+     Startbildschirm des Systems, damit nichts aufblitzt. */
+  if (!loaded) return (
+    <div className="screen-center boot" aria-busy="true">
+      <div style={{ textAlign: "center" }}>
+        <div className="brand" style={{ fontSize: 36 }}>{APP_NAME}<span style={{ color: "var(--blue)" }}>.</span></div>
+        <div className="boot-bar" role="progressbar" aria-label={makeT(state.lang)("loading")}><span></span></div>
+      </div>
+    </div>);
 
   /* Sperrbildschirm vor allem anderen – aber erst nach dem Laden, sonst
      blitzt er bei jedem Start kurz auf. */
@@ -408,9 +528,15 @@ function App() {
       <Ic n="alert" size={14} />{saveErr === "quota" ? t("saveFailQuota") : t("saveFailGeneric")}
     </div>) : null;
 
+  /* Rueckmeldungen erscheinen als schwebender Hinweis unten – vorher
+     standen sie in mehreren Karten gleichzeitig (PIN, Daten, …), weil
+     jede Karte dieselbe Meldung anzeigte. */
   const flashBox = msg ? (
-    <div style={{ marginTop: 10, fontWeight: 700, color: msg.kind === "ok" ? "var(--green)" : "var(--red)" }} role="status">{msg.text}</div>
+    <div className={"toast " + (msg.kind === "ok" ? "toast-ok" : "toast-err")} role={msg.kind === "ok" ? "status" : "alert"}>
+      <Ic n={msg.kind === "ok" ? "sparkle" : "alert"} size={14} />{msg.text}
+    </div>
   ) : null;
+  const floats = (snack || flashBox) ? <div className="float-stack">{flashBox}{snack}</div> : null;
 
   /* ============ START ============ */
   if (state.screen === "start") return (
@@ -420,7 +546,7 @@ function App() {
           {APP_NAME}<span style={{ color: "var(--blue)" }}>.</span>
         </div>
         <div style={{ color: "var(--sub)", marginTop: 2, fontSize: 15 }}>
-          {APP_SUB}
+          {t("appSub")}
         </div>
         <div style={{ color: "var(--sub)", marginTop: 8, fontSize: 16 }}>{t("tagline")}</div>
         <div className="lbl" style={{ margin: "34px 0 10px", textTransform: "uppercase", letterSpacing: ".05em" }}>{t("chooseLang")}</div>
@@ -435,7 +561,13 @@ function App() {
               <div className="brand" style={{ marginTop: 8, fontSize: 15 }}>{T[lg].langName}</div>
             </button>))}
         </div>
-        <button className="btn" style={{ fontSize: 17, padding: "13px 34px" }} onClick={() => up({ screen: "setup" })}>{t("start")} →</button>
+        <button className="btn" style={{ fontSize: 17, padding: "13px 34px" }} onClick={() => setState((s) => ({
+          ...s,
+          screen: "setup",
+          /* Die erste Bezeichnung entsteht vor der Sprachwahl und ist
+             deshalb zweisprachig – jetzt passend zur gewaehlten Sprache. */
+          datasets: s.datasets.map((d) => (d.label === "1. Halbjahr / 1st term" ? { ...d, label: makeT(s.lang)("termDefault") } : d)),
+        }))}>{t("start")} →</button>
         <div style={{ marginTop: 22 }}>
           <button className="btn-ghost" style={{ border: "none", color: "var(--faint)" }} onClick={() => up({ screen: "about", aboutFrom: "start" })}>
             <Ic n="info" size={14} />{t("aboutBtn")}
@@ -453,7 +585,7 @@ function App() {
       <div className="card">
         <div className="brand" style={{ fontSize: 22 }}>
           {APP_NAME}<span style={{ color: "var(--blue)" }}>.</span>{" "}
-          <span style={{ fontSize: 14, color: "var(--sub)", fontWeight: 400 }}>{APP_SUB}</span>
+          <span style={{ fontSize: 14, color: "var(--sub)", fontWeight: 400 }}>{t("appSub")}</span>
         </div>
         {t("aboutText").map((p, i) => <p key={i} style={{ lineHeight: 1.6, fontSize: 15 }}>{p}</p>)}
       </div>
@@ -471,6 +603,14 @@ function App() {
           ? <p style={{ margin: 0, lineHeight: 1.6, fontSize: 14, color: "var(--green)", fontWeight: 700 }}>✓ {t("unlockedState")}</p>
           : <UnlockCard t={t} />}
       </div>
+      {canOpenStore() && (
+        <div className="card">
+          <h2 className="sec"><Ic n="heart" size={14} />{t("rateBtn")}</h2>
+          <p className="hint" style={{ margin: "0 0 10px" }}>{t("rateHint")}</p>
+          <button className="btn-ghost" onClick={async () => { if (!(await openStorePage())) flash(t("unlockError"), "err"); }}>
+            <Ic n="star" size={14} />{t("rateBtn")}
+          </button>
+        </div>)}
       <div className="card">
         <h2 className="sec"><Ic n="lock" size={14} />{t("aboutPrivacyTitle")}</h2>
         <p style={{ margin: 0, lineHeight: 1.6, fontSize: 15 }}>{t("aboutPrivacy")}</p>
@@ -481,19 +621,44 @@ function App() {
         <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("developedBy")}</span><strong>{DEVELOPER}</strong></div>
         <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("version")}</span><span>{APP_VER}</span></div>
         <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("edition")}</span><span>{pur.unlocked ? t("editionFull") : t("editionFree")}</span></div>
-        <div className="row" style={{ justifyContent: "space-between", marginTop: 10 }}><span className="lbl">{t("contact")}</span><span style={{ color: "var(--sub)" }}>{CONTACT}</span></div>
-        {(PRIVACY_URL || IMPRINT_URL) && (
-          <div className="row" style={{ marginTop: 14, flexWrap: "wrap", gap: 8 }}>
-            {IMPRINT_URL && (
-              <a className="btn-ghost" style={{ textDecoration: "none" }}
-                {...extLinkProps(IMPRINT_URL)}>{t("imprintLink")}</a>)}
-            {PRIVACY_URL && (
-              <a className="btn-ghost" style={{ textDecoration: "none" }}
-                {...extLinkProps(PRIVACY_URL)}>{t("privacyLink")}</a>)}
-          </div>)}
+        <div className="row" style={{ justifyContent: "space-between", marginTop: 10, gap: 12 }}>
+          <span className="lbl">{t("contact")}</span>
+          <a {...extLinkProps("mailto:" + CONTACT)} aria-label={t("writeMail") + ": " + CONTACT}
+            style={{ color: "var(--blue)", fontWeight: 600, overflowWrap: "anywhere", textAlign: "right" }}>{CONTACT}</a>
+        </div>
+        <div className="row" style={{ marginTop: 14, flexWrap: "wrap", gap: 8 }}>
+          <button className="btn-ghost" onClick={() => up({ screen: "legal", legalDoc: "imprint" })}>{t("imprintLink")}</button>
+          <button className="btn-ghost" onClick={() => up({ screen: "legal", legalDoc: "privacy" })}>{t("privacyLink")}</button>
+        </div>
         <div style={{ marginTop: 14, fontSize: 12, color: "var(--faint)" }}>© 2026 {PUBLISHER} · {DEVELOPER}</div>
       </div>
+      {floats}
     </div>);
+
+  /* ============ IMPRESSUM / DATENSCHUTZ ============
+     Die Seiten liegen im App-Paket (public/) und funktionieren damit
+     auch ohne Netz. recht.js blendet im Rahmen die eigene Navigation aus
+     und meldet die Hoehe, damit nur die App-Seite scrollt. */
+  if (state.screen === "legal") {
+    const doc = state.legalDoc === "privacy" ? "privacy" : "imprint";
+    const file = (LEGAL_FILES[state.lang] || LEGAL_FILES.de)[doc];
+    return (
+      <div className="wrap">
+        <button className="btn-ghost" style={{ border: "none", paddingLeft: 0 }} onClick={() => up({ screen: "about" })}>← {t("back")}</button>
+        <h1 className="brand" style={{ fontSize: 28, margin: "8px 0 12px" }}>
+          {doc === "privacy" ? t("aboutPrivacyTitle") : t("legalTitle")}
+        </h1>
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <iframe key={file} src={"./" + file + "?theme=" + (dark ? "dark" : "light")} title={doc === "privacy" ? t("privacyLink") : t("imprintLink")}
+            scrolling="no" className="legal-frame" style={{ height: legalH }} />
+        </div>
+        <div className="hint" style={{ fontSize: 12, textAlign: "center" }}>
+          {t("legalOffline")}{" "}
+          <a {...extLinkProps(WEB_BASE + file)} style={{ color: "var(--blue)" }}>{t("legalOnline")}</a>
+        </div>
+        {floats}
+      </div>);
+  }
 
   /* ============ RECHNER: NOTENSCHLÜSSEL ============ */
   if (state.screen === "key") return (
@@ -504,6 +669,7 @@ function App() {
         <KeyCalc ds={ds} sc={sc} t={t} lang={state.lang} dark={dark}
           onChangeDs={(patch) => upDs(patch)} />
       </div>
+      {floats}
     </div>);
 
   /* ============ RECHNER: ABITUR ============ */
@@ -514,6 +680,7 @@ function App() {
       <div className="card">
         <AbiCalc abi={ds.abi || freshAbi()} t={t} lang={state.lang} onChange={(next) => upDs({ abi: next })} />
       </div>
+      {floats}
     </div>);
 
   /* ============ SETUP / EINSTELLUNGEN ============ */
@@ -655,7 +822,12 @@ function App() {
                     <button className="btn-ghost" style={{ marginTop: 10, marginLeft: 18, padding: "6px 12px", fontSize: 13 }}
                       onClick={() => {
                         if (!canTerm) { setAskUnlock(true); return; }
-                        up({ datasets: [...state.datasets, freshDataset(state.lang === "de" ? "Neues Halbjahr" : "New term", yr.id)] });
+                        /* Faecher und Einstellungen des geoeffneten Halbjahres
+                           uebernehmen – sonst muss z. B. die Oberstufe jedes
+                           Halbjahr wieder auf Punkte umstellen. */
+                        const nd = datasetFrom(ds.id ? ds : null, t("newTermName"), yr.id);
+                        up({ datasets: [...state.datasets, nd] });
+                        if (ds.subjects.length) flash(t("newTermCopied")(ds.label), "ok");
                       }}>
                       + {t("newTerm")}{!canTerm && <Ic n="star" size={12} color="var(--blue)" style={{ marginLeft: 6, marginRight: 0 }} />}
                     </button>
@@ -665,10 +837,11 @@ function App() {
             <button className="btn-ghost" style={{ marginTop: 14 }}
               onClick={() => {
                 if (!canYear) { setAskUnlock(true); return; }
-                up({ years: [...state.years, freshYear(state.lang === "de" ? "Neues Schuljahr" : "New school year")] });
+                up({ years: [...state.years, freshYear(t("newYearName"))] });
               }}>
               + {t("newYear")}{!canYear && <Ic n="star" size={12} color="var(--blue)" style={{ marginLeft: 6, marginRight: 0 }} />}
             </button>
+            <div className="hint" style={{ marginTop: 10, fontSize: 12 }}>{t("newTermCopyHint")}</div>
             {!pur.unlocked && (askUnlock
               ? <UnlockCard t={t} compact style={{ marginTop: 14 }} />
               : <div className="hint" style={{ marginTop: 12, fontSize: 12 }}>{t("freeLimitHint")(FREE_TERMS)}</div>)}
@@ -693,7 +866,6 @@ function App() {
                   onClick={() => { up({ lock: null }); flash(t("lockRemove"), "ok"); }}>
                   <Ic n="trash" size={14} />{t("lockRemove")}
                 </button>
-                {flashBox}
               </React.Fragment>
             ) : (
             <React.Fragment>
@@ -719,24 +891,27 @@ function App() {
                 disabled={pinBusy || pinA.length < PIN_MIN || pinB.length < PIN_MIN}>
                 <Ic n="lock" size={14} />{t("lockSave")}
               </button>
-              {flashBox}
             </React.Fragment>)}
           </div>
 
           {/* ---------- Daten ---------- */}
           <div className="card">
             <h2 className="sec"><Ic n="save" size={14} />{t("data")}</h2>
-            <div className="hint" style={{ marginBottom: 10 }}>{t("dataHint")}</div>
+            <div className="hint" style={{ marginBottom: 10 }}>
+              {t("dataHint")} <span key={metaTick} style={{ fontWeight: 700 }}>{t("lastBackup")(daysSince(getMeta().lastBackup))}</span>
+            </div>
             <div className="row" style={{ flexWrap: "wrap" }}>
               <button className="btn-ghost" onClick={doExport}><Ic n="download" size={15} />{t("exportBtn")}</button>
               <button className="btn-ghost" onClick={() => fileRef.current && fileRef.current.click()}><Ic n="upload" size={15} />{t("importBtn")}</button>
-              <input ref={fileRef} type="file" accept=".json,application/json" style={{ display: "none" }}
+              {/* Bewusst grosszuegig: Manche Android-Dateiauswahlen und Cloud-Dienste
+                  melden .json als „Binaerdatei“ und blenden sie sonst aus. Der
+                  Inhalt wird beim Einlesen ohnehin geprueft. */}
+              <input ref={fileRef} type="file" accept=".json,application/json,text/plain,application/octet-stream" style={{ display: "none" }}
                 onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) doImport(f); e.target.value = ""; }} />
               <button className="btn-ghost" onClick={doCsv}><Ic n="table" size={15} />{t("exportCsvBtn")}</button>
               <button className="btn-ghost" onClick={doPrint}><Ic n="printer" size={15} />{isNative() ? t("printBtnApp") : t("printBtn")}</button>
             </div>
             <div className="hint" style={{ marginTop: 8 }}>{t("csvHint")}</div>
-            {flashBox}
             <div style={{ borderTop: "1px solid var(--line)", marginTop: 14, paddingTop: 14 }}>
               <button className="btn-danger" style={{ width: "100%", background: confirmReset ? "var(--red)" : "var(--card)", color: confirmReset ? "#fff" : "var(--red)" }}
                 onClick={() => { if (!confirmReset) return setConfirmReset(true); hardReset(); }}>
@@ -773,7 +948,7 @@ function App() {
             <button className="btn-ghost" onClick={() => up({ screen: "home" })}>{t("skip")}</button>
             <button className="btn" onClick={() => up({ screen: "home" })}>{t("continue")} →</button>
           </div>)}
-        {snack}
+        {floats}
       </div>);
   }
 
@@ -792,7 +967,11 @@ function App() {
     return (
       <div className="wrap">
         <button className="btn-ghost" style={{ border: "none", paddingLeft: 0 }} onClick={() => { up({ selSubject: null }); setConfirmDel(false); }}>← {t("back")}</button>
-        <h1 className="brand" style={{ fontSize: 30, margin: "8px 0 16px", overflowWrap: "anywhere" }}>{sName(subject, state.lang)}</h1>
+        <h1 className="brand" style={{ fontSize: 30, margin: "8px 0 16px", overflowWrap: "anywhere" }}>
+          <EditableName key={subject.id} value={sName(subject, state.lang)} label={t("renameSubject")} maxLength={80}
+            inputStyle={{ fontSize: 22, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif" }}
+            onSave={(name) => upSubject(subject.id, { name })} />
+        </h1>
         {banner}
 
         <div className="card row" style={{ justifyContent: "space-around" }}>
@@ -863,7 +1042,6 @@ function App() {
             <TrendChart subject={subject} sc={sc} lang={state.lang} t={t} dark={dark}
               onError={() => flash(t("exportErr"), "err")}
               fileName={sName(subject, state.lang) + " – " + t("trend")} />
-            {flashBox}
           </div>)}
 
         {eff.cats && (
@@ -873,21 +1051,26 @@ function App() {
               const m = catMean(c);
               return (
                 <div key={c.id} style={{ borderTop: "1px solid var(--line)", padding: "12px 0" }}>
-                  <div className="row" style={{ flexWrap: "wrap" }}>
-                    <strong style={{ flex: 1, fontSize: 15, display: "flex", alignItems: "center", gap: 7, minWidth: 120, overflowWrap: "anywhere" }}>
+                  {/* Zwei Zeilen statt einer umbrechenden: oben Name, Schnitt
+                      und Loeschen, darunter die Gewichtung. */}
+                  <div className="row">
+                    <strong style={{ flex: 1, fontSize: 15, display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
                       <span style={{ width: 9, height: 9, borderRadius: "50%", background: catColor(ci), flexShrink: 0 }}></span>
-                      {cName(c, state.lang)}
+                      <EditableName bare value={cName(c, state.lang)} label={t("renameCat")} maxLength={60}
+                        inputStyle={{ fontSize: 15 }} onSave={(name) => upCat(c.id, { name })} />
                     </strong>
+                    <span className="brand" style={{ minWidth: 46, textAlign: "right", color: C(m), flexShrink: 0 }}>Ø {fmt(m, state.lang)}</span>
+                    <button className="xbtn" aria-label={t("deleteCat")} title={t("deleteCat")}
+                      onClick={() => { pushUndo(); upSubject(subject.id, { cats: subject.cats.filter((x) => x.id !== c.id) }); }}>✕</button>
+                  </div>
+                  <div className="row" style={{ gap: 6, marginTop: 6, paddingLeft: 16 }}>
                     <span style={{ fontSize: 12, color: "var(--sub)" }}>{t("weight")}</span>
-                    <input className="num-weight" inputMode="numeric" value={c.weight} aria-label={t("weight")}
+                    <input className="num-weight" inputMode="numeric" value={c.weight} aria-label={t("weight") + " – " + cName(c, state.lang)}
                       onChange={(e) => {
                         const raw = e.target.value.replace(/\D/g, "").slice(0, 3);
                         upCat(c.id, { weight: raw === "" ? 0 : Number(raw) });
                       }} />
                     <span style={{ fontSize: 12, color: "var(--sub)" }}>%</span>
-                    <span className="brand" style={{ minWidth: 46, textAlign: "right", color: C(m) }}>Ø {fmt(m, state.lang)}</span>
-                    <button className="xbtn" aria-label={t("deleteSubject")}
-                      onClick={() => { pushUndo(); upSubject(subject.id, { cats: subject.cats.filter((x) => x.id !== c.id) }); }}>✕</button>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8, alignItems: "center" }}>
                     {c.grades.map((gr, i) => {
@@ -903,7 +1086,7 @@ function App() {
                             <span style={{ fontWeight: 400, fontSize: 11, opacity: 0.8 }}>
                               {fmt(gr.p.r, state.lang, 1)}/{fmt(gr.p.m, state.lang, 1)}
                             </span>)}
-                          <button className="xbtn" style={{ fontSize: 14, color: "var(--faint)" }} aria-label="✕"
+                          <button className="xbtn" style={{ fontSize: 14, color: "var(--faint)" }} aria-label={t("deleteGrade") + " " + fmt(val, state.lang)}
                             onClick={() => { pushUndo(); upCat(c.id, { grades: c.grades.filter((_, j) => j !== i) }); }}>✕</button>
                         </span>);
                     })}
@@ -911,7 +1094,10 @@ function App() {
                       dateLabel={t("gradeDate")} dateHint={t("gradeDateHint")}
                       keyObj={subjKey} sc={sc}
                       lang={state.lang} t={t} dark={dark}
-                      onAdd={(v) => upCat(c.id, { grades: [...c.grades, v] })} />
+                      onAdd={(v) => {
+                        upCat(c.id, { grades: [...c.grades, v] });
+                        maybeAskReview(state, APP_VER);
+                      }} />
                   </div>
                 </div>);
             })}
@@ -940,7 +1126,7 @@ function App() {
               const r = neededGrade(subject, c, w, sc);
               return (
                 <div key={c.id} style={{ borderTop: "1px solid var(--line)", padding: "10px 0" }}>
-                  <div className="lbl">{t("needIn")} „{cName(c, state.lang)}“:</div>
+                  <div className="lbl">{t("needIn")} {state.lang === "de" ? "„" : "“"}{cName(c, state.lang)}{state.lang === "de" ? "“" : "”"}:</div>
                   <div style={{
                     marginTop: 4, fontSize: 14, lineHeight: 1.5,
                     color: r.type === "ok" ? "var(--ink)" : r.type === "safe" ? "var(--green)" : r.type === "impossible" ? "var(--red)" : "var(--sub)",
@@ -983,11 +1169,16 @@ function App() {
           }}>
           <Ic n="trash" size={15} />{confirmDel ? t("confirmDelete") : t("deleteSubject")}
         </button>
-        {snack}
+        {floats}
       </div>);
   }
 
   /* ============ HOME ============ */
+  const meta = getMeta();
+  const realData = { ...state, datasets: state.datasets.filter((d) => !d.demo) };
+  const nGrades = countGrades(realData);
+  const showBackup = backupDue(meta, nGrades > 0);
+  const showDemoOffer = !ds.demo && !meta.demoOff && state.datasets.length === 1 && countGrades(state) === 0;
   return (
     <div className="wrap">
       <div className="row" style={{ justifyContent: "space-between", marginBottom: 12 }}>
@@ -1037,6 +1228,33 @@ function App() {
         {overallAvg == null && <div style={{ fontSize: 13, color: "var(--hero-ink)", marginTop: 8 }}>{t("noGrades")}</div>}
       </div>
 
+      {/* ---------- Beispielzeugnis ---------- */}
+      {ds.demo && (
+        <div className="banner banner-info row" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
+          <span><Ic n="sparkle" size={14} />{t("demoBanner")}</span>
+          <button className="btn-ghost" style={{ padding: "5px 10px", fontSize: 13 }} onClick={removeDemo}>{t("demoRemove")}</button>
+        </div>)}
+      {showDemoOffer && (
+        <div className="card offer">
+          <h2 className="sec"><Ic n="sparkle" size={14} />{t("demoTitle")}</h2>
+          <p className="hint" style={{ margin: "0 0 12px" }}>{t("demoText")}</p>
+          <div className="row" style={{ flexWrap: "wrap" }}>
+            <button className="btn" onClick={loadDemo}>{t("demoLoad")}</button>
+            <button className="btn-ghost" style={{ border: "none" }} onClick={() => { hideDemoOffer(); setMetaTick((n) => n + 1); }}>{t("demoNo")}</button>
+          </div>
+        </div>)}
+
+      {/* ---------- Sicherungserinnerung ---------- */}
+      {showBackup && (
+        <div className="card offer">
+          <h2 className="sec"><Ic n="save" size={14} />{t("backupDueTitle")}</h2>
+          <p className="hint" style={{ margin: "0 0 12px" }}>{t("backupDueText")(daysSince(meta.lastBackup))}</p>
+          <div className="row" style={{ flexWrap: "wrap" }}>
+            <button className="btn" onClick={doExport}><Ic n="download" size={15} />{t("backupNow")}</button>
+            <button className="btn-ghost" style={{ border: "none" }} onClick={() => { snoozeBackup(); setMetaTick((n) => n + 1); }}>{t("backupLater")}</button>
+          </div>
+        </div>)}
+
       {/* ---------- Rechner ---------- */}
       <div className="card">
         <h2 className="sec"><Ic n="sliders" size={14} />{t("tools")}</h2>
@@ -1070,7 +1288,6 @@ function App() {
                 <span className="brand" style={{ color: colorFor(a, dsc, null, dark), minWidth: 48, textAlign: "right" }}>Ø {fmt(a, state.lang)}</span>
               </div>);
           })}
-          {flashBox}
         </div>)}
 
       {/* ---------- Ausgewählte Durchschnitte ---------- */}
@@ -1093,13 +1310,19 @@ function App() {
                   <button key={key} className="chip-btn" onClick={() => addPreset(key)}>+ {t(key)}</button>))}
               </div>
             </div>
-            {flashBox}
           </React.Fragment>
         </div>)}
 
       {/* ---------- Fächer ---------- */}
       <div className="card">
-        <h2 className="sec"><Ic n="book" size={14} />{t("subjects")}</h2>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+          <h2 className="sec"><Ic n="book" size={14} />{t("subjects")}</h2>
+          {(sorting || ds.subjects.length > 1) && (
+            <button className={sorting ? "btn" : "btn-ghost"} style={{ padding: "4px 10px", fontSize: 13 }}
+              aria-pressed={sorting} onClick={() => setSorting(!sorting)}>
+              {sorting ? t("sortDone") : <React.Fragment><Ic n="sort" size={13} />{t("sortSubjects")}</React.Fragment>}
+            </button>)}
+        </div>
 
         {ds.subjects.length === 0 ? (
           <div className="empty">
@@ -1108,15 +1331,24 @@ function App() {
             <div className="hint" style={{ marginTop: 4 }}>{t("emptySubjectsCta")}</div>
           </div>
         ) : (<React.Fragment>
-          <div className="hint" style={{ marginBottom: 6 }}>{t("empty")}</div>
-          <div style={{
+          {!sorting && <div className="hint" style={{ marginBottom: 6 }}>{t("empty")}</div>}
+          {!sorting && <div style={{
             display: "grid", gridTemplateColumns: eff.wish ? "1fr 70px 70px" : "1fr 70px", gap: "0 8px",
             fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: ".05em", padding: "6px 4px 4px",
           }}>
             <span></span><span style={{ textAlign: "center" }}>{t("grade")}</span>
             {eff.wish && <span style={{ textAlign: "center" }}><Ic n="star" size={10} />{t("wish")}</span>}
-          </div>
-          {ds.subjects.map((s) => {
+          </div>}
+          {sorting ? ds.subjects.map((s, i) => (
+            <div key={s.id} className="row" style={{ borderTop: "1px solid var(--line)", padding: "6px 4px", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 16, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{sName(s, state.lang)}</span>
+              <span className="row" style={{ gap: 4, flexShrink: 0 }}>
+                <button className="sort-btn" disabled={i === 0} aria-label={t("moveUp") + ": " + sName(s, state.lang)}
+                  onClick={() => moveSubject(s.id, -1)}><Ic n="up" size={18} style={{ marginRight: 0 }} /></button>
+                <button className="sort-btn" disabled={i === ds.subjects.length - 1} aria-label={t("moveDown") + ": " + sName(s, state.lang)}
+                  onClick={() => moveSubject(s.id, 1)}><Ic n="down" size={18} style={{ marginRight: 0 }} /></button>
+              </span>
+            </div>)) : ds.subjects.map((s) => {
             const sg = parseNum(s.grade);
             const wt = subjWeight(s);
             return (
@@ -1128,10 +1360,12 @@ function App() {
                 <button onClick={() => up({ selSubject: s.id })}
                   style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", fontSize: 16, fontWeight: 600, color: "var(--ink)", display: "flex", alignItems: "center", gap: 8, padding: 0, minWidth: 0 }}>
                   <span style={{ width: 10, height: 10, borderRadius: "50%", background: C(sg), flexShrink: 0 }}></span>
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sName(s, state.lang)}</span>
+                  {/* Der Name bekommt Vorrang: Bei wenig Platz wird zuerst die
+                      Verlaufslinie abgeschnitten, nicht „Sport“ zu „Sp…“. */}
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: "min(4.6em, 100%)", flexShrink: 1 }}>{sName(s, state.lang)}</span>
                   {wt !== 1 && (
                     <span className="wt-badge" title={t("subjWeight")}>{wt === 0 ? "0" : "×" + fmt(wt, state.lang, 1)}</span>)}
-                  {eff.charts && eff.cats && <span style={{ marginLeft: "auto", display: "flex" }}><Spark subject={s} sc={sc} /></span>}
+                  {eff.charts && eff.cats && <span style={{ marginLeft: "auto", display: "flex", minWidth: 0, overflow: "hidden", flexShrink: 3 }}><Spark subject={s} sc={sc} /></span>}
                   <span style={{ color: "var(--border)", fontSize: 13 }} aria-hidden="true">›</span>
                 </button>
                 <NumInput width="100%" label={sName(s, state.lang) + " – " + t("grade")} value={s.grade} onChange={(v) => upSubject(s.id, { grade: v })} ph="–" color={C(sg)} />
@@ -1140,8 +1374,8 @@ function App() {
           })}
         </React.Fragment>)}
 
-        <AddRow ph={t("addSubject")} btn={t("add")}
-          onAdd={(name) => upDs({ subjects: [...ds.subjects, { id: uid(), name, grade: "", wish: "", weight: 1, cats: defaultCats(), goals: "", notes: "" }] })} />
+        {!sorting && <AddRow ph={t("addSubject")} btn={t("add")}
+          onAdd={(name) => upDs({ subjects: [...ds.subjects, { id: uid(), name, grade: "", wish: "", weight: 1, keyId: "", cats: defaultCats(), goals: "", notes: "" }] })} />}
       </div>
 
       <div style={{ textAlign: "center", marginTop: 6 }}>
@@ -1149,7 +1383,7 @@ function App() {
           <Ic n="info" size={13} />{t("aboutBtn")} · v{APP_VER}
         </button>
       </div>
-      {snack}
+      {floats}
     </div>);
 }
 
