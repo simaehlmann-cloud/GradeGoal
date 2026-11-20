@@ -1,7 +1,9 @@
-# GradeGoal: Schulnoten & Grades
+# GradeGoal: Noten bis zum Abi
 
 Zeugnisnoten eintragen, Durchschnitte berechnen, Wunschnoten erreichen.
-Entwickelt von Simon Mählmann · Version 1.8.0
+Entwickelt von Simon Mählmann (Wisdompeak Apps) · Version 1.9.0
+
+Was sich geändert hat: `AENDERUNGEN.md`.
 
 ## Gratis-Rahmen und Kauf
 
@@ -33,8 +35,45 @@ Seit 1.8.0 gibt es **eine** App mit allen Funktionen (vorher: Lite und Pro).
 ```bash
 npm install
 npm run dev        # http://localhost:5173 (freigeschaltet)
+npm test           # Rechenlogik prüfen (läuft auch in jedem Workflow)
 npm run build      # erzeugt dist/index.html
 ```
+
+**Bei jeder Version:** `version` in `package.json` und `APP_VER` in
+`src/lib/i18n.js` gleich setzen. Ändert sich, was die App speichert:
+Abschnitt 2 in `public/datenschutz.html` **und** `datenschutz-en.html`
+ergänzen.
+
+## Prüfen
+
+`npm test` führt die Tests in `tests/` aus (`node --test`, keine
+zusätzlichen Pakete): Notenwerte, gewichteter Schnitt, Zielrechner,
+Schlüssel, die komplette Abitur-Tabelle 300–900 Punkte, Datenmigration,
+„Neues Halbjahr übernimmt Fächer“, Beispielzeugnis, Sicherungserinnerung
+und Bewertungsregeln. Schlägt ein Test fehl, bricht jeder Build ab –
+eine falsch rechnende Version kommt so nicht in die Stores.
+
+## Store-Screenshots
+
+```bash
+npm install --no-save playwright
+npx playwright install chromium
+npm run store-bilder
+```
+
+Steuert die gebaute App mit dem Beispielzeugnis (`src/lib/demo.js`) und
+legt in `store-bilder/` sechs Bilder je Satz ab: iPhone 6,9″
+(1320 × 2868), iPad 13″ (2064 × 2752) und Android (1080 × 2160), jeweils
+Deutsch und Englisch. Jedes Bild wird gegen sein Sollmaß geprüft.
+`store-bilder/` steht in `.gitignore`.
+
+## Bewertungen
+
+`src/lib/review.js` bittet über das Bewertungsfenster des Systems um
+eine Bewertung – frühestens nach 7 Tagen und 10 Noten, höchstens einmal
+je Version, nur nach einer erreichten Wunschnote oder einer neuen
+Einzelnote. Sobald die App im App Store steht, die Apple-ID bei
+`APPSTORE_ID` eintragen; dann erscheint „App bewerten“ auch auf iOS.
 
 Die erzeugte `dist/index.html` enthält den kompletten Code und läuft
 offline. Zum Entwickeln immer `npm run dev` verwenden – die `index.html`
@@ -125,6 +164,9 @@ src/
     filesave.js            Dateien herausgeben (Download bzw. Teilen-Menü)
     platform.js            App oder Browser, externe Verweise
     purchase.js            Gratis-Rahmen und In-App-Kauf
+    meta.js                Sicherungserinnerung, Nutzungsbeginn (nicht in der Sicherung)
+    review.js              Bitte um Bewertung, „App bewerten“
+    demo.js                Beispielzeugnis (auch für die Store-Bilder)
     i18n.js                alle Texte (de/en)
     security.js            PIN
     logger.js              lokales Diagnose-Protokoll
@@ -132,9 +174,16 @@ src/
     icons.jsx  ui.jsx  charts.jsx  panels.jsx
     KeyCalc.jsx  AbiCalc.jsx  LockScreen.jsx  ErrorBoundary.jsx
 
+public/
+  impressum(-en).html  datenschutz(-en).html  recht.css  recht.js
+
+tests/                     npm test
+
 tools/
   prepare-release.sh       Android: Version und Signierung
-  prepare-ios.sh           iOS: Version, Info.plist-Einträge
+  prepare-ios.sh           iOS: Version, Info.plist-Einträge, Privacy-Manifest
+  apple/PrivacyInfo.xcprivacy  apple/add-resource.rb
+  store-bilder.mjs         Store-Screenshots
   make_icons.py  make_feature_graphic.py  check_icons.py
 ```
 
@@ -176,7 +225,7 @@ Der Keystore selbst gehört **nicht** ins Repo; `.gitignore` schließt
 
 **Actions → Release AAB (Play Store) → Run workflow.** Dort eintragen:
 
-- **version_name** – muss zu `package.json` passen, z. B. `1.6.2`
+- **version_name** – muss zu `package.json` passen, z. B. `1.9.0`
 - **version_code** – ganze Zahl, **höher als beim letzten Upload**. Play
   nimmt jeden Wert nur einmal je App-ID an. Beim ersten Mal `1`.
 
@@ -205,13 +254,16 @@ Im Ordner `store/`:
 |---|---|
 | `APP-STORE-CHECKLISTE.md` | Apple: Konto, App, Kauf, API-Schlüssel, TestFlight |
 | `APP-STORE-TEXTE.md` | Name, Untertitel, Beschreibung, Schlüsselwörter, Kauf – de/en |
-| `PLAY-CONSOLE-CHECKLISTE.md` | Google Play (Stand vor 1.8.0, vor Nutzung anpassen) |
-| `STORE-TEXTE.md` | Play-Texte (Stand vor 1.8.0, vor Nutzung anpassen) |
+| `PLAY-CONSOLE-CHECKLISTE.md` | Google Play: Konto, Test mit 12 Personen, Kauf, Angaben |
+| `STORE-TEXTE.md` | Play-Texte de/en, In-App-Produkt, Datensicherheit |
+| `feature-graphic.png` | Feature-Grafik 1024 × 500 für Google Play |
 
-Impressum und Datenschutzerklärung liegen als `public/impressum.html` und
-`public/datenschutz.html` im Projekt und werden über GitHub Pages
-veröffentlicht. Die App verlinkt unter „Info & Impressum“ dorthin
-(`PRIVACY_URL`, `IMPRINT_URL` in `src/lib/i18n.js`).
+Impressum und Datenschutzerklärung liegen als `public/impressum.html`,
+`public/datenschutz.html` und englisch als `…-en.html` im Projekt. Sie
+werden über GitHub Pages veröffentlicht (Adressen für die Stores) und
+stecken außerdem im App-Paket: Die App zeigt sie unter „Info &
+Impressum“ ohne Internet an (`public/recht.js` sorgt für die Darstellung
+im Rahmen).
 
 Der wichtigste Zeitfaktor bei Google Play: Neue persönliche
 Entwicklerkonten müssen vor dem Produktionszugriff einen geschlossenen

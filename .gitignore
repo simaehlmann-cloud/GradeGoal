@@ -8,3 +8,6 @@ ios/
 *.mobileprovision
 .DS_Store
 *.p8
+
+# Store-Screenshots entstehen aus tools/store-bilder.mjs
+store-bilder/
