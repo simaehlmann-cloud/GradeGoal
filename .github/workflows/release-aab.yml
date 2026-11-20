@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: 'Versionsname, muss zu package.json passen (z. B. 1.5.0)'
+        description: 'Versionsname, muss zu package.json passen (z. B. 1.9.0)'
         required: true
-        default: '1.8.0'
+        default: '1.9.0'
       version_code:
         description: 'versionCode – ganze Zahl, muss höher sein als beim letzten Upload'
         required: true
@@ -53,6 +53,11 @@ jobs:
 
       - name: Install dependencies
         run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Tests der Rechenlogik
+
+        run: npm test
+
 
       - name: Build web app
         run: npm run build
